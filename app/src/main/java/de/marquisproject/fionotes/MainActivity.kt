@@ -1,8 +1,7 @@
 package de.marquisproject.fionotes
 
 // my own packages
-import de.marquisproject.fionotes.ui.components.BottomNavigation
-import de.marquisproject.fionotes.ui.components.TopBar
+import de.marquisproject.fionotes.ui.components.BottomNavBar
 import de.marquisproject.fionotes.ui.screens.HomeScreen
 import de.marquisproject.fionotes.ui.screens.SettingsScreen
 import de.marquisproject.fionotes.ui.screens.NoteScreen
@@ -37,8 +36,9 @@ class MainActivity : ComponentActivity() {
             FionotesTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
+                    topBar = {},
                     bottomBar = {
-                        BottomNavigation(
+                        BottomNavBar(
                             navController = navController
                         )
                     },
