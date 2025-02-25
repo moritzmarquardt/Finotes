@@ -23,6 +23,8 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -34,6 +36,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -50,6 +53,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import de.marquisproject.fionotes.ui.theme.FionotesTheme
 
 class MainActivity : ComponentActivity() {
@@ -58,28 +65,66 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            var searchQuery by remember { mutableStateOf("") }
+            val navController = rememberNavController()
             FionotesTheme {
-                var searchText by remember { mutableStateOf("") }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        BottomBar()
+                        BottomBar(
+                            navController = navController
+                        )
                     },
                     topBar = {
                         TopBar(
-                            query = searchText,
-                            onQueryChange = { searchText = it },
+                            searchQuery = searchQuery,
+                            onQueryChange = { searchQuery = it }
                         )
                     },
+                    floatingActionButton = {
+                        FloatingActionButton(
+                            onClick = { /* do something */ },
+                            containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+                        ) {
+                            Icon(Icons.Filled.Add, "Localized description")
+                        }
+                    }
                 ) { innerPadding ->
-                    Greeting(
-                        name = searchText,
+                    NavHost(
+                        navController = navController,
+                        startDestination = "home",
                         modifier = Modifier.padding(innerPadding)
-                    )
+                    ) {
+                        composable("home") { HomeScreen() }
+                        composable("bin") { BinScreen() }
+                        composable("archive") { ArchiveScreen() }
+                        composable("settings") { SettingsScreen() }
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+fun HomeScreen() {
+    Text(text = "Home Screen")
+}
+
+@Composable
+fun BinScreen() {
+    Text(text = "Bin Screen")
+}
+
+@Composable
+fun ArchiveScreen() {
+    Text(text = "Archive Screen")
+}
+
+@Composable
+fun SettingsScreen() {
+    Text(text = "Settings Screen")
 }
 
 @Composable
@@ -93,48 +138,37 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    query: String,
+    searchQuery: String,
     onQueryChange: (String) -> Unit,
 ) {
     TopAppBar(
         title = {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Search Bar
-                OutlinedTextField(
-                    value = query,
+                TextField(
+                    value = searchQuery,
                     onValueChange = onQueryChange,
-                    placeholder = { Text("Search Fionotes ...") },
-                    modifier = Modifier
-                        .weight(1f), // Makes search bar take up all available space
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+                        Icon(Icons.Filled.Search, contentDescription = "Search")
                     },
+                    placeholder = { Text("Search Fionotes") },
+                    modifier = Modifier.weight(1f),
                     singleLine = true,
-                    shape = RoundedCornerShape(8.dp), // Reduce text size
                 )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Right-side Icon Button
-                IconButton(
-                    onClick = {
-                        /* handle icon click */
-                    }
-                ) {
-                    Icon(imageVector = Icons.Default.Settings, contentDescription = "More Options")
-                }
             }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     )
 }
 
 @Composable
-fun BottomBar() {
+fun BottomBar(
+    navController: NavController
+) {
     BottomAppBar(
         actions = {
             NavigationBarItem(
@@ -143,7 +177,7 @@ fun BottomBar() {
                 },
                 label = { Text("Notes") },
                 selected = false,
-                onClick = { }
+                onClick = { navController.navigate("home") }
             )
             NavigationBarItem(
                 icon = {
@@ -151,7 +185,7 @@ fun BottomBar() {
                 },
                 label = { Text("Bin") },
                 selected = false,
-                onClick = { }
+                onClick = { navController.navigate("bin") }
             )
             NavigationBarItem(
                 icon = {
@@ -161,18 +195,16 @@ fun BottomBar() {
                 },
                 label = { Text("Archived") },
                 selected = false,
-                onClick = { }
+                onClick = { navController.navigate("archive") }
             )
-            Spacer(modifier = Modifier.weight(1f))
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* do something */ },
-                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-            ) {
-                Icon(Icons.Filled.Add, "Localized description")
-            }
+            NavigationBarItem(
+                icon = {
+                    Icon(Icons.Filled.Settings, "Localized description")
+                },
+                label = { Text("Settings") },
+                selected = false,
+                onClick = { /* do something */ }
+            )
         }
     )
 }
