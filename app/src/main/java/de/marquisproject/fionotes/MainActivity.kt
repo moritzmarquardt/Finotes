@@ -4,63 +4,51 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import de.marquisproject.fionotes.ui.theme.FionotesTheme
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -83,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     },
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { /* do something */ },
+                            onClick = { navController.navigate("note") },
                             containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                             elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
                         ) {
@@ -96,10 +84,13 @@ class MainActivity : ComponentActivity() {
                         startDestination = "home",
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable("home") { HomeScreen() }
+                        composable("home") { HomeScreen(
+                            searchQuery = searchQuery,
+                        ) }
                         composable("bin") { BinScreen() }
                         composable("archive") { ArchiveScreen() }
                         composable("settings") { SettingsScreen() }
+                        composable("note") { NoteView()}
                     }
                 }
             }
@@ -108,8 +99,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun HomeScreen() {
-    Text(text = "Home Screen")
+fun HomeScreen(
+    searchQuery: String,
+) {
+    Text(text = "Home Screen with search query: $searchQuery")
 }
 
 @Composable
@@ -135,29 +128,41 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
+@Composable
+fun NoteView() {
+    val noteId = "123"
+    Text(text = "Note View with id: $noteId")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
     searchQuery: String,
     onQueryChange: (String) -> Unit,
 ) {
-    TopAppBar(
+    val focusRequester = remember { FocusRequester()}
+    var isFocused by remember { mutableStateOf(false) }
+
+    CenterAlignedTopAppBar(
         title = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = onQueryChange,
-                    leadingIcon = {
-                        Icon(Icons.Filled.Search, contentDescription = "Search")
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(CircleShape)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        isFocused = focusState.isFocused
                     },
-                    placeholder = { Text("Search Fionotes") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                )
-            }
+                value = searchQuery,
+                onValueChange = onQueryChange,
+                leadingIcon = {
+                    Icon(Icons.Filled.Search, contentDescription = "Search")
+                },
+                placeholder = { Text("Search Fionotes") },
+                singleLine = true,
+                textStyle = TextStyle(fontSize = 16.sp),
+            )
+
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -169,6 +174,8 @@ fun TopBar(
 fun BottomBar(
     navController: NavController
 ) {
+    val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
+
     BottomAppBar(
         actions = {
             NavigationBarItem(
@@ -176,7 +183,7 @@ fun BottomBar(
                     Icon(Icons.Outlined.Home, "Localized description")
                 },
                 label = { Text("Notes") },
-                selected = false,
+                selected = currentDestination == "home",
                 onClick = { navController.navigate("home") }
             )
             NavigationBarItem(
@@ -184,7 +191,7 @@ fun BottomBar(
                     Icon(Icons.Outlined.Delete, "Localized description")
                 },
                 label = { Text("Bin") },
-                selected = false,
+                selected = currentDestination == "bin",
                 onClick = { navController.navigate("bin") }
             )
             NavigationBarItem(
@@ -194,7 +201,7 @@ fun BottomBar(
                         "Localized description")
                 },
                 label = { Text("Archived") },
-                selected = false,
+                selected = currentDestination == "archive",
                 onClick = { navController.navigate("archive") }
             )
             NavigationBarItem(
@@ -202,12 +209,13 @@ fun BottomBar(
                     Icon(Icons.Filled.Settings, "Localized description")
                 },
                 label = { Text("Settings") },
-                selected = false,
-                onClick = { /* do something */ }
+                selected = currentDestination == "settings",
+                onClick = { navController.navigate("settings") }
             )
         }
     )
 }
+
 
 @Preview(showBackground = true)
 @Composable
