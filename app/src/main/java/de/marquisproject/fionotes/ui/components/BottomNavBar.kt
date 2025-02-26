@@ -63,7 +63,7 @@ fun BottomNavBar(
                 onClick = {
                     selectedItem.intValue = index
                     navController.navigate(route = item.route)
-                }
+                },
             )
         }
     }

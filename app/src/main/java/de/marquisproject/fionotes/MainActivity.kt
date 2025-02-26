@@ -36,7 +36,6 @@ class MainActivity : ComponentActivity() {
             FionotesTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    topBar = {},
                     bottomBar = {
                         BottomNavBar(
                             navController = navController

@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.dagger.hilt.android") version "2.51.1" apply false
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -41,21 +43,20 @@ android {
 }
 
 dependencies {
-    // Jetpack Compose integration
+    // Navigation
     implementation(libs.androidx.navigation.compose)
-
-    // Views/Fragments integration
-    implementation(libs.androidx.navigation.fragment)
-    implementation(libs.androidx.navigation.ui)
-
-    // Feature module support for Fragments
-    implementation(libs.androidx.navigation.dynamic.features.fragment)
-
-    // Testing Navigation
     androidTestImplementation(libs.androidx.navigation.testing)
-
-    // JSON serialization library, works with the Kotlin serialization plugin
     implementation(libs.jetbrains.kotlinx.serialization.json)
+
+    // Room database
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    // Dagger-Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
