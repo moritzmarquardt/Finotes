@@ -10,6 +10,7 @@ kotlinxSerializationJsonVersion = "1.8.0"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.0"
 composeBom = "2025.02.00"
+livecycleLivedataKtx = "2.2.0"
 navigationCompose = "2.8.7"
 navigationDynamicFeaturesFragment = "2.8.7"
 navigationFragment = "2.8.7"
@@ -18,6 +19,7 @@ navigationUi = "2.8.7"
 roomRuntime = "2.6.1"
 
 [libraries]
+androidx-livecycle-livedata-ktx = { module = "androidx.livecycle:livecycle-livedata-ktx", version.ref = "livecycleLivedataKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-dynamic-features-fragment = { module = "androidx.navigation:navigation-dynamic-features-fragment", version.ref = "navigationDynamicFeaturesFragment" }

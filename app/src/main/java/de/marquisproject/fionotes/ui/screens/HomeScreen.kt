@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import de.marquisproject.fionotes.NoteRoute
+import de.marquisproject.fionotes.data.notes.model.Note
 import de.marquisproject.fionotes.ui.components.TopBarHome
 
 @Composable
@@ -26,6 +27,8 @@ fun HomeScreen(
     navController: NavController,
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
+
+    val allNotes by homeViewModel.allNotes.collectAsState()
 
     Scaffold (
         modifier = Modifier.fillMaxSize(),
@@ -38,11 +41,17 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(
-                    NoteRoute(
-                        id = "new"
+                onClick = {
+                    homeViewModel.insert(
+                        Note(
+                            id = 123,
+                            title = "New note",
+                            content = "This is a new note",
+                            lastEdited = "2021-10-10"
+                        )
                     )
-                ) },
+                    //navController.navigate(NoteRoute(id = "new"))
+                },
                 containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
                 elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
             ) {
@@ -55,5 +64,6 @@ fun HomeScreen(
         ) {
             Text(text = "Home Screen with filter: ${homeUiState.filter} and search query: ${homeUiState.searchQuery}")
         }
+        Text(text = "All notes: $allNotes")
     }
 }
