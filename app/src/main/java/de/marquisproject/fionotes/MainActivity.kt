@@ -1,7 +1,5 @@
 package de.marquisproject.fionotes
 
-// my own packages
-import de.marquisproject.fionotes.ui.components.BottomNavBar
 import de.marquisproject.fionotes.ui.screens.HomeScreen
 import de.marquisproject.fionotes.ui.screens.SettingsScreen
 import de.marquisproject.fionotes.ui.screens.NoteScreen
@@ -10,20 +8,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import de.marquisproject.fionotes.ui.screens.ArchiveScreen
+import de.marquisproject.fionotes.ui.screens.BinScreen
 import de.marquisproject.fionotes.ui.theme.FionotesTheme
 import kotlinx.serialization.Serializable
 
@@ -34,56 +24,52 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             FionotesTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        BottomNavBar(
-                            navController = navController
-                        )
-                    },
-                    floatingActionButton = {
-                        FloatingActionButton(
-                            onClick = { navController.navigate(NoteRoute(
-                                id = "new"
-                            )) },
-                            containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                            elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-                        ) {
-                            Icon(Icons.Filled.Add, "Localized description")
-                        }
-                    }
-                ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = HomeRoute(filter = "all"),
-                        modifier = Modifier.padding(innerPadding)
+                        startDestination = HomeRoute,
                     ) {
                         composable<HomeRoute> {
-                            val args = it.toRoute<HomeRoute>()
                             HomeScreen(
-                                filter = args.filter,
+                                navController = navController,
+                            )
+                        }
+                        composable<ArchiveRoute> {
+                            ArchiveScreen(
+                                navController = navController,
+                            )
+                        }
+                        composable<BinRoute> {
+                            BinScreen(
+                                navController = navController,
                             )
                         }
                         composable<NoteRoute> {
                             val args = it.toRoute<NoteRoute>()
                             NoteScreen(
+                                navController = navController,
                                 id = args.id,
                             )
                         }
                         composable<SettingsRoute> {
-                            SettingsScreen()
+                            SettingsScreen(
+                                navController = navController,
+                            )
                         }
                     }
                 }
             }
         }
     }
-}
+
 
 @Serializable
-data class HomeRoute(
-    val filter : String = "all",
-)
+object HomeRoute
+
+@Serializable
+object ArchiveRoute
+
+@Serializable
+object BinRoute
 
 @Serializable
 object SettingsRoute

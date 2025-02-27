@@ -5,9 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 
 @Composable
-fun NoteScreen(
+fun ArchiveScreen(
     navController: NavController,
-    id: String
 ) {
-    Text(text = "Note View with id: $id")
+    Text(text = "Archive Screen")
 }

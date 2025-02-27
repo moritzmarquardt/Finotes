@@ -14,6 +14,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import de.marquisproject.fionotes.ArchiveRoute
+import de.marquisproject.fionotes.BinRoute
 import de.marquisproject.fionotes.HomeRoute
 import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.SettingsRoute
@@ -34,17 +37,17 @@ fun BottomNavBar(
         NavItem(
             icon = { Icon(Icons.Outlined.Home, "Localized description") },
             label = { Text("Notes") },
-            route = HomeRoute(filter="all")
+            route = HomeRoute
         ),
         NavItem(
             icon = { Icon(Icons.Outlined.Delete, "Localized description") },
             label = { Text("Bin") },
-            route = HomeRoute(filter="bin")
+            route = BinRoute
         ),
         NavItem(
             icon = { Icon(painterResource(id = R.drawable.inventory_2_24dp), "Localized description") },
             label = { Text("Archived") },
-            route = HomeRoute(filter="archived")
+            route = ArchiveRoute
         ),
         NavItem(
             icon = { Icon(Icons.Filled.Settings, "Localized description") },
@@ -53,6 +56,7 @@ fun BottomNavBar(
         ),
     )
     val selectedItem = remember { mutableIntStateOf(0) }
+
 
     NavigationBar {
         navItems.forEachIndexed { index, item ->
