@@ -1,6 +1,5 @@
 package de.marquisproject.fionotes.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -18,10 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import de.marquisproject.fionotes.NoteRoute
-import de.marquisproject.fionotes.ui.components.BottomNavBar
-import de.marquisproject.fionotes.ui.components.TopBar
+import de.marquisproject.fionotes.ui.components.TopBarHome
 
 @Composable
 fun HomeScreen(
@@ -33,14 +30,10 @@ fun HomeScreen(
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopBar(
-                searchQuery = homeUiState.searchQuery,
-                onQueryChange = { homeViewModel.updateQuery(it) }
-            )
-        },
-        bottomBar = {
-            BottomNavBar(
+            TopBarHome(
                 navController = navController,
+                updateQuery = { homeViewModel.updateQuery(it) },
+                searchQuery = homeUiState.searchQuery
             )
         },
         floatingActionButton = {
