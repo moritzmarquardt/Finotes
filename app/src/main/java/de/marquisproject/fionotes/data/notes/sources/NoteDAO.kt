@@ -13,22 +13,28 @@ import kotlinx.coroutines.flow.Flow
 interface NoteDAO {
     @Upsert
     suspend fun upsertNote(note: Note)
-    // upsert is update if note with id already exists, insert otherwise
-    // suspend, so it works with coroutines
-    // can use it here because no data is returned
+    /**
+     * Upsert is a combination of insert and update
+     * If the note with the same id already exists, it will be updated else it will be inserted
+     * suspend is used because it is a coroutine function and we use it here because no data is returned
+     * @param note: Note object to be upserted
+     */
 
     @Delete
     suspend fun deleteNote(note: Note)
 
-    @Query("SELECT * FROM notes_table")
+    @Query("SELECT * FROM notes_table ORDER BY lastEdited DESC")
     fun getAllNotes(): Flow<List<Note>>
+    /**
+     * With flow we get an observable which will notify us when there is a change in the database.
+     * @return: Flow of List of Notes ordered by lastEdited in descending order
+     */
+
+    @Query("SELECT * FROM notes_table WHERE id = :noteId")
+    fun getNoteById(noteId: Long): Flow<Note>
 
     @Query("SELECT * FROM notes_table WHERE isPinned = 1")
     fun getPinnedNotes(): Flow<List<Note>>
-    // with flow we get an observable which will notify us when there is a change in the database
-
-    @Query("SELECT * FROM notes_table ORDER BY lastEdited DESC")
-    fun getNotesOrderedByDate(): Flow<List<Note>>
 
     @Query("SELECT * FROM notes_table WHERE title LIKE :searchQuery OR content LIKE :searchQuery")
     fun searchNotes(searchQuery: String): Flow<List<Note>>

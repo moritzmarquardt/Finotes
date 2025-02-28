@@ -15,9 +15,9 @@ class NoteRepository (private val db: NoteDatabase) {
 
     fun getAllNotes() = db.dao.getAllNotes()
 
-    fun getPinnedNotes() = db.dao.getPinnedNotes()
+    fun getNoteById(noteId: Long) = db.dao.getNoteById(noteId)
 
-    fun getNotesOrderedByDate() = db.dao.getNotesOrderedByDate()
+    fun getPinnedNotes() = db.dao.getPinnedNotes()
 
     fun searchNotes(searchQuery: String) = db.dao.searchNotes(searchQuery)
 

@@ -101,5 +101,5 @@ object SettingsRoute
 
 @Serializable
 data class NoteRoute (
-    val id: String
+    val id: Long
 )

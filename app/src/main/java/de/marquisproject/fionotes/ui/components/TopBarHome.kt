@@ -29,6 +29,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.navigation.NavController
 import de.marquisproject.fionotes.ArchiveRoute
+import de.marquisproject.fionotes.BinRoute
 import de.marquisproject.fionotes.SettingsRoute
 
 
@@ -96,7 +97,7 @@ fun TopBarHome(
                     text = { Text("Bin") },
                     onClick = {
                         expandedMenu = false
-                        navController.navigate(ArchiveRoute)
+                        navController.navigate(BinRoute)
                     }
                 )
                 DropdownMenuItem(
