@@ -1,21 +1,24 @@
 package de.marquisproject.fionotes.data.notes.repositories
 
 import de.marquisproject.fionotes.data.notes.model.Note
-import de.marquisproject.fionotes.data.notes.sources.NoteLocalSource
+import de.marquisproject.fionotes.data.notes.sources.NoteDatabase
 import kotlinx.coroutines.flow.Flow
 
-class NoteRepository (private val noteLocalSource: NoteLocalSource) {
-    val allNotes: Flow<List<Note>> = noteLocalSource.getAllNotes()
-
-    fun insert(note: Note) {
-        noteLocalSource.insertNote(note)
+class NoteRepository (private val db: NoteDatabase) {
+    suspend fun upsertNote(note: Note) {
+        db.dao.upsertNote(note)
     }
 
-    fun update(note: Note) {
-        noteLocalSource.updateNote(note)
+    suspend fun deleteNote(note: Note) {
+        db.dao.upsertNote(note)
     }
 
-    fun delete(note: Note) {
-        noteLocalSource.deleteNote(note)
-    }
+    fun getAllNotes() = db.dao.getAllNotes()
+
+    fun getPinnedNotes() = db.dao.getPinnedNotes()
+
+    fun getNotesOrderedByDate() = db.dao.getNotesOrderedByDate()
+
+    fun searchNotes(searchQuery: String) = db.dao.searchNotes(searchQuery)
+
 }

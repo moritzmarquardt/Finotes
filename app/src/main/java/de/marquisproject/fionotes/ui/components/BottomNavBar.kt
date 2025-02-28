@@ -14,7 +14,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import de.marquisproject.fionotes.ArchiveRoute
 import de.marquisproject.fionotes.BinRoute
 import de.marquisproject.fionotes.HomeRoute

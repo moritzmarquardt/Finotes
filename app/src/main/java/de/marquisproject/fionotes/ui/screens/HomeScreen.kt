@@ -15,39 +15,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import de.marquisproject.fionotes.NoteRoute
+import androidx.compose.foundation.lazy.LazyColumn
 import de.marquisproject.fionotes.data.notes.model.Note
 import de.marquisproject.fionotes.ui.components.TopBarHome
 
+
 @Composable
 fun HomeScreen(
-    homeViewModel: HomeViewModel = viewModel(),
     navController: NavController,
+    viewModel: MainViewModel
 ) {
-    val homeUiState by homeViewModel.uiState.collectAsState()
+    
+    val uiState by viewModel.uiState.collectAsState()
 
-    val allNotes by homeViewModel.allNotes.collectAsState()
 
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopBarHome(
                 navController = navController,
-                updateQuery = { homeViewModel.updateQuery(it) },
-                searchQuery = homeUiState.searchQuery
+                updateQuery = { viewModel.updateQuery(it) },
+                searchQuery = uiState.searchQuery
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    homeViewModel.insert(
+                    viewModel.upsertNote(
                         Note(
-                            id = 123,
                             title = "New note",
                             content = "This is a new note",
-                            lastEdited = "2021-10-10"
+                            lastEdited = "2021-10-10",
+                            isPinned = false,
+                            color = 0,
                         )
                     )
                     //navController.navigate(NoteRoute(id = "new"))
@@ -62,8 +63,14 @@ fun HomeScreen(
         Card(
             modifier = Modifier.padding(innerPadding)
         ) {
-            Text(text = "Home Screen with filter: ${homeUiState.filter} and search query: ${homeUiState.searchQuery}")
+            Text(text = "Home Screen with filter: ${uiState.filter} and search query: ${uiState.searchQuery}")
         }
-        Text(text = "All notes: $allNotes")
+        LazyColumn {
+            for (note in uiState.notesList) {
+                item {
+                    Text(text = note.title)
+                }
+            }
+        }
     }
 }

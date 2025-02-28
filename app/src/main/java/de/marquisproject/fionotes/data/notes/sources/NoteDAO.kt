@@ -1,38 +1,35 @@
 package de.marquisproject.fionotes.data.notes.sources
 
-import androidx.lifecycle.LiveData
 import de.marquisproject.fionotes.data.notes.model.Note
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 
 @Dao
 interface NoteDAO {
-    @Query("SELECT * FROM notes_table")
-    fun getNotes(): Flow<List<Note>>
-    //flow is better than Live view because it updates if the underlying data changes
-
-    @Query("SELECT * FROM notes_table")
-    fun getPlainNotes(): List<Note>
-
-    @Query("SELECT * FROM notes_table WHERE id = :id")
-    fun getNoteDetail(id: Int): Flow<Note>
-
-    @Query("SELECT * FROM notes_table WHERE id = :id")
-    fun getPlainNoteDetail(id: Int): Note
-
-    @Update
-    fun updateNote(vararg notes: Note): Int
+    @Upsert
+    suspend fun upsertNote(note: Note)
+    // upsert is update if note with id already exists, insert otherwise
+    // suspend, so it works with coroutines
+    // can use it here because no data is returned
 
     @Delete
-    fun deleteNotes(vararg notes: Note): Int
+    suspend fun deleteNote(note: Note)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertNote(note: Note): Long
+    @Query("SELECT * FROM notes_table")
+    fun getAllNotes(): Flow<List<Note>>
+
+    @Query("SELECT * FROM notes_table WHERE isPinned = 1")
+    fun getPinnedNotes(): Flow<List<Note>>
+    // with flow we get an observable which will notify us when there is a change in the database
+
+    @Query("SELECT * FROM notes_table ORDER BY lastEdited DESC")
+    fun getNotesOrderedByDate(): Flow<List<Note>>
+
+    @Query("SELECT * FROM notes_table WHERE title LIKE :searchQuery OR content LIKE :searchQuery")
+    fun searchNotes(searchQuery: String): Flow<List<Note>>
 }
