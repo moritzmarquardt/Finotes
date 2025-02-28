@@ -49,6 +49,29 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         }
     }
 
+    fun setCurrentNoteId(noteId: Long) {
+        _uiState.value = _uiState.value.copy(currentNoteId = noteId)
+    }
+
+    fun setCurrentNote(note: Note) {
+        _uiState.value = _uiState.value.copy(currentNote = note)
+    }
+
+    fun updateCurrentNoteTitle(title: String) {
+        _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(title = title))
+        upsertNote(_uiState.value.currentNote)
+    }
+
+    fun updateCurrentNoteBody(body: String) {
+        _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(body = body))
+        upsertNote(_uiState.value.currentNote)
+    }
+
+    fun updateCurrentNoteIsPinned(isPinned: Boolean) {
+        _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(isPinned = isPinned))
+        upsertNote(_uiState.value.currentNote)
+    }
+
     fun updateQuery(query: String) {
         _searchQuery.value = query
     }

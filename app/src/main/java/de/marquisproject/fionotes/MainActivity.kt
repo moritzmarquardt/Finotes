@@ -69,10 +69,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable<NoteRoute> {
-                            val args = it.toRoute<NoteRoute>()
                             NoteScreen(
                                 navController = navController,
-                                id = args.id,
+                                viewModel = viewModel,
                             )
                         }
                         composable<SettingsRoute> {
@@ -100,6 +99,4 @@ object BinRoute
 object SettingsRoute
 
 @Serializable
-data class NoteRoute (
-    val id: Long
-)
+object NoteRoute

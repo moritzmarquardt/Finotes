@@ -1,45 +1,58 @@
 package de.marquisproject.fionotes.ui.screens
 
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import de.marquisproject.fionotes.R
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreen(
     navController: NavController,
-    id: Long
+    viewModel: MainViewModel,
 ) {
+
+    val uiState by viewModel.uiState.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
                 title = {
-                    Text(text = "Note View with id: $id")
+                    //Text(text = "Note View with id: ${uiState.currentNoteId}")
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -47,6 +60,18 @@ fun NoteScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        viewModel.updateCurrentNoteIsPinned(!uiState.currentNote.isPinned)
+                    }) {
+                        if (uiState.currentNote.isPinned){
+                            Icon(painterResource(id = R.drawable.baseline_star_24), contentDescription = "Localized description")
+                        } else {
+                            Icon(painterResource(id = R.drawable.outline_star_outline_24), contentDescription = "Localized description")
+                        }
+                    }
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
+                    }
                     IconButton(onClick = { /* do something */ }) {
                         Icon(Icons.Outlined.Delete, contentDescription = "Localized description")
                     }
@@ -56,23 +81,53 @@ fun NoteScreen(
         bottomBar = {
             BottomAppBar(
                 actions = {
-                    IconButton(onClick = { /* do something */ }) {
-                        Icon(Icons.Filled.Check, contentDescription = "Localized description")
-                    }
-                    IconButton(onClick = { /* do something */ }) {
-                        Icon(
-                            Icons.Filled.Edit,
-                            contentDescription = "Localized description",
-                        )
-                    }
-                }
+                    Text(text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(uiState.currentNote.lastEdited)))
+                },
             )
         }
     ) { innerPadding ->
-        Text(
-            modifier = Modifier.padding(innerPadding),
-            text = "Example of a scaffold with a bottom app bar."
-        )
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            TextField(
+                label = null,
+                value = uiState.currentNote.title,
+                onValueChange = { viewModel.updateCurrentNoteTitle(it) },
+                placeholder = { Text("Title") },
+                maxLines = 2,
+                textStyle = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .focusable()
+                    .fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
+            )
+            TextField(
+                label = null,
+                value = uiState.currentNote.body,
+                onValueChange = { viewModel.updateCurrentNoteBody(it) },
+                placeholder = { Text("Body") },
+                textStyle = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .focusable()
+                    .fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
+            )
+        }
+
     }
 
 }

@@ -81,13 +81,16 @@ fun HomeScreen(
                             .padding(3.dp)
                             .clickable(
                                 onClick = {
-                                    navController.navigate(NoteRoute(id = note.id))
+                                    viewModel.setCurrentNoteId(note.id)
+                                    viewModel.setCurrentNote(note)
+                                    navController.navigate(NoteRoute)
                                 }
                             )
                     ) {
-                        Text(text = note.title, style = MaterialTheme.typography.titleLarge)
+                        if (!note.title.isBlank()) {
+                            Text(text = note.title, style = MaterialTheme.typography.titleLarge)
+                        }
                         Text(text = note.body, style = MaterialTheme.typography.bodySmall)
-                        Text(text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(note.lastEdited)))
                     }
                 }
             }
