@@ -4,6 +4,8 @@ import de.marquisproject.fionotes.ui.screens.HomeScreen
 import de.marquisproject.fionotes.ui.screens.SettingsScreen
 import de.marquisproject.fionotes.ui.screens.NoteScreen
 import de.marquisproject.fionotes.data.notes.sources.NoteDatabase
+import de.marquisproject.fionotes.data.notes.sources.ArchiveDatabase
+import de.marquisproject.fionotes.data.notes.sources.BinDatabase
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -32,11 +34,29 @@ class MainActivity : ComponentActivity() {
             "note.db"
         ).build()
     }
+    private val archiveDb by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            ArchiveDatabase::class.java,
+            "archive.db"
+        ).build()
+    }
+    private val binDb by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            BinDatabase::class.java,
+            "bin.db"
+        ).build()
+    }
     val viewModel by viewModels<MainViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return MainViewModel(NoteRepository(db)) as T
+                    return MainViewModel(NoteRepository(
+                        db = db,
+                        archiveDb = archiveDb,
+                        binDb = binDb
+                    )) as T
                 }
             }
         }
@@ -61,11 +81,13 @@ class MainActivity : ComponentActivity() {
                         composable<ArchiveRoute> {
                             ArchiveScreen(
                                 navController = navController,
+                                viewModel = viewModel,
                             )
                         }
                         composable<BinRoute> {
                             BinScreen(
                                 navController = navController,
+                                viewModel = viewModel,
                             )
                         }
                         composable<NoteRoute> {

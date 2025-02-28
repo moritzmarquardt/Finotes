@@ -3,29 +3,21 @@ package de.marquisproject.fionotes.ui.screens
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,10 +61,16 @@ fun NoteScreen(
                             Icon(painterResource(id = R.drawable.outline_star_outline_24), contentDescription = "Localized description")
                         }
                     }
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = {
+                        viewModel.archiveNote(uiState.currentNote)
+                        navController.popBackStack()
+                    }) {
                         Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
                     }
-                    IconButton(onClick = { /* do something */ }) {
+                    IconButton(onClick = {
+                        viewModel.deleteNote(uiState.currentNote)
+                        navController.popBackStack()
+                    }) {
                         Icon(Icons.Outlined.Delete, contentDescription = "Localized description")
                     }
                 }
@@ -80,8 +78,10 @@ fun NoteScreen(
         },
         bottomBar = {
             BottomAppBar(
+                modifier = Modifier.height(56.dp),
                 actions = {
-                    Text(text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(uiState.currentNote.lastEdited)))
+                    val timestamp = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(uiState.currentNote.lastEdited))
+                    Text(text = "Last edited: $timestamp", style = MaterialTheme.typography.labelMedium)
                 },
             )
         }

@@ -22,5 +22,7 @@ data class Note(
     @ColumnInfo(name = "content") val body: String = "",
     @ColumnInfo(name = "lastEdited") val lastEdited: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "isPinned") val isPinned: Boolean = false,
+    @ColumnInfo(name = "isArchived") val isArchived: Boolean = false,
+    @ColumnInfo(name = "isBinned") val isBinned: Boolean = false,
     @ColumnInfo(name = "color") val color: Int = 0,
 )

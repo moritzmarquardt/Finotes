@@ -28,11 +28,16 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    val uiState = combine(_uiState, _notesList, _searchQuery) {
-        uiState, notesList, searchQuery ->
+    private val _archivedList = noteRepository.getAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _binList = noteRepository.getAllDeletedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
+    val uiState = combine(_uiState, _notesList, _searchQuery, _archivedList, _binList) {
+        uiState, notesList, searchQuery, archivedList, binList ->
         uiState.copy(
             notesList = notesList,
-            searchQuery = searchQuery)
+            searchQuery = searchQuery,
+            archivedList = archivedList,
+            binList = binList)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainUiState())
 
 
@@ -43,10 +48,16 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         }
     }
 
+    fun archiveNote(note: Note) {
+        viewModelScope.launch {
+            noteRepository.archiveNote(note)
+        }
+    }
+
     fun insertNewEmptyNote() {
        viewModelScope.launch {
            val emptyNote = Note()
-           val newId = noteRepository.insertNewNote(emptyNote)
+           val newId = noteRepository.insertNote(emptyNote)
            setCurrentNote(emptyNote.copy(id = newId))
        }
     }
@@ -55,6 +66,13 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         //viewmodel scope because we use suspend functions
         viewModelScope.launch {
             noteRepository.deleteNote(note)
+        }
+    }
+
+    fun deleteNoteFromBin(note: Note) {
+        //viewmodel scope because we use suspend functions
+        viewModelScope.launch {
+            noteRepository.deleteNoteFromBin(note)
         }
     }
 

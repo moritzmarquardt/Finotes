@@ -22,7 +22,7 @@ interface NoteDAO {
      */
 
     @Insert
-    suspend fun insertNewNote(note: Note) : Long
+    suspend fun insertNote(note: Note) : Long
     /**
      * Insert a new note into the database.
      * This is not suspend, because we want to return the id of the new inserted note

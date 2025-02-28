@@ -6,6 +6,8 @@ data class MainUiState(
     val searchQuery: String = "",
     val filter: String = "all",
     val notesList: List<Note> = emptyList(),
+    val archivedList: List<Note> = emptyList(),
+    val binList: List<Note> = emptyList(),
     val currentNoteId: Long? = null,
     val currentNote: Note = Note(),
 )
