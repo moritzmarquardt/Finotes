@@ -5,6 +5,7 @@ import de.marquisproject.fionotes.data.notes.model.Note
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Delete
+import androidx.room.Insert
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -18,6 +19,14 @@ interface NoteDAO {
      * If the note with the same id already exists, it will be updated else it will be inserted
      * suspend is used because it is a coroutine function and we use it here because no data is returned
      * @param note: Note object to be upserted
+     */
+
+    @Insert
+    suspend fun insertNewNote(note: Note) : Long
+    /**
+     * Insert a new note into the database.
+     * This is not suspend, because we want to return the id of the new inserted note
+     * @param note: Note object to be inserted
      */
 
     @Delete

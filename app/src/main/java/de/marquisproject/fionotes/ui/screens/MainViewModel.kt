@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import de.marquisproject.fionotes.data.notes.model.Note
 import de.marquisproject.fionotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -40,6 +41,14 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         viewModelScope.launch {
             noteRepository.upsertNote(note)
         }
+    }
+
+    fun insertNewEmptyNote() {
+       viewModelScope.launch {
+           val emptyNote = Note()
+           val newId = noteRepository.insertNewNote(emptyNote)
+           setCurrentNote(emptyNote.copy(id = newId))
+       }
     }
 
     fun deleteNote(note: Note) {

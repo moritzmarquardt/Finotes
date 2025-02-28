@@ -93,8 +93,7 @@ fun NoteScreen(
                 label = null,
                 value = uiState.currentNote.title,
                 onValueChange = { viewModel.updateCurrentNoteTitle(it) },
-                placeholder = { Text("Title") },
-                maxLines = 2,
+                placeholder = { Text("Title", style = MaterialTheme.typography.titleLarge) },
                 textStyle = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .focusable()
@@ -112,8 +111,8 @@ fun NoteScreen(
                 label = null,
                 value = uiState.currentNote.body,
                 onValueChange = { viewModel.updateCurrentNoteBody(it) },
-                placeholder = { Text("Body") },
-                textStyle = MaterialTheme.typography.bodySmall,
+                placeholder = { Text("Body", style = MaterialTheme.typography.bodyLarge) },
+                textStyle = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier
                     .focusable()
                     .fillMaxWidth(),

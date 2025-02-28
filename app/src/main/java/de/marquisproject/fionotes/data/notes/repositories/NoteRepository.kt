@@ -9,6 +9,10 @@ class NoteRepository (private val db: NoteDatabase) {
         db.dao.upsertNote(note)
     }
 
+    suspend fun insertNewNote(note: Note) : Long {
+        return db.dao.insertNewNote(note)
+    }
+
     suspend fun deleteNote(note: Note) {
         db.dao.upsertNote(note)
     }
