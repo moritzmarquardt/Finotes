@@ -22,10 +22,15 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.NoteRoute
-import de.marquisproject.fionotes.data.notes.model.Note
+import de.marquisproject.fionotes.ui.components.NoteCard
 import de.marquisproject.fionotes.ui.components.TopBarHome
 
 
@@ -65,38 +70,14 @@ fun HomeScreen(
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
                 items(uiState.notesList) { note ->
-                    OutlinedCard(
-                        modifier = Modifier
-                            .padding(3.dp)
-                            .clickable(
-                                onClick = {
-                                    viewModel.setCurrentNoteId(note.id)
-                                    viewModel.setCurrentNote(note)
-                                    navController.navigate(NoteRoute)
-                                }
-                            )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            if (note.title.isNotBlank()) {
-                                Text(
-                                    text = note.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            if (note.body.isNotBlank()) {
-                                Text(
-                                    text = note.body,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 7,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
+                    NoteCard(
+                        setCurrentNoteId = { viewModel.setCurrentNoteId(it) },
+                        setCurrentNote = { viewModel.setCurrentNote(it) },
+                        note = note,
+                        navigate = { navController.navigate(NoteRoute) },
+                        searchQuery = uiState.searchQuery
+                    )
+
                 }
             }
         )

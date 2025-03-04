@@ -45,6 +45,6 @@ interface NoteDAO {
     @Query("SELECT * FROM notes_table WHERE isPinned = 1")
     fun getPinnedNotes(): Flow<List<Note>>
 
-    @Query("SELECT * FROM notes_table WHERE title LIKE :searchQuery OR content LIKE :searchQuery")
+    @Query("SELECT * FROM notes_table WHERE title LIKE '%' || :searchQuery || '%' OR content LIKE '%' || :searchQuery || '%' ORDER BY lastEdited DESC")
     fun searchNotes(searchQuery: String): Flow<List<Note>>
 }

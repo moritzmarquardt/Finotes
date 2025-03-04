@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.NoteRoute
 import de.marquisproject.fionotes.data.notes.model.Note
+import de.marquisproject.fionotes.ui.components.NoteCard
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,38 +75,13 @@ fun ArchiveScreen(
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
                 items(uiState.archivedList) { note ->
-                    OutlinedCard(
-                        modifier = Modifier
-                            .padding(3.dp)
-                            .clickable(
-                                onClick = {
-                                    viewModel.setCurrentNoteId(note.id)
-                                    viewModel.setCurrentNote(note)
-                                    navController.navigate(NoteRoute)
-                                }
-                            )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            if (note.title.isNotBlank()) {
-                                Text(
-                                    text = note.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            if (note.body.isNotBlank()) {
-                                Text(
-                                    text = note.body,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 7,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
+                    NoteCard(
+                        setCurrentNoteId = { viewModel.setCurrentNoteId(it) },
+                        setCurrentNote = { viewModel.setCurrentNote(it) },
+                        note = note,
+                        navigate = { navController.navigate(NoteRoute) },
+                        searchQuery = uiState.searchQuery
+                    )
                 }
             }
         )

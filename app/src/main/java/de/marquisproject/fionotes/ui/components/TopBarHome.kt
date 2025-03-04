@@ -15,8 +15,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,13 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import de.marquisproject.fionotes.ArchiveRoute
 import de.marquisproject.fionotes.BinRoute
 import de.marquisproject.fionotes.R
-import de.marquisproject.fionotes.SettingsRoute
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,19 +51,19 @@ fun TopBarHome(
 
     CenterAlignedTopAppBar(
         title = {
-            SearchBarDefaults.InputField(
+            TextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(CircleShape)
                     .focusRequester(focusRequester)
-                    .focusable(),
-                query = searchQuery,
-                onQueryChange = updateQuery,
-                onSearch = {
-                    focusManager.clearFocus()
-                },
-                expanded = false,
-                onExpandedChange = { },
+                    .focusable()
+                    .onFocusChanged { focusState ->
+                        if (!focusState.isFocused) {
+                            updateQuery("")
+                        }
+                    },
+                value = searchQuery,
+                onValueChange = updateQuery,
                 leadingIcon = {
                     Icon(
                         Icons.Filled.Search,
@@ -77,9 +79,17 @@ fun TopBarHome(
                         }
                     }
                 },
-                placeholder = { Text("Search Fionotes") },
+                placeholder = { Text("Search Finotes") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                )
             )
-
         },
         actions = {
             IconButton(onClick = { expandedMenu = !expandedMenu }) {
