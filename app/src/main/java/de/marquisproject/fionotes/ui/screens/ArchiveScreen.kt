@@ -76,7 +76,6 @@ fun ArchiveScreen(
             content = {
                 items(uiState.archivedList) { note ->
                     NoteCard(
-                        setCurrentNoteId = { viewModel.setCurrentNoteId(it) },
                         setCurrentNote = { viewModel.setCurrentNote(it) },
                         note = note,
                         navigate = { navController.navigate(NoteRoute) },

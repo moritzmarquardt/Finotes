@@ -17,6 +17,6 @@ interface ArchiveDAO {
     @Delete
     suspend fun deleteNote(note: Note)
 
-    @Query("SELECT * FROM notes_table ORDER BY lastEdited DESC")
+    @Query("SELECT * FROM notes_table ORDER BY dateCreated DESC")
     fun getAllNotes(): Flow<List<Note>>
 }

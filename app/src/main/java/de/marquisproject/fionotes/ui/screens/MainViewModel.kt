@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import de.marquisproject.fionotes.data.notes.model.Note
 import de.marquisproject.fionotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -41,10 +40,18 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainUiState())
 
 
-    fun upsertNote(note: Note) {
+    fun updateNote(note: Note) {
         //viewmodel scope because we use suspend functions
         viewModelScope.launch {
-            noteRepository.upsertNote(note)
+            noteRepository.updateNote(note)
+        }
+    }
+
+    fun insertNewEmptyNote() {
+        viewModelScope.launch {
+            val emptyNote = Note()
+            val newId = noteRepository.insertNote(emptyNote)
+            setCurrentNote(emptyNote.copy(id = newId))
         }
     }
 
@@ -54,18 +61,22 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         }
     }
 
-    fun insertNewEmptyNote() {
-       viewModelScope.launch {
-           val emptyNote = Note()
-           val newId = noteRepository.insertNote(emptyNote)
-           setCurrentNote(emptyNote.copy(id = newId))
-       }
+    fun unarchiveNote (note: Note) {
+        viewModelScope.launch {
+            noteRepository.unarchiveNote(note)
+        }
     }
 
-    fun deleteNote(note: Note) {
+    fun binNote(note: Note) {
         //viewmodel scope because we use suspend functions
         viewModelScope.launch {
-            noteRepository.deleteNote(note)
+            noteRepository.binNote(note)
+        }
+    }
+
+    fun restoreNote(note: Note) {
+        viewModelScope.launch {
+            noteRepository.restoreNote(note)
         }
     }
 
@@ -76,27 +87,23 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         }
     }
 
-    fun setCurrentNoteId(noteId: Long) {
-        _uiState.value = _uiState.value.copy(currentNoteId = noteId)
-    }
-
     fun setCurrentNote(note: Note) {
         _uiState.value = _uiState.value.copy(currentNote = note)
     }
 
     fun updateCurrentNoteTitle(title: String) {
         _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(title = title))
-        upsertNote(_uiState.value.currentNote)
+        updateNote(_uiState.value.currentNote)
     }
 
     fun updateCurrentNoteBody(body: String) {
         _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(body = body))
-        upsertNote(_uiState.value.currentNote)
+        updateNote(_uiState.value.currentNote)
     }
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
         _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(isPinned = isPinned))
-        upsertNote(_uiState.value.currentNote)
+        updateNote(_uiState.value.currentNote)
     }
 
     fun updateQuery(query: String) {

@@ -68,7 +68,7 @@ fun NoteScreen(
                         Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
                     }
                     IconButton(onClick = {
-                        viewModel.deleteNote(uiState.currentNote)
+                        viewModel.binNote(uiState.currentNote)
                         navController.popBackStack()
                     }) {
                         Icon(Icons.Outlined.Delete, contentDescription = "Localized description")
@@ -80,7 +80,7 @@ fun NoteScreen(
             BottomAppBar(
                 modifier = Modifier.height(56.dp),
                 actions = {
-                    val timestamp = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(uiState.currentNote.lastEdited))
+                    val timestamp = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(uiState.currentNote.dateCreated))
                     Text(text = "Last edited: $timestamp", style = MaterialTheme.typography.labelMedium)
                 },
             )
@@ -126,7 +126,5 @@ fun NoteScreen(
                 ),
             )
         }
-
     }
-
 }

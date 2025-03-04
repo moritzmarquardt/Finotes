@@ -1,53 +1,55 @@
 package de.marquisproject.fionotes.data.notes.repositories
 
 import de.marquisproject.fionotes.data.notes.model.Note
+import de.marquisproject.fionotes.data.notes.model.NoteStatus
 import de.marquisproject.fionotes.data.notes.sources.ArchiveDatabase
 import de.marquisproject.fionotes.data.notes.sources.BinDatabase
 import de.marquisproject.fionotes.data.notes.sources.NoteDatabase
 
 class NoteRepository (
-    private val db: NoteDatabase,
+    private val noteDb: NoteDatabase,
     private val archiveDb: ArchiveDatabase,
     private val binDb: BinDatabase
 ) {
-    suspend fun upsertNote(note: Note) {
-        db.dao.upsertNote(note)
+    suspend fun updateNote(note: Note) {
+        noteDb.dao.updateNote(note)
     }
 
     suspend fun insertNote(note: Note) : Long {
-        return db.dao.insertNote(note)
+        return noteDb.dao.insertNote(note)
     }
 
-    suspend fun deleteNote(note: Note) {
-        db.dao.deleteNote(note)
+    suspend fun binNote(note: Note) {
+        noteDb.dao.deleteNote(note)
         archiveDb.dao.deleteNote(note)
-        binDb.dao.insertNote(note)
+        binDb.dao.insertNote(note.copy(noteStatus = NoteStatus.BINNED))
     }
 
-    fun getAllNotes() = db.dao.getAllNotes()
-
-    fun getAllArchivedNotes() = archiveDb.dao.getAllNotes()
-
-    fun getAllDeletedNotes() = binDb.dao.getAllNotes()
-
-    fun getNoteById(noteId: Long) = db.dao.getNoteById(noteId)
-
-    fun getPinnedNotes() = db.dao.getPinnedNotes()
-
-    fun searchNotes(searchQuery: String) = db.dao.searchNotes(searchQuery)
-
-    suspend fun archiveNote(note: Note) {
-        archiveDb.dao.insertNote(note)
-        db.dao.deleteNote(note)
-    }
-
-    suspend fun unarchiveNote(note: Note) {
-        db.dao.insertNote(note)
-        archiveDb.dao.deleteNote(note)
+    suspend fun restoreNote (note: Note) {
+        binDb.dao.deleteNote(note)
+        noteDb.dao.insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
     }
 
     suspend fun deleteNoteFromBin(note: Note) {
         binDb.dao.deleteNote(note)
     }
+
+    suspend fun archiveNote(note: Note) {
+        archiveDb.dao.insertNote(note.copy(noteStatus = NoteStatus.ARCHIVED))
+        noteDb.dao.deleteNote(note)
+    }
+
+    suspend fun unarchiveNote(note: Note) {
+        noteDb.dao.insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+        archiveDb.dao.deleteNote(note)
+    }
+
+    fun getAllNotes() = noteDb.dao.getAllNotes()
+
+    fun searchNotes(searchQuery: String) = noteDb.dao.getNotesWithQuery(searchQuery)
+
+    fun getAllArchivedNotes() = archiveDb.dao.getAllNotes()
+
+    fun getAllDeletedNotes() = binDb.dao.getAllNotes()
 
 }

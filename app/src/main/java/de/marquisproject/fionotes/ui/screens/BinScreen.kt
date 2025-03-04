@@ -73,7 +73,6 @@ fun BinScreen(
                             .padding(3.dp)
                             .clickable(
                                 onClick = {
-                                    viewModel.setCurrentNoteId(note.id)
                                     viewModel.setCurrentNote(note)
                                     navController.navigate(NoteRoute)
                                 }

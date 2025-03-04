@@ -19,7 +19,6 @@ import de.marquisproject.fionotes.data.notes.model.Note
 
 @Composable
 fun NoteCard(
-    setCurrentNoteId: (Long) -> Unit,
     setCurrentNote: (Note) -> Unit,
     note: Note,
     navigate: () -> Unit,
@@ -54,7 +53,6 @@ fun NoteCard(
             .padding(4.dp)
             .clickable(
                 onClick = {
-                    setCurrentNoteId(note.id)
                     setCurrentNote(note)
                     navigate()
                 }
