@@ -43,7 +43,7 @@ interface NoteDAO {
      * With flow we get an observable which will notify us when there is a change in the database.
      * @return Flow of List of Notes ordered by lastEdited in descending order
      */
-    @Query("SELECT * FROM notes_table ORDER BY dateCreated DESC, isPinned DESC")
+    @Query("SELECT * FROM notes_table ORDER BY isPinned DESC, dateCreated DESC")
     fun getAllNotes(): Flow<List<Note>>
 
     /**
@@ -51,6 +51,6 @@ interface NoteDAO {
      * @param searchQuery String to search for in the title or body of the notes
      * @return Flow of List of Notes ordered by lastEdited in descending order
      */
-    @Query("SELECT * FROM notes_table WHERE title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%' ORDER BY dateCreated DESC, isPinned DESC")
+    @Query("SELECT * FROM notes_table WHERE title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%' ORDER BY isPinned DESC, dateCreated DESC")
     fun getNotesWithQuery(searchQuery: String): Flow<List<Note>>
 }

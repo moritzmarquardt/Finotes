@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import de.marquisproject.fionotes.R
+import de.marquisproject.fionotes.data.notes.model.NoteStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -52,26 +53,57 @@ fun NoteScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        viewModel.updateCurrentNoteIsPinned(!uiState.currentNote.isPinned)
-                    }) {
-                        if (uiState.currentNote.isPinned){
-                            Icon(painterResource(id = R.drawable.baseline_star_24), contentDescription = "Localized description")
-                        } else {
-                            Icon(painterResource(id = R.drawable.outline_star_outline_24), contentDescription = "Localized description")
+                    if (uiState.currentNote.noteStatus == NoteStatus.ACTIVE) {
+                        IconButton(onClick = {
+                            viewModel.updateCurrentNoteIsPinned(!uiState.currentNote.isPinned)
+                        }) {
+                            if (uiState.currentNote.isPinned) {
+                                Icon(
+                                    painterResource(id = R.drawable.baseline_star_24),
+                                    contentDescription = "Localized description"
+                                )
+                            } else {
+                                Icon(
+                                    painterResource(id = R.drawable.outline_star_outline_24),
+                                    contentDescription = "Localized description"
+                                )
+                            }
                         }
                     }
-                    IconButton(onClick = {
-                        viewModel.archiveNote(uiState.currentNote)
-                        navController.popBackStack()
-                    }) {
-                        Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
+                    if (uiState.currentNote.noteStatus == NoteStatus.ACTIVE) {
+                        IconButton(onClick = {
+                            viewModel.archiveNote(uiState.currentNote)
+                            navController.popBackStack()
+                        }) {
+                            Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
+                        }
                     }
-                    IconButton(onClick = {
-                        viewModel.binNote(uiState.currentNote)
-                        navController.popBackStack()
-                    }) {
-                        Icon(Icons.Outlined.Delete, contentDescription = "Localized description")
+                    if (uiState.currentNote.noteStatus == NoteStatus.ARCHIVED) {
+                        IconButton(onClick = {
+                            viewModel.unarchiveNote(uiState.currentNote)
+                            navController.popBackStack()
+                        }) {
+                            Icon(painterResource(id = R.drawable.outline_unarchive_24), contentDescription = "Localized description")
+                        }
+                    }
+                    if (uiState.currentNote.noteStatus == NoteStatus.BINNED) {
+                        IconButton(onClick = {
+                            viewModel.restoreNote(uiState.currentNote)
+                            navController.popBackStack()
+                        }) {
+                            Icon(painterResource(id = R.drawable.baseline_restore_from_trash_24), contentDescription = "Localized description")
+                        }
+                    }
+                    if (uiState.currentNote.noteStatus == NoteStatus.ACTIVE || uiState.currentNote.noteStatus == NoteStatus.ARCHIVED) {
+                        IconButton(onClick = {
+                            viewModel.binNote(uiState.currentNote)
+                            navController.popBackStack()
+                        }) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = "Localized description"
+                            )
+                        }
                     }
                 }
             )

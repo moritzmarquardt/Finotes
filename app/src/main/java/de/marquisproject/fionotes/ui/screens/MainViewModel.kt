@@ -3,6 +3,7 @@ package de.marquisproject.fionotes.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.marquisproject.fionotes.data.notes.model.Note
+import de.marquisproject.fionotes.data.notes.model.NoteStatus
 import de.marquisproject.fionotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,7 +48,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         }
     }
 
-    fun insertNewEmptyNote() {
+    fun insertAndShowNewEmptyNote() {
         viewModelScope.launch {
             val emptyNote = Note()
             val newId = noteRepository.insertNote(emptyNote)
@@ -103,6 +104,11 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
         _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(isPinned = isPinned))
+        updateNote(_uiState.value.currentNote)
+    }
+
+    fun updateCurrentNoteStatus(noteStatus: NoteStatus) {
+        _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(noteStatus = noteStatus))
         updateNote(_uiState.value.currentNote)
     }
 

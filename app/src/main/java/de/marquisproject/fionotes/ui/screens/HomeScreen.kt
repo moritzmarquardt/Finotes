@@ -55,7 +55,7 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.insertNewEmptyNote()
+                    viewModel.insertAndShowNewEmptyNote()
                     navController.navigate(NoteRoute)
                 },
                 containerColor = BottomAppBarDefaults.bottomAppBarFabColor,

@@ -46,8 +46,6 @@ fun TopBarHome(
     searchQuery: String,
 ) {
     var expandedMenu by remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
 
     CenterAlignedTopAppBar(
         title = {
@@ -55,7 +53,6 @@ fun TopBarHome(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(CircleShape)
-                    .focusRequester(focusRequester)
                     .focusable()
                     .onFocusChanged { focusState ->
                         if (!focusState.isFocused) {
