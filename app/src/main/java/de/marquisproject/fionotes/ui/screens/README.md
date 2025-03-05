@@ -1,1 +1,0 @@
-I constructed the structure of this foloowing the android dev guidelines here: https://developer.android.com/topic/modularization/patterns
