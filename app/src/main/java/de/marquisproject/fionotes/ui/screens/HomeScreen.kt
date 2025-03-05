@@ -18,8 +18,6 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.IconButton
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.NoteRoute
