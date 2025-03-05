@@ -41,7 +41,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainUiState())
 
 
-    fun updateNote(note: Note) {
+    private fun updateNote(note: Note) {
         //viewmodel scope because we use suspend functions
         viewModelScope.launch {
             noteRepository.updateNote(note)

@@ -1,20 +1,32 @@
 package de.marquisproject.fionotes.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.data.notes.model.Note
 
 @Composable
@@ -58,24 +70,39 @@ fun NoteCard(
                 }
             )
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
         ) {
-            if (note.title.isNotBlank()) {
-                Text(
-                    text = highlightText(note.title, searchQuery),
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+            if (note.isPinned){
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_push_pin_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(20.dp)
                 )
             }
-            if (note.body.isNotBlank()) {
-                Text(
-                    text = highlightText(note.body, searchQuery),
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 7,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Column{
+                if (note.title.isNotBlank()) {
+                    Text(
+                        modifier = Modifier.padding(end = 20.dp),
+                        text = highlightText(note.title, searchQuery),
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (note.body.isNotBlank()) {
+                    Text(
+                        text = highlightText(note.body, searchQuery),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 7,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }

@@ -74,12 +74,12 @@ fun NoteScreen(
                         }) {
                             if (uiState.currentNote.isPinned) {
                                 Icon(
-                                    painterResource(id = R.drawable.baseline_star_24),
+                                    painterResource(id = R.drawable.baseline_push_pin_24),
                                     contentDescription = "Localized description"
                                 )
                             } else {
                                 Icon(
-                                    painterResource(id = R.drawable.outline_star_outline_24),
+                                    painterResource(id = R.drawable.outline_push_pin_24),
                                     contentDescription = "Localized description"
                                 )
                             }
@@ -140,7 +140,7 @@ fun NoteScreen(
                 modifier = Modifier.height(56.dp),
                 actions = {
                     val timestamp = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(uiState.currentNote.dateCreated))
-                    Text(text = "Last edited: $timestamp", style = MaterialTheme.typography.labelMedium)
+                    Text(text = "Created on: $timestamp", style = MaterialTheme.typography.labelMedium)
                 },
             )
         }
