@@ -1,6 +1,8 @@
 package de.marquisproject.fionotes.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +11,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.internal.isLiveLiteralsEnabled
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,12 +33,14 @@ import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.data.notes.model.Note
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteCard(
-    setCurrentNote: (Note) -> Unit,
     note: Note,
-    navigate: () -> Unit,
-    searchQuery: String
+    searchQuery: String,
+    selected: Boolean,
+    onClick: (Note) -> Unit,
+    onLongClick: (Note) -> Unit
 ) {
     fun highlightText(text: String, query: String): AnnotatedString {
         if (query.isBlank()) return AnnotatedString(text)
@@ -58,17 +64,29 @@ fun NoteCard(
         }
     }
 
+    val colors = if (selected) {
+        CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        )
+    } else {
+        CardDefaults.outlinedCardColors()
+    }
+
 
 
     OutlinedCard(
         modifier = Modifier
             .padding(4.dp)
-            .clickable(
+            .combinedClickable(
                 onClick = {
-                    setCurrentNote(note)
-                    navigate()
+                    onClick(note)
+                },
+                onLongClick = {
+                    onLongClick(note)
                 }
-            )
+            ),
+        colors = colors
     ) {
         Box(
             modifier = Modifier

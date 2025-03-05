@@ -1,6 +1,7 @@
 package de.marquisproject.fionotes.ui.screens
 
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,14 +18,24 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.TopAppBar
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import de.marquisproject.fionotes.NoteRoute
+import de.marquisproject.fionotes.R
+import de.marquisproject.fionotes.ui.components.NoteCard
+import de.marquisproject.fionotes.ui.components.SelectionBar
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,31 +46,70 @@ fun BinScreen(
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val openFinalDeleteAlert = remember { mutableStateOf(false) }
+
+    BackHandler {
+        if (uiState.inSelectionMode) {
+            viewModel.clearSelection()
+        } else {
+            navController.popBackStack()
+        }
+    }
+
 
 
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Bin")
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back press")
-                    }
-                },
-
+            if (uiState.inSelectionMode) {
+                SelectionBar(
+                    numSelected = uiState.selectedNotes.size,
+                    onSelectionClear = { viewModel.clearSelection() },
+                    actionButtons = listOf(
+                        painterResource(id = R.drawable.baseline_restore_from_trash_24) to { viewModel.restoreSelectedNotes() },
+                        painterResource(id = R.drawable.outline_delete_24) to { openFinalDeleteAlert.value = true }
+                    )
                 )
+            } else {
+                TopAppBar(
+                    title = {
+                        Text(text = "Bin")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back press"
+                            )
+                        }
+                    },
+                    )
+            }
+        },
+        floatingActionButton = {
+            if (uiState.binList.isNotEmpty()) {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        viewModel.selectAllBinned()
+                    },
+                ) {
+                    Text("Select all")
+                }
+            }
         }
     ) { innerPadding ->
         if (uiState.binList.isEmpty()) {
             Column(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "No binned notes",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "No notes in the bin",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Gray
                 )
             }
         }
@@ -68,39 +118,45 @@ fun BinScreen(
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
                 items(uiState.binList) { note ->
-                    OutlinedCard(
-                        modifier = Modifier
-                            .padding(3.dp)
-                            .clickable(
-                                onClick = {
-                                    viewModel.setCurrentNote(note)
-                                    navController.navigate(NoteRoute)
-                                }
-                            )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            if (note.title.isNotBlank()) {
-                                Text(
-                                    text = note.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            if (note.body.isNotBlank()) {
-                                Text(
-                                    text = note.body,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 7,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                    NoteCard(
+                        note = note,
+                        searchQuery = uiState.searchQuery,
+                        selected = uiState.selectedNotes.contains(note),
+                        onClick = {
+                            viewModel.shortClickSelect(note = note, navController = navController)
+                        },
+                        onLongClick = {
+                            viewModel.longClickSelect(note = note)
                         }
-                    }
+                    )
                 }
             }
         )
+        when {
+            openFinalDeleteAlert.value -> {
+                AlertDialog(
+                    onDismissRequest = { openFinalDeleteAlert.value = false },
+                    title = {
+                        Text("Delete selected notes permanently")
+                    },
+                    text = {
+                        Text("This deletion is irreversible")
+                    },
+                    confirmButton = {
+                        Button(onClick = {
+                            openFinalDeleteAlert.value = false
+                            viewModel.permanentlyDeleteSelection()
+                        }) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { openFinalDeleteAlert.value = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+        }
     }
 }

@@ -2,6 +2,8 @@ package de.marquisproject.fionotes.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
+import de.marquisproject.fionotes.NoteRoute
 import de.marquisproject.fionotes.data.notes.model.Note
 import de.marquisproject.fionotes.data.notes.model.NoteStatus
 import de.marquisproject.fionotes.data.notes.repositories.NoteRepository
@@ -114,6 +116,106 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun updateQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun longClickSelect(note: Note) {
+        if (!_uiState.value.inSelectionMode) {
+            _uiState.value = _uiState.value.copy(inSelectionMode = true)
+        }
+        val selectedNotes = _uiState.value.selectedNotes.toMutableList()
+        if (!selectedNotes.contains(note)) {
+            selectedNotes.add(note)
+        }
+        _uiState.value = _uiState.value.copy(selectedNotes = selectedNotes)
+    }
+
+    fun shortClickSelect(note: Note, navController: NavController) {
+        if(_uiState.value.inSelectionMode) {
+            val selectedNotes = _uiState.value.selectedNotes.toMutableList()
+            if (selectedNotes.contains(note)) {
+                selectedNotes.remove(note)
+                if (selectedNotes.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(inSelectionMode = false)
+                }
+            } else {
+                selectedNotes.add(note)
+            }
+            _uiState.value = _uiState.value.copy(selectedNotes = selectedNotes)
+        } else {
+            setCurrentNote(note)
+            navController.navigate(NoteRoute)
+        }
+    }
+
+    fun clearSelection() {
+        _uiState.value = _uiState.value.copy(selectedNotes = emptyList(), inSelectionMode = false)
+    }
+
+    fun selectAllBinned() {
+        _uiState.value = _uiState.value.copy(selectedNotes = _binList.value, inSelectionMode = true)
+    }
+
+    fun archiveSelectedNotes() {
+        viewModelScope.launch {
+            _uiState.value.selectedNotes.forEach { note ->
+                noteRepository.archiveNote(note)
+            }
+            clearSelection()
+        }
+    }
+
+    fun unarchiveSelectedNotes() {
+        viewModelScope.launch {
+            _uiState.value.selectedNotes.forEach { note ->
+                noteRepository.unarchiveNote(note)
+            }
+            clearSelection()
+        }
+    }
+
+    fun binSelectedNotes() {
+        viewModelScope.launch {
+            _uiState.value.selectedNotes.forEach { note ->
+                noteRepository.binNote(note)
+            }
+            clearSelection()
+        }
+    }
+
+    fun restoreSelectedNotes() {
+        viewModelScope.launch {
+            _uiState.value.selectedNotes.forEach { note ->
+                noteRepository.restoreNote(note)
+            }
+            clearSelection()
+        }
+    }
+
+    fun permanentlyDeleteSelection() {
+        viewModelScope.launch {
+            _uiState.value.selectedNotes.forEach { note ->
+                noteRepository.deleteNoteFromBin(note)
+            }
+            clearSelection()
+        }
+    }
+
+    fun pinSelectedNotes() {
+        viewModelScope.launch {
+            _uiState.value.selectedNotes.forEach { note ->
+                noteRepository.updateNote(note.copy(isPinned = true))
+            }
+            clearSelection()
+        }
+    }
+
+    fun unpinSelectedNotes() {
+        viewModelScope.launch {
+            _uiState.value.selectedNotes.forEach { note ->
+                noteRepository.updateNote(note.copy(isPinned = false))
+            }
+            clearSelection()
+        }
     }
 
 }

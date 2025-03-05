@@ -8,4 +8,6 @@ data class MainUiState(
     val archivedList: List<Note> = emptyList(),
     val binList: List<Note> = emptyList(),
     val currentNote: Note = Note(),
+    val selectedNotes: List<Note> = emptyList(),
+    val inSelectionMode: Boolean = false
 )

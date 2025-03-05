@@ -1,6 +1,8 @@
 package de.marquisproject.fionotes.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,16 +24,23 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.NoteRoute
+import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.data.notes.model.Note
 import de.marquisproject.fionotes.ui.components.NoteCard
+import de.marquisproject.fionotes.ui.components.SelectionBar
+import de.marquisproject.fionotes.ui.components.TopBarHome
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,30 +52,56 @@ fun ArchiveScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    BackHandler {
+        if (uiState.inSelectionMode) {
+            viewModel.clearSelection()
+        } else {
+            navController.popBackStack()
+        }
+    }
+
 
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Archive")
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back press")
-                    }
-                },
-
-            )
+            if (uiState.inSelectionMode) {
+                SelectionBar(
+                    numSelected = uiState.selectedNotes.size,
+                    onSelectionClear = { viewModel.clearSelection() },
+                    actionButtons = listOf(
+                        painterResource(id = R.drawable.outline_unarchive_24) to { viewModel.unarchiveSelectedNotes() },
+                        painterResource(id = R.drawable.outline_delete_24) to { viewModel.binSelectedNotes() }
+                    )
+                )
+            } else {
+                TopAppBar(
+                    title = {
+                        Text(text = "Archive")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back press"
+                            )
+                        }
+                    },
+                )
+            }
         }
     ) { innerPadding ->
         if (uiState.archivedList.isEmpty()) {
             Column(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "No archived notes",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "No notes in the archive",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Gray
                 )
             }
         }
@@ -76,10 +111,15 @@ fun ArchiveScreen(
             content = {
                 items(uiState.archivedList) { note ->
                     NoteCard(
-                        setCurrentNote = { viewModel.setCurrentNote(it) },
                         note = note,
-                        navigate = { navController.navigate(NoteRoute) },
-                        searchQuery = uiState.searchQuery
+                        searchQuery = uiState.searchQuery,
+                        selected = uiState.selectedNotes.contains(note),
+                        onClick = {
+                            viewModel.shortClickSelect(note = note, navController = navController)
+                        },
+                        onLongClick = {
+                            viewModel.longClickSelect(note = note)
+                        }
                     )
                 }
             }
