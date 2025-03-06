@@ -17,10 +17,17 @@ This is a project for friends and family.
 
 ## Screenshots
 
-![Home Screen](screenshots/Home_Screen.png)
-![Search Screen](screenshots/Search_Screen.png)
-![Note Screen](screenshots/Note_Screen.png)
-![Swipe to archive](screenshots/Swipe_to_Archive.png)
+![Home Screen](screenshots/Home_Screen.png){ width=50% }
+*Home Screen*
+
+![Search Screen](screenshots/Search_Screen.png){ width=50% }
+*Search Screen*
+
+![Note Screen](screenshots/Note_Screen.png){ width=50% }
+*Note Screen*
+
+![Swipe to archive](screenshots/Swipe_to_Archive.png){ width=50% }
+*Swipe to Archive*
 
 
 ## Contributing and Development
