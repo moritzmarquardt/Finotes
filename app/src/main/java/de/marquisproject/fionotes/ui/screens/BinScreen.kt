@@ -115,7 +115,10 @@ fun BinScreen(
             modifier = Modifier.padding(innerPadding),
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
-                items(uiState.binList) { note ->
+                items(
+                    items = uiState.binList,
+                    key = { note -> note.id }
+                ) { note ->
                     NoteCard(
                         note = note,
                         searchQuery = uiState.searchQuery,

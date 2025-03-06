@@ -97,7 +97,10 @@ fun ArchiveScreen(
             modifier = Modifier.padding(innerPadding),
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
-                items(uiState.archivedList) { note ->
+                items(
+                    items = uiState.archivedList,
+                    key = { note -> note.id } //necessary for the swiping to work
+                ) { note ->
                     NoteCard(
                         note = note,
                         searchQuery = uiState.searchQuery,
@@ -107,7 +110,9 @@ fun ArchiveScreen(
                         },
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
-                        }
+                        },
+                        onSwipe = { viewModel.binNote(note) },
+                        swipeIcon = painterResource(id = R.drawable.outline_delete_24)
                     )
                 }
             }

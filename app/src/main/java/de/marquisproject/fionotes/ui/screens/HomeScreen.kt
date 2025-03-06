@@ -35,12 +35,8 @@ fun HomeScreen(
     
     val uiState by viewModel.uiState.collectAsState()
 
-    BackHandler {
-        if (uiState.inSelectionMode) {
-            viewModel.clearSelection()
-        } else {
-            navController.popBackStack()
-        }
+    BackHandler(uiState.inSelectionMode) {
+        viewModel.clearSelection()
     }
 
 
@@ -88,7 +84,10 @@ fun HomeScreen(
             modifier = Modifier.padding(innerPadding),
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
-                items(uiState.notesList) { note ->
+                items(
+                    items = uiState.notesList,
+                    key = { note -> note.id }
+                ) { note ->
                     NoteCard(
                         note = note,
                         searchQuery = uiState.searchQuery,
@@ -98,9 +97,10 @@ fun HomeScreen(
                         },
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
-                        }
+                        },
+                        onSwipe = { viewModel.archiveNote(note) },
+                        swipeIcon = painterResource(id = R.drawable.outline_archive_24)
                     )
-
                 }
             }
         )
