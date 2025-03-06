@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.data.notes.model.NoteStatus
+import de.marquisproject.fionotes.ui.viewmodels.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

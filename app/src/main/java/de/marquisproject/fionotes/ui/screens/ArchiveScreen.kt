@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.ui.components.NoteCard
 import de.marquisproject.fionotes.ui.components.SelectionBar
+import de.marquisproject.fionotes.ui.viewmodels.MainViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -135,16 +135,13 @@ fun NoteCard(
 ) {
     if (onSwipe != null) {
         val dismissState = rememberSwipeToDismissBoxState(
-            confirmValueChange = {
-                when (it) {
-                    SwipeToDismissBoxValue.StartToEnd -> {
-                        onSwipe(note)
-                    }
-
-                    SwipeToDismissBoxValue.EndToStart -> TODO()
-                    SwipeToDismissBoxValue.Settled -> return@rememberSwipeToDismissBoxState false
+            confirmValueChange = { value ->
+                if (value == SwipeToDismissBoxValue.StartToEnd) {
+                    onSwipe(note)
+                    true
+                } else {
+                    false
                 }
-                return@rememberSwipeToDismissBoxState true
             }
         )
 

@@ -1,4 +1,4 @@
-package de.marquisproject.fionotes.ui.screens
+package de.marquisproject.fionotes.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

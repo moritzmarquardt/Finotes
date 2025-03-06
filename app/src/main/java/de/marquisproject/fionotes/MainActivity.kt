@@ -19,7 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import de.marquisproject.fionotes.data.notes.repositories.NoteRepository
 import de.marquisproject.fionotes.ui.screens.ArchiveScreen
-import de.marquisproject.fionotes.ui.screens.MainViewModel
+import de.marquisproject.fionotes.ui.viewmodels.MainViewModel
 import de.marquisproject.fionotes.ui.screens.BinScreen
 import de.marquisproject.fionotes.ui.theme.FionotesTheme
 import kotlinx.serialization.Serializable
