@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ArchiveDAO {
     @Insert
-    suspend fun insertNote(note: Note) : Long
+    suspend fun insertNote(note: Note)
 
     @Delete
     suspend fun deleteNote(note: Note)

@@ -21,7 +21,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -30,6 +35,7 @@ import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.ui.components.NoteCard
 import de.marquisproject.fionotes.ui.components.SelectionBar
 import de.marquisproject.fionotes.ui.viewmodels.MainViewModel
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +46,8 @@ fun ArchiveScreen(
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     BackHandler {
         if (uiState.inSelectionMode) {
@@ -77,6 +85,11 @@ fun ArchiveScreen(
                     },
                 )
             }
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+            )
         }
     ) { innerPadding ->
         if (uiState.archivedList.isEmpty()) {
@@ -112,7 +125,16 @@ fun ArchiveScreen(
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
                         },
-                        onSwipe = { viewModel.binNote(note) },
+                        onSwipe = {
+                            viewModel.binNote(note)
+                            scope.launch {
+                                snackbarHostState
+                                    .showSnackbar(
+                                        message = "Note moved to bin",
+                                        duration = SnackbarDuration.Short
+                                    )
+                            }
+                                  },
                         swipeIcon = painterResource(id = R.drawable.outline_delete_24)
                     )
                 }

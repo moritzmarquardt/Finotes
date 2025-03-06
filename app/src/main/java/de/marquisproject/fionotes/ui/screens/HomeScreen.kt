@@ -18,6 +18,11 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.NoteRoute
@@ -26,6 +31,7 @@ import de.marquisproject.fionotes.ui.components.NoteCard
 import de.marquisproject.fionotes.ui.components.SelectionBar
 import de.marquisproject.fionotes.ui.components.TopBarHome
 import de.marquisproject.fionotes.ui.viewmodels.MainViewModel
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -35,6 +41,8 @@ fun HomeScreen(
 ) {
     
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     BackHandler(uiState.inSelectionMode) {
         viewModel.clearSelection()
@@ -79,6 +87,11 @@ fun HomeScreen(
             ) {
                 Icon(Icons.Filled.Add, "Localized description")
             }
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+            )
         }
     ) { innerPadding ->
         LazyVerticalStaggeredGrid(
@@ -99,8 +112,17 @@ fun HomeScreen(
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
                         },
-                        onSwipe = { viewModel.archiveNote(note) },
-                        swipeIcon = painterResource(id = R.drawable.outline_archive_24)
+                        onSwipe = {
+                            viewModel.archiveNote(note)
+                            scope.launch {
+                                snackbarHostState
+                                    .showSnackbar(
+                                        message = "Note archived",
+                                        duration = SnackbarDuration.Short
+                                    )
+                            }
+                                  },
+                        swipeIcon = painterResource(id = R.drawable.outline_archive_24),
                     )
                 }
             }

@@ -9,5 +9,5 @@ data class MainUiState(
     val binList: List<Note> = emptyList(),
     val currentNote: Note = Note(),
     val selectedNotes: List<Note> = emptyList(),
-    val inSelectionMode: Boolean = false
+    val inSelectionMode: Boolean = false,
 )
