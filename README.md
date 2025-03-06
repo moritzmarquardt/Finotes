@@ -17,16 +17,16 @@ This is a project for friends and family.
 
 ## Screenshots
 
-![Home Screen](screenshots/Home_Screen.png){ width=50% }
+<img src="screenshots/Home_Screen.png" style="width:50%" alt="Home Screen">
 *Home Screen*
 
-![Search Screen](screenshots/Search_Screen.png){ width=50% }
+<img src="screenshots/Search_Screen.png" style="width:50%" alt="Search Screen">
 *Search Screen*
 
-![Note Screen](screenshots/Note_Screen.png){ width=50% }
+<img src="screenshots/Note_Screen.png" style="width:50%" alt="Note Screen">
 *Note Screen*
 
-![Swipe to archive](screenshots/Swipe_to_Archive.png){ width=50% }
+<img src="screenshots/Swipe_to_Archive.png" style="width:50%" alt="Swipe to Archive">
 *Swipe to Archive*
 
 
