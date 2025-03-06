@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "fionotes"
+rootProject.name = "finotes"
 include(":app")
