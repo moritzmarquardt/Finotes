@@ -32,7 +32,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import de.marquisproject.finotes.ArchiveRoute
 import de.marquisproject.finotes.BinRoute
+import de.marquisproject.finotes.ExportImportRoute
 import de.marquisproject.finotes.R
+import de.marquisproject.finotes.ui.screens.ExportImportScreen
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,6 +113,16 @@ fun TopBarHome(
                     },
                     leadingIcon = {
                         Icon(Icons.Default.Delete, contentDescription = "Bin")
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Export/Import notes") },
+                    onClick = {
+                        expandedMenu = false
+                        navController.navigate(ExportImportRoute)
+                    },
+                    leadingIcon = {
+                        Icon(painterResource(id = R.drawable.baseline_import_export_24), contentDescription = "Bin")
                     }
                 )
             }
