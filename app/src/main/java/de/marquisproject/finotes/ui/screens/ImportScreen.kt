@@ -23,10 +23,10 @@ fun ImportScreen(
         horizontalArrangement = Arrangement.Center
     ) {
         Button(onClick = {
-            Log.e("Import", "Button Clicked")
+            Log.d("ImportExportViewModel", "Button Clicked to import")
             pickFileLauncher.launch("application/json")
         }) {
-            Text("Import")
+            Text("Import from JSON file")
         }
     }
 }

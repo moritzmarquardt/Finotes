@@ -22,5 +22,5 @@ interface ArchiveDAO {
     fun getAllNotes(): Flow<List<Note>>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    fun insertNotes(archivedNotes: List<Note>)
+    fun insertListOfNotes(notes: List<Note>)
 }

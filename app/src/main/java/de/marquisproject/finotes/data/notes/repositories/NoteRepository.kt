@@ -16,18 +16,21 @@ class NoteRepository (
     }
 
     suspend fun insertNote(note: Note) : Long {
-        return noteDb.dao.insertNote(note)
+        return noteDb.dao.insertNote(note.copy(id = 0))
     }
 
     suspend fun binNote(note: Note) {
-        noteDb.dao.deleteNote(note)
-        archiveDb.dao.deleteNote(note)
-        binDb.dao.insertNote(note.copy(noteStatus = NoteStatus.BINNED))
+        if (note.noteStatus == NoteStatus.ACTIVE) {
+            noteDb.dao.deleteNote(note)
+        } else if (note.noteStatus == NoteStatus.ARCHIVED) {
+            archiveDb.dao.deleteNote(note)
+        }
+        binDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.BINNED))
     }
 
     suspend fun restoreNote (note: Note) {
         binDb.dao.deleteNote(note)
-        noteDb.dao.insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+        noteDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ACTIVE))
     }
 
     suspend fun deleteNoteFromBin(note: Note) {
@@ -35,12 +38,12 @@ class NoteRepository (
     }
 
     suspend fun archiveNote(note: Note) {
-        archiveDb.dao.insertNote(note.copy(noteStatus = NoteStatus.ARCHIVED))
+        archiveDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ARCHIVED))
         noteDb.dao.deleteNote(note)
     }
 
     suspend fun unarchiveNote(note: Note) {
-        noteDb.dao.insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+        noteDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ACTIVE))
         archiveDb.dao.deleteNote(note)
     }
 
@@ -53,15 +56,15 @@ class NoteRepository (
     fun getAllDeletedNotes() = binDb.dao.getAllNotes()
 
 
-    suspend fun insertNotes(notes: List<Note>) {
+    fun insertNotes(notes: List<Note>) {
         // make all note ids 0 to insert them as new notes and avoid conflicts
         val zeroIdNotes = notes.map { it.copy(id = 0) }
-        noteDb.dao.insertNotes(zeroIdNotes)
+        noteDb.dao.insertListOfNotes(zeroIdNotes)
     }
 
-    suspend fun insertArchivedNotes(archivedNotes: List<Note>) {
+    fun insertNotesToArchive(archivedNotes: List<Note>) {
         val zeroIdNotes = archivedNotes.map { it.copy(id = 0) }
-        archiveDb.dao.insertNotes(zeroIdNotes)
+        archiveDb.dao.insertListOfNotes(zeroIdNotes)
     }
 
 }

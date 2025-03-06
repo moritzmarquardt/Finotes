@@ -82,44 +82,39 @@ class MainActivity : ComponentActivity() {
     )
 
     private val createFileLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        uri?.let { writeExportJsonToFile(it) }
-    }
+        uri?.let {
+            val jsonString = importExportViewModel.importExportState.value.exportJson
 
-    private fun writeExportJsonToFile(uri: Uri) {
-        val jsonString = importExportViewModel.importExportState.value.exportJson
-
-        try {
-            contentResolver.openOutputStream(uri)?.bufferedWriter().use { writer ->
-                writer?.write(jsonString)
+            try {
+                contentResolver.openOutputStream(it)?.bufferedWriter().use { writer ->
+                    writer?.write(jsonString)
+                }
+                Toast.makeText(this, "Backup saved successfully!", Toast.LENGTH_SHORT).show()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                Toast.makeText(this, "Failed to save backup", Toast.LENGTH_SHORT).show()
             }
-            Toast.makeText(this, "Backup saved successfully!", Toast.LENGTH_SHORT).show()
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(this, "Failed to save backup", Toast.LENGTH_SHORT).show()
         }
     }
 
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { readFromFile(it) }
-    }
-
-    private fun readFromFile(uri: Uri) {
-        Log.e("Import", "start readFromFile")
-        try {
-            contentResolver.openInputStream(uri)?.bufferedReader().use { reader ->
-                val jsonString = reader?.readText()
-                jsonString?.let {
-                    Log.e("Import", "inside let with jsonString: $jsonString")
-                    importExportViewModel.restoreBackup(it)
-                    Toast.makeText(this, "Backup restored!", Toast.LENGTH_SHORT).show()
+        uri?.let { it ->
+            Log.d("ImportExportViewModel", "start readFromFile")
+            try {
+                contentResolver.openInputStream(it)?.bufferedReader().use { reader ->
+                    val jsonString = reader?.readText()
+                    jsonString?.let {
+                        Log.d("ImportExportViewModel", "Json String read from file: $jsonString")
+                        importExportViewModel.restoreBackup(it)
+                        Toast.makeText(this, "Backup restored!", Toast.LENGTH_SHORT).show()
+                    }
                 }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                Toast.makeText(this, "Failed to read file", Toast.LENGTH_SHORT).show()
             }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(this, "Failed to read file", Toast.LENGTH_SHORT).show()
         }
     }
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

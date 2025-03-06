@@ -9,7 +9,6 @@ enum class ImportExportMode {
 
 enum class ExportFileFormat {
     JSON,
-    SQLITE
 }
 
 data class ExportSettings (
@@ -19,7 +18,7 @@ data class ExportSettings (
 
 data class ExportData(
     val notes: List<Note> = emptyList(),
-    val archivedNotes: List<Note>? = null,
+    val archivedNotes: List<Note> = emptyList(),
 )
 
 data class ImportExportState(

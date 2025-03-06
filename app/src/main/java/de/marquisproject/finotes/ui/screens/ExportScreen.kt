@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,8 @@ fun ExportScreen(
             Switch(
                 checked = iEState.exportSettings.includeArchived,
                 onCheckedChange = {
-                    iEviewModel.updateExportSettings (
+                    Log.d("ImportExportViewModel", "Include archived notes: $it")
+                    iEviewModel.setExportSettings (
                         iEState.exportSettings.copy(includeArchived = it)
                     )
                                   },
@@ -77,7 +79,7 @@ fun ExportScreen(
                         .selectable(
                             selected = (iEState.exportSettings.exportFileFormat == format),
                             onClick = {
-                                iEviewModel.updateExportSettings (
+                                iEviewModel.setExportSettings (
                                     iEState.exportSettings.copy(exportFileFormat = format)
                                 )
                             },
@@ -100,12 +102,12 @@ fun ExportScreen(
         }
         Button(
             onClick = {
-                iEviewModel.exportNotes()
+                iEviewModel.setExportJson()
                 createFileLauncher.launch("notes_backup.json")
                       },
             modifier = Modifier.fillMaxWidth().padding(top = 30.dp)
         ) {
-            val numExportNotes = iEState.exportData.notes.size + (iEState.exportData.archivedNotes?.size ?: 0)
+            val numExportNotes = iEState.exportData.notes.size + iEState.exportData.archivedNotes.size
             Text("Export $numExportNotes notes")
         }
     }

@@ -54,5 +54,5 @@ interface NoteDAO {
     fun getNotesWithQuery(searchQuery: String): Flow<List<Note>>
 
     @Insert(onConflict = androidx.room.OnConflictStrategy.ABORT)
-    fun insertNotes(notes: List<Note>)
+    fun insertListOfNotes(notes: List<Note>)
 }

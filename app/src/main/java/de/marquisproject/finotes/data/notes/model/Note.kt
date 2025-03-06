@@ -4,6 +4,12 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+enum class NoteStatus {
+    ACTIVE,
+    ARCHIVED,
+    BINNED
+}
+
 @Entity(tableName = "notes_table")
 data class Note(
     /**
