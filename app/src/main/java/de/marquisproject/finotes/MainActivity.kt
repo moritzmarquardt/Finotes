@@ -9,6 +9,7 @@ import de.marquisproject.finotes.data.notes.sources.ArchiveDatabase
 import de.marquisproject.finotes.data.notes.sources.BinDatabase
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -52,7 +53,7 @@ class MainActivity : ComponentActivity() {
             "bin.db"
         ).build()
     }
-    val viewModel by viewModels<MainViewModel>(
+    private val viewModel by viewModels<MainViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -81,10 +82,10 @@ class MainActivity : ComponentActivity() {
     )
 
     private val createFileLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        uri?.let { writeToFile(it) }
+        uri?.let { writeExportJsonToFile(it) }
     }
 
-    private fun writeToFile(uri: Uri) {
+    private fun writeExportJsonToFile(uri: Uri) {
         val jsonString = importExportViewModel.importExportState.value.exportJson
 
         try {
@@ -103,10 +104,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun readFromFile(uri: Uri) {
+        Log.e("Import", "start readFromFile")
         try {
             contentResolver.openInputStream(uri)?.bufferedReader().use { reader ->
                 val jsonString = reader?.readText()
                 jsonString?.let {
+                    Log.e("Import", "inside let with jsonString: $jsonString")
                     importExportViewModel.restoreBackup(it)
                     Toast.makeText(this, "Backup restored!", Toast.LENGTH_SHORT).show()
                 }

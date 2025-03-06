@@ -17,11 +17,15 @@ data class ExportSettings (
     val includeArchived: Boolean = true
 )
 
+data class ExportData(
+    val notes: List<Note> = emptyList(),
+    val archivedNotes: List<Note>? = null,
+)
+
 data class ImportExportState(
     val mode: ImportExportMode = ImportExportMode.EXPORT,
     val exportSettings: ExportSettings = ExportSettings(),
-    val notesToImport: List<Note> = emptyList(),
-    val notesToExport: List<Note> = emptyList(),
-    val isLoading: Boolean = false,
+    val exportData: ExportData = ExportData(),
+    val importData: ExportData = ExportData(),
     val exportJson: String = "",
 )

@@ -52,4 +52,7 @@ interface NoteDAO {
      */
     @Query("SELECT * FROM notes_table WHERE title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%' ORDER BY isPinned DESC, dateCreated DESC")
     fun getNotesWithQuery(searchQuery: String): Flow<List<Note>>
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.ABORT)
+    fun insertNotes(notes: List<Note>)
 }

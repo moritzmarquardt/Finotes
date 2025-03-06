@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ fun ImportScreen(
         horizontalArrangement = Arrangement.Center
     ) {
         Button(onClick = {
+            Log.e("Import", "Button Clicked")
             pickFileLauncher.launch("application/json")
         }) {
             Text("Import")

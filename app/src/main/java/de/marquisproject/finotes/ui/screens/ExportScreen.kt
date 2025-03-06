@@ -105,15 +105,8 @@ fun ExportScreen(
                       },
             modifier = Modifier.fillMaxWidth().padding(top = 30.dp)
         ) {
-            if (iEState.isLoading) {
-                CircularProgressIndicator(
-                        modifier = Modifier.width(28.dp),
-                color = MaterialTheme.colorScheme.secondary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-            } else {
-                Text("Export ${iEState.notesToExport.size} notes")
-            }
+            val numExportNotes = iEState.exportData.notes.size + (iEState.exportData.archivedNotes?.size ?: 0)
+            Text("Export $numExportNotes notes")
         }
     }
 }

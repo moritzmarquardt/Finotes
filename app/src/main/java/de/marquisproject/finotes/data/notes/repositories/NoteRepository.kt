@@ -52,4 +52,16 @@ class NoteRepository (
 
     fun getAllDeletedNotes() = binDb.dao.getAllNotes()
 
+
+    suspend fun insertNotes(notes: List<Note>) {
+        // make all note ids 0 to insert them as new notes and avoid conflicts
+        val zeroIdNotes = notes.map { it.copy(id = 0) }
+        noteDb.dao.insertNotes(zeroIdNotes)
+    }
+
+    suspend fun insertArchivedNotes(archivedNotes: List<Note>) {
+        val zeroIdNotes = archivedNotes.map { it.copy(id = 0) }
+        archiveDb.dao.insertNotes(zeroIdNotes)
+    }
+
 }

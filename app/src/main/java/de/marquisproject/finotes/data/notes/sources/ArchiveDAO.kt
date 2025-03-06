@@ -6,6 +6,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import kotlinx.coroutines.flow.Flow
 
 
@@ -19,4 +20,7 @@ interface ArchiveDAO {
 
     @Query("SELECT * FROM notes_table ORDER BY dateCreated DESC")
     fun getAllNotes(): Flow<List<Note>>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    fun insertNotes(archivedNotes: List<Note>)
 }
