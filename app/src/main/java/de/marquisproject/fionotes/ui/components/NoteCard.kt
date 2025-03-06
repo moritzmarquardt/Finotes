@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import de.marquisproject.fionotes.R
 import de.marquisproject.fionotes.data.notes.model.Note
+import kotlin.math.abs
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -147,9 +149,20 @@ fun NoteCard(
             }
         }
 
+        val init = try {
+            dismissState.requireOffset()
+        } catch (e: Exception) {
+            0f // or any default value you prefer
+        }
+        val alpha = if (dismissState.progress == 1.0f) {
+            1f - init
+        } else {
+            1f - 2*abs(dismissState.progress)
+        }
+
         SwipeToDismissBox(
             state = dismissState,
-            modifier = Modifier,
+            modifier = Modifier.graphicsLayer { this.alpha = alpha },
             backgroundContent = {
                 if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
                     Row(modifier = Modifier.fillMaxSize(),
