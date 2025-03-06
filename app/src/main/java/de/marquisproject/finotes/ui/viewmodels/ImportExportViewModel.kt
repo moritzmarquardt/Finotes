@@ -1,18 +1,29 @@
 package de.marquisproject.finotes.ui.viewmodels
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.provider.DocumentsContract
+import android.util.Log
+import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import de.marquisproject.finotes.NoteRoute
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+
+data class BackupData(
+    val notes: List<Note>,
+)
+
 
 class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
@@ -65,6 +76,39 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
     private fun exportNotesToJSON(noteList: List<Note>) {
         // export all notes to JSON
 
+        Log.e("Export", "Exporting notes to JSON")
+
+        val moshi = Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+
+        Log.e("Export", "Moshi built")
+
+        // Convert data to JSON
+        val jsonAdapter = moshi.adapter(BackupData::class.java)
+        val backupJson = jsonAdapter.toJson(BackupData(noteList))
+
+        // Save to file
+        //val file = File(context.getExternalFilesDir(null), "notes_backup.json")
+        //file.writeText(backupJson)
+
+        Log.e("Export", "Backup JSON: $backupJson")
+
+        _importExportState.value = _importExportState.value.copy(exportJson = backupJson)
+
+        Log.e("Export", "done")
+
+    }
+
+    fun restoreBackup(jsonString: String) {
+        val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+        val jsonAdapter = moshi.adapter(BackupData::class.java)
+
+        Log.e("Import", "Restoring backup")
+
+        jsonAdapter.fromJson(jsonString)?.let { backupData ->
+            Log.e("Import", "Backup data: ${backupData.notes}")
+        }
     }
 
     private fun exportNotesToSQLite(noteList: List<Note>) {

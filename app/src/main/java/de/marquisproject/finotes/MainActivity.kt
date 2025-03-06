@@ -1,5 +1,6 @@
 package de.marquisproject.finotes
 
+import android.net.Uri
 import de.marquisproject.finotes.ui.screens.HomeScreen
 import de.marquisproject.finotes.ui.screens.NoteScreen
 import de.marquisproject.finotes.ui.screens.ExportImportScreen
@@ -8,15 +9,16 @@ import de.marquisproject.finotes.data.notes.sources.ArchiveDatabase
 import de.marquisproject.finotes.data.notes.sources.BinDatabase
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
@@ -26,6 +28,7 @@ import de.marquisproject.finotes.ui.screens.BinScreen
 import de.marquisproject.finotes.ui.theme.FinotesTheme
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
 import kotlinx.serialization.Serializable
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
     private val noteDb by lazy {
@@ -77,6 +80,45 @@ class MainActivity : ComponentActivity() {
         }
     )
 
+    private val createFileLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri?.let { writeToFile(it) }
+    }
+
+    private fun writeToFile(uri: Uri) {
+        val jsonString = importExportViewModel.importExportState.value.exportJson
+
+        try {
+            contentResolver.openOutputStream(uri)?.bufferedWriter().use { writer ->
+                writer?.write(jsonString)
+            }
+            Toast.makeText(this, "Backup saved successfully!", Toast.LENGTH_SHORT).show()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Toast.makeText(this, "Failed to save backup", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { readFromFile(it) }
+    }
+
+    private fun readFromFile(uri: Uri) {
+        try {
+            contentResolver.openInputStream(uri)?.bufferedReader().use { reader ->
+                val jsonString = reader?.readText()
+                jsonString?.let {
+                    importExportViewModel.restoreBackup(it)
+                    Toast.makeText(this, "Backup restored!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Toast.makeText(this, "Failed to read file", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -115,6 +157,8 @@ class MainActivity : ComponentActivity() {
                             ExportImportScreen(
                                 navControllerMain = navController,
                                 iEviewModel = importExportViewModel,
+                                createFileLauncher = createFileLauncher,
+                                pickFileLauncher = pickFileLauncher,
                             )
                         }
                     }

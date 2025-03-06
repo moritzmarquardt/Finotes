@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,7 +31,9 @@ import kotlinx.serialization.Serializable
 @Composable
 fun ExportImportScreen(
     navControllerMain: NavController,
-    iEviewModel: ImportExportViewModel
+    iEviewModel: ImportExportViewModel,
+    createFileLauncher: ActivityResultLauncher<String>,
+    pickFileLauncher: ActivityResultLauncher<String>
 ) {
     val navControllerIE = rememberNavController()
     val iEState by iEviewModel.importExportState.collectAsState()
@@ -86,11 +89,16 @@ fun ExportImportScreen(
             composable<ExportRoute> {
                 ExportScreen(
                     iEState = iEState,
-                    iEviewModel = iEviewModel
+                    iEviewModel = iEviewModel,
+                    createFileLauncher = createFileLauncher
                 )
             }
             composable<ImportRoute> {
-                ImportScreen()
+                ImportScreen(
+                    iEstate = iEState,
+                    iEviewModel = iEviewModel,
+                    pickFileLauncher = pickFileLauncher
+                )
             }
         }
     }

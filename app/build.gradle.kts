@@ -43,6 +43,10 @@ android {
 }
 
 dependencies {
+    //Moshi for JSON parsing
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
     androidTestImplementation(libs.androidx.navigation.testing)

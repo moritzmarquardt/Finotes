@@ -22,4 +22,6 @@ data class ImportExportState(
     val exportSettings: ExportSettings = ExportSettings(),
     val notesToImport: List<Note> = emptyList(),
     val notesToExport: List<Note> = emptyList(),
+    val isLoading: Boolean = false,
+    val exportJson: String = "",
 )
