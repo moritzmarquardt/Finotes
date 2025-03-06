@@ -8,24 +8,16 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxSerializationJsonVersion = "1.8.0"
 lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.10.0"
+activityCompose = "1.10.1"
 composeBom = "2025.02.00"
-livecycleLivedataKtx = "2.2.0"
-navigationCompose = "2.8.7"
-navigationDynamicFeaturesFragment = "2.8.7"
-navigationFragment = "2.8.7"
-navigationTesting = "2.8.7"
-navigationUi = "2.8.7"
+navigationCompose = "2.8.8"
+navigationTesting = "2.8.8"
 roomRuntime = "2.6.1"
 
 [libraries]
-androidx-livecycle-livedata-ktx = { module = "androidx.livecycle:livecycle-livedata-ktx", version.ref = "livecycleLivedataKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-navigation-dynamic-features-fragment = { module = "androidx.navigation:navigation-dynamic-features-fragment", version.ref = "navigationDynamicFeaturesFragment" }
-androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigationFragment" }
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navigationTesting" }
-androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigationUi" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
