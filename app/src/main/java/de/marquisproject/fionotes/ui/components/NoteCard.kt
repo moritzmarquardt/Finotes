@@ -17,6 +17,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -136,14 +137,15 @@ fun NoteCard(
     if (onSwipe != null) {
         val dismissState = rememberSwipeToDismissBoxState(
             confirmValueChange = { value ->
-                if (value == SwipeToDismissBoxValue.StartToEnd) {
-                    onSwipe(note)
-                    true
-                } else {
-                    false
-                }
-            }
+                value == SwipeToDismissBoxValue.StartToEnd
+            },
         )
+
+        LaunchedEffect(dismissState.currentValue) {
+            if (dismissState.currentValue == SwipeToDismissBoxValue.StartToEnd) {
+                onSwipe(note)
+            }
+        }
 
         SwipeToDismissBox(
             state = dismissState,
