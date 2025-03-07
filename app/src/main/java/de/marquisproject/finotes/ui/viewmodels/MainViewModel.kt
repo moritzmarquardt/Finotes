@@ -2,6 +2,7 @@ package de.marquisproject.finotes.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.data.notes.model.Note
@@ -52,8 +53,10 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     fun insertAndShowNewEmptyNote() {
         viewModelScope.launch {
             val emptyNote = Note()
-            val newId = noteRepository.insertNote(emptyNote)
-            setCurrentNote(emptyNote.copy(id = newId))
+            setCurrentNote(emptyNote)
+            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = true)
+            //val newId = noteRepository.insertNote(emptyNote)
+            //setCurrentNote(emptyNote.copy(id = newId))
         }
     }
 
@@ -94,18 +97,43 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     }
 
     fun updateCurrentNoteTitle(title: String) {
-        _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(title = title))
-        updateNote(_uiState.value.currentNote)
+        setCurrentNote(note = _uiState.value.currentNote.copy(title = title))
+        //_uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(title = title))
+        if (_uiState.value.currentNoteIsNeverEdited) {
+            viewModelScope.launch {
+                val newId = noteRepository.insertNote(_uiState.value.currentNote)
+                setCurrentNote(_uiState.value.currentNote.copy(id = newId))
+            }
+            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = false)
+        } else {
+            updateNote(_uiState.value.currentNote)
+        }
     }
 
     fun updateCurrentNoteBody(body: String) {
-        _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(body = body))
-        updateNote(_uiState.value.currentNote)
+        setCurrentNote(note = _uiState.value.currentNote.copy(body = body))
+        if (_uiState.value.currentNoteIsNeverEdited) {
+            viewModelScope.launch {
+                val newId = noteRepository.insertNote(_uiState.value.currentNote)
+                setCurrentNote(_uiState.value.currentNote.copy(id = newId))
+            }
+            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = false)
+        } else {
+            updateNote(_uiState.value.currentNote)
+        }
     }
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
-        _uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(isPinned = isPinned))
-        updateNote(_uiState.value.currentNote)
+        setCurrentNote(note = _uiState.value.currentNote.copy(isPinned = isPinned))
+        if (_uiState.value.currentNoteIsNeverEdited) {
+            viewModelScope.launch {
+                val newId = noteRepository.insertNote(_uiState.value.currentNote)
+                setCurrentNote(_uiState.value.currentNote.copy(id = newId))
+            }
+            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = false)
+        } else {
+            updateNote(_uiState.value.currentNote)
+        }
     }
 
     fun updateQuery(query: String) {

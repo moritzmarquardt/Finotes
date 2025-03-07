@@ -10,4 +10,5 @@ data class MainUiState(
     val currentNote: Note = Note(),
     val selectedNotes: List<Note> = emptyList(),
     val inSelectionMode: Boolean = false,
+    val currentNoteIsNeverEdited: Boolean = false,
 )

@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
@@ -50,7 +52,9 @@ fun NoteScreen(
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = uiState.currentNote.id) {
-        bodyFocusRequester.requestFocus()
+        if (uiState.currentNoteIsNeverEdited) {
+            bodyFocusRequester.requestFocus()
+        }
     }
 
     Scaffold(
@@ -134,11 +138,38 @@ fun NoteScreen(
         },
         modifier = Modifier.imePadding()
     ) { innerPadding ->
+        when {
+            openFinalDeleteAlert.value -> {
+                AlertDialog(
+                    onDismissRequest = { openFinalDeleteAlert.value = false },
+                    title = {
+                        Text("Delete note permanently")
+                    },
+                    text = {
+                        Text("This deletion is irreversible")
+                    },
+                    confirmButton = {
+                        Button(onClick = {
+                            openFinalDeleteAlert.value = false
+                            navController.popBackStack()
+                            viewModel.deleteNoteFromBin(uiState.currentNote)
+                        }) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { openFinalDeleteAlert.value = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+        }
+
         Column(
             modifier = Modifier
-                .padding(
-                    innerPadding
-                )
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
         ) {
             BasicTextField(
                 value = uiState.currentNote.title,
@@ -159,7 +190,7 @@ fun NoteScreen(
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.TopStart
                     ) {
-                        if (uiState.currentNote.title.isBlank()) {
+                        if (uiState.currentNote.title.isEmpty()) {
                             Text("Title", style = MaterialTheme.typography.titleLarge, color = Color.Gray)
                         }
                         innerTextField()
@@ -173,7 +204,6 @@ fun NoteScreen(
                 modifier = Modifier
                     .focusable()
                     .fillMaxWidth()
-                    .weight(1f)
                     .focusRequester(bodyFocusRequester),
                 keyboardActions = KeyboardActions(
                     onDone = { bodyFocusRequester.requestFocus() },
@@ -185,42 +215,13 @@ fun NoteScreen(
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.TopStart
                     ) {
-                        if (uiState.currentNote.body.isBlank()) {
+                        if (uiState.currentNote.body.isEmpty()) {
                             Text("Body", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
                         }
                         innerTextField()
                     }
                 }
             )
-
-            when {
-                openFinalDeleteAlert.value -> {
-                    AlertDialog(
-                        onDismissRequest = { openFinalDeleteAlert.value = false },
-                        title = {
-                            Text("Delete note permanently")
-                        },
-                        text = {
-                            Text("This deletion is irreversible")
-                        },
-                        confirmButton = {
-                            Button(onClick = {
-                                openFinalDeleteAlert.value = false
-                                navController.popBackStack()
-                                viewModel.deleteNoteFromBin(uiState.currentNote)
-                            }) {
-                                Text("Delete")
-                            }
-                        },
-                        dismissButton = {
-                            Button(onClick = { openFinalDeleteAlert.value = false }) {
-                                Text("Cancel")
-                            }
-                        }
-                    )
-                }
-
-            }
         }
     }
 }
