@@ -125,7 +125,7 @@ fun ArchiveScreen(
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
                         },
-                        onSwipe = {
+                        /*onSwipe = {
                             viewModel.binNote(note)
                             scope.launch {
                                 snackbarHostState
@@ -135,7 +135,7 @@ fun ArchiveScreen(
                                     )
                             }
                                   },
-                        swipeIcon = painterResource(id = R.drawable.outline_delete_24)
+                        swipeIcon = painterResource(id = R.drawable.outline_delete_24)*/
                     )
                 }
             }

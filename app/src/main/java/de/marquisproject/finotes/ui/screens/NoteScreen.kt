@@ -1,17 +1,17 @@
 package de.marquisproject.finotes.ui.screens
 
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,14 +19,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -37,9 +37,6 @@ import androidx.navigation.NavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +48,10 @@ fun NoteScreen(
     val uiState by viewModel.uiState.collectAsState()
     val bodyFocusRequester = FocusRequester()
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = uiState.currentNote.id) {
+        bodyFocusRequester.requestFocus()
+    }
 
     Scaffold(
         topBar = {
@@ -131,62 +132,67 @@ fun NoteScreen(
                 }
             )
         },
-        bottomBar = {
-            BottomAppBar(
-                modifier = Modifier.height(56.dp),
-                actions = {
-                    val timestamp = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(uiState.currentNote.dateCreated))
-                    Text(text = "Created on: $timestamp", style = MaterialTheme.typography.labelMedium)
-                },
-            )
-        }
+        modifier = Modifier.imePadding()
     ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(
+                    innerPadding
+                )
         ) {
-            TextField(
-                label = null,
+            BasicTextField(
                 value = uiState.currentNote.title,
                 onValueChange = { viewModel.updateCurrentNoteTitle(it) },
-                placeholder = { Text("Title", style = MaterialTheme.typography.titleLarge) },
                 textStyle = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .focusable()
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
                 keyboardActions = KeyboardActions(
                     onDone = { bodyFocusRequester.requestFocus() },
                     onNext = { bodyFocusRequester.requestFocus() },
                 ),
                 singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                ),
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.TopStart
+                    ) {
+                        if (uiState.currentNote.title.isBlank()) {
+                            Text("Title", style = MaterialTheme.typography.titleLarge, color = Color.Gray)
+                        }
+                        innerTextField()
+                    }
+                }
             )
-            TextField(
-                label = null,
+            BasicTextField(
                 value = uiState.currentNote.body,
                 onValueChange = { viewModel.updateCurrentNoteBody(it) },
-                placeholder = { Text("Body", style = MaterialTheme.typography.bodyLarge) },
                 textStyle = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier
                     .focusable()
                     .fillMaxWidth()
-                    .fillMaxSize()
+                    .weight(1f)
                     .focusRequester(bodyFocusRequester),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
+                keyboardActions = KeyboardActions(
+                    onDone = { bodyFocusRequester.requestFocus() },
+                    onNext = { bodyFocusRequester.requestFocus() },
                 ),
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.TopStart
+                    ) {
+                        if (uiState.currentNote.body.isBlank()) {
+                            Text("Body", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+                        }
+                        innerTextField()
+                    }
+                }
             )
+
             when {
                 openFinalDeleteAlert.value -> {
                     AlertDialog(

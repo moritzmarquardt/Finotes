@@ -1,5 +1,8 @@
 package de.marquisproject.finotes.ui.screens
 
+import android.annotation.SuppressLint
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,26 +21,24 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentManager.BackStackEntry
+import androidx.navigation.NavBackStackEntry
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.components.TopBarHome
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
-import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -46,7 +47,6 @@ fun HomeScreen(
     
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     BackHandler(uiState.inSelectionMode) {
         viewModel.clearSelection()
@@ -116,7 +116,7 @@ fun HomeScreen(
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
                         },
-                        onSwipe = {
+                        /*onSwipe = {
                             viewModel.archiveNote(note)
                             scope.launch {
                                 snackbarHostState
@@ -126,7 +126,7 @@ fun HomeScreen(
                                     )
                             }
                                   },
-                        swipeIcon = painterResource(id = R.drawable.outline_archive_24),
+                        swipeIcon = painterResource(id = R.drawable.outline_archive_24),*/
                     )
                 }
             }

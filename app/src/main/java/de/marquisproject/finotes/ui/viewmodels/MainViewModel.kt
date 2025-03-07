@@ -14,11 +14,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     // Expose screen UI state
     private val _uiState = MutableStateFlow(MainUiState())
     private val _searchQuery = MutableStateFlow("")
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val _notesList = _searchQuery
         .flatMapLatest { searchQuery ->
             if (searchQuery.isBlank()) {

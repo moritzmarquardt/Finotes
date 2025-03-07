@@ -2,6 +2,7 @@ package de.marquisproject.finotes.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
@@ -44,7 +47,7 @@ fun OutlinedNoteCard(
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,
     selected: Boolean
-)  {
+) {
     fun highlightText(text: String, query: String): AnnotatedString {
         if (query.isBlank()) return AnnotatedString(text)
 
@@ -93,7 +96,7 @@ fun OutlinedNoteCard(
                 .fillMaxSize()
                 .padding(12.dp)
         ) {
-            if (note.isPinned){
+            if (note.isPinned) {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.baseline_push_pin_24),
                     contentDescription = null,
@@ -103,7 +106,7 @@ fun OutlinedNoteCard(
                         .size(20.dp)
                 )
             }
-            Column{
+            Column {
                 if (note.title.isNotBlank()) {
                     Text(
                         modifier = Modifier.padding(end = 20.dp),
@@ -157,7 +160,7 @@ fun NoteCard(
         val alpha = if (dismissState.progress == 1.0f) {
             1f - init
         } else {
-            1f - 2*abs(dismissState.progress)
+            1f - 2 * abs(dismissState.progress)
         }
 
         SwipeToDismissBox(
@@ -165,7 +168,8 @@ fun NoteCard(
             modifier = Modifier.graphicsLayer { this.alpha = alpha },
             backgroundContent = {
                 if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
-                    Row(modifier = Modifier.fillMaxSize(),
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(swipeIcon, contentDescription = "delete")
