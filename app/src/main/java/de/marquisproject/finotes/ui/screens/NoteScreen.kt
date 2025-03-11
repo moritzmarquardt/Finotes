@@ -28,12 +28,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
@@ -50,6 +54,7 @@ fun NoteScreen(
     val uiState by viewModel.uiState.collectAsState()
     val bodyFocusRequester = FocusRequester()
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
+    var bodyTextState by remember { mutableStateOf(TextFieldValue(uiState.currentNote.body)) }
 
     LaunchedEffect(key1 = uiState.currentNote.id) {
         if (uiState.currentNoteIsNeverEdited) {
@@ -174,7 +179,8 @@ fun NoteScreen(
             BasicTextField(
                 value = uiState.currentNote.title,
                 onValueChange = { viewModel.updateCurrentNoteTitle(it) },
-                textStyle = MaterialTheme.typography.titleLarge,
+                textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
                 modifier = Modifier
                     .focusable()
                     .fillMaxWidth()
@@ -198,11 +204,37 @@ fun NoteScreen(
                 }
             )
             BasicTextField(
-                value = uiState.currentNote.body,
-                onValueChange = { viewModel.updateCurrentNoteBody(it) },
-                textStyle = MaterialTheme.typography.bodyLarge,
+                value = bodyTextState,
+                onValueChange = { textFieldValue ->
+                    val textString = textFieldValue.text
+                    val lastInputIsDelete = textString.length < bodyTextState.text.length
+                    val lastChar = textString.lastOrNull()
+                    val lines = textString.split("\n")
+
+                    if (lastChar == '\n' && lines.size > 1 && !lastInputIsDelete) {
+                        val previousLine = lines[lines.size - 2] // Get the last line before the new line
+                        val previousLineIsEmptyListLine = previousLine == "- "
+                        if (previousLine.startsWith("- ") && !previousLineIsEmptyListLine) {
+                            val updatedText = "$textString- "
+                            viewModel.updateCurrentNoteBody(updatedText)
+                            bodyTextState = TextFieldValue(
+                                text = updatedText,
+                                selection = TextRange(updatedText.length)
+                            ) // Move cursor to end
+                        } else {
+                            viewModel.updateCurrentNoteBody(textString)
+                            bodyTextState = textFieldValue
+                        }
+                    } else {
+                        viewModel.updateCurrentNoteBody(textString)
+                        bodyTextState = textFieldValue
+                    }
+                    //viewModel.updateCurrentNoteBody(it)
+                                },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
                 modifier = Modifier
-                    .focusable()
+                    //.focusable()
                     .fillMaxWidth()
                     .focusRequester(bodyFocusRequester),
                 keyboardActions = KeyboardActions(
