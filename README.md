@@ -12,7 +12,6 @@ This is a project for friends and family.
 - **Pin Notes**: Pin important notes to keep them at the top.
 - **Bin**: Move notes to the bin and restore or permanently delete them.
 - **Dark Mode**: Use the app in dark mode for a better reading experience.
-- **Swipe to Archive**: Swipe notes to quickly archive them.
 
 
 ## Screenshots
