@@ -45,7 +45,6 @@ fun ArchiveScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     BackHandler {
         if (uiState.inSelectionMode) {
