@@ -1,6 +1,5 @@
 package de.marquisproject.finotes.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.Moshi
@@ -27,7 +26,6 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
         _archivedList,
         _exportSettings
     ) { notesList, archivedList, exportSettings ->
-        Log.d("ImportExportViewModel", "_exportData is updated")
         if (exportSettings.includeArchived) {
             ExportData(notesList, archivedList)
         } else {
@@ -40,7 +38,6 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
         _exportData,
         _exportSettings,
     ) { importExportState, exportData, exportSettings ->
-        Log.d("ImportExportViewModel", "importExportState is updated")
         importExportState.copy(
             exportData = exportData,
             exportSettings = exportSettings
@@ -61,14 +58,11 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
         val moshi = Moshi.Builder()
             .add(KotlinJsonAdapterFactory())
             .build()
-        Log.d("ImportExportViewModel", "Moshi built for Export")
 
         val jsonAdapter = moshi.adapter(ExportData::class.java)
         val backupJson = jsonAdapter.toJson(exportData)
-        Log.d("ImportExportViewModel", "Data converted to JSON: $backupJson")
 
         _importExportState.value = _importExportState.value.copy(exportJson = backupJson)
-        Log.d("ImportExportViewModel", "exportJson is set")
     }
 
     fun restoreBackup(jsonString: String) {
@@ -76,10 +70,8 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
             .add(KotlinJsonAdapterFactory())
             .build()
         val jsonAdapter = moshi.adapter(ExportData::class.java)
-        Log.d("ImportExportViewModel", "Moshi built for Import")
 
         jsonAdapter.fromJson(jsonString)?.let { backupData ->
-            Log.d("ImportExportViewModel", "Backup data: $backupData")
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
                     noteRepository.insertNotes(backupData.notes)

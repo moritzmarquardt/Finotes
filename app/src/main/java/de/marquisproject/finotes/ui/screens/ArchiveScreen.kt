@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
@@ -35,7 +34,6 @@ import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
-import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)

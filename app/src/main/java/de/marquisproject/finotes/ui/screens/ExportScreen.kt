@@ -1,6 +1,5 @@
 package de.marquisproject.finotes.ui.screens
 
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,11 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -53,7 +50,6 @@ fun ExportScreen(
             Switch(
                 checked = iEState.exportSettings.includeArchived,
                 onCheckedChange = {
-                    Log.d("ImportExportViewModel", "Include archived notes: $it")
                     iEviewModel.setExportSettings (
                         iEState.exportSettings.copy(includeArchived = it)
                     )

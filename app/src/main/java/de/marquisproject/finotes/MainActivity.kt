@@ -1,6 +1,5 @@
 package de.marquisproject.finotes
 
-import android.net.Uri
 import de.marquisproject.finotes.ui.screens.HomeScreen
 import de.marquisproject.finotes.ui.screens.NoteScreen
 import de.marquisproject.finotes.ui.screens.ExportImportScreen
@@ -9,7 +8,6 @@ import de.marquisproject.finotes.data.notes.sources.ArchiveDatabase
 import de.marquisproject.finotes.data.notes.sources.BinDatabase
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -99,12 +97,10 @@ class MainActivity : ComponentActivity() {
 
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { it ->
-            Log.d("ImportExportViewModel", "start readFromFile")
             try {
                 contentResolver.openInputStream(it)?.bufferedReader().use { reader ->
                     val jsonString = reader?.readText()
                     jsonString?.let {
-                        Log.d("ImportExportViewModel", "Json String read from file: $jsonString")
                         importExportViewModel.restoreBackup(it)
                         Toast.makeText(this, "Backup restored!", Toast.LENGTH_SHORT).show()
                     }
