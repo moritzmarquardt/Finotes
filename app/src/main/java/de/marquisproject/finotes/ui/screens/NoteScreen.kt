@@ -206,30 +206,74 @@ fun NoteScreen(
             BasicTextField(
                 value = bodyTextState,
                 onValueChange = { textFieldValue ->
-                    val textString = textFieldValue.text
-                    val lastInputIsDelete = textString.length < bodyTextState.text.length
-                    val lastChar = textString.lastOrNull()
-                    val lines = textString.split("\n")
+                    val bodyText = textFieldValue.text
+                    val cursorPosition = textFieldValue.selection.start
 
-                    if (lastChar == '\n' && lines.size > 1 && !lastInputIsDelete) {
-                        val previousLine = lines[lines.size - 2] // Get the last line before the new line
-                        val previousLineIsEmptyListLine = previousLine == "- "
-                        if (previousLine.startsWith("- ") && !previousLineIsEmptyListLine) {
-                            val updatedText = "$textString- "
-                            viewModel.updateCurrentNoteBody(updatedText)
+                    // Ensure cursorPosition is valid if textFieldValue is empty
+                    if (cursorPosition == 0 || cursorPosition > bodyText.length) {
+                        bodyTextState = textFieldValue
+                        viewModel.updateCurrentNoteBody(bodyTextState.text)
+                        return@BasicTextField
+                    }
+
+                    val lastInputIsNewLine = bodyText[cursorPosition - 1] == '\n'
+                    val lastInputIsDelete = bodyText.length < bodyTextState.text.length
+
+                    if (lastInputIsNewLine && !lastInputIsDelete) {
+                        // empty new line that was just created
+                        val textBeforeCursor = bodyText.substring(0, cursorPosition - 1) // Before newline
+                        val textAfterCursor = bodyText.substring(cursorPosition) // After newline
+                        // Last line before cursor and if \n not found, return textBeforeCursor because it has to be the first line anyways
+                        val previousLine = textBeforeCursor.substringAfterLast("\n", textBeforeCursor)
+
+                        when {
+                            previousLine.startsWith("- ") && previousLine != "- " -> {
+                                // Continue list with "- "
+                                val updatedText = "$textBeforeCursor\n- $textAfterCursor"
+                                bodyTextState = TextFieldValue(updatedText, TextRange(cursorPosition + 2))
+                            }
+                            previousLine == "- " -> {
+                                // Remove empty "- " line
+                                val updatedText = textBeforeCursor.dropLast(2) + textAfterCursor
+                                bodyTextState = TextFieldValue(updatedText, TextRange(textBeforeCursor.length - 2))
+                            }
+                            else -> {
+                                bodyTextState = textFieldValue
+                            }
+                        }
+                    } else {
+                        bodyTextState = textFieldValue
+                    }
+
+                    viewModel.updateCurrentNoteBody(bodyTextState.text)
+
+                    /*if (lastInputIsNewLine && !lastInputIsDelete) {
+                        val textBeforePosition = bodyText.substring(0, cursorPosition)
+                        val textAfterPosition = bodyText.substring(cursorPosition)
+                        val lineBefore = textBeforePosition.split("\n").dropLast(1).lastOrNull()
+                        val lineBeforeIsWithList = lineBefore?.startsWith("- ") == true
+                        val lineBeforeIsListButEmpty = lineBefore == "- "
+                        if (lineBeforeIsWithList && !lineBeforeIsListButEmpty) {
+                            val updatedText = "$textBeforePosition- $textAfterPosition"
                             bodyTextState = TextFieldValue(
                                 text = updatedText,
-                                selection = TextRange(updatedText.length)
-                            ) // Move cursor to end
+                                selection = TextRange(textBeforePosition.length + 2) // Move cursor to end of the new line
+                            )
+                        } else if (lineBeforeIsListButEmpty) {
+                            val textBeforePositionWithoutLastEmptyListLine = textBeforePosition.substring(0, textBeforePosition.length - 3)
+                            val updatedText = "${textBeforePositionWithoutLastEmptyListLine}$textAfterPosition"
+                            bodyTextState = TextFieldValue(
+                                text = updatedText,
+                                selection = TextRange(textBeforePositionWithoutLastEmptyListLine.length) // Move cursor to end of the new line
+                            )
                         } else {
-                            viewModel.updateCurrentNoteBody(textString)
                             bodyTextState = textFieldValue
                         }
                     } else {
-                        viewModel.updateCurrentNoteBody(textString)
                         bodyTextState = textFieldValue
                     }
-                    //viewModel.updateCurrentNoteBody(it)
+
+                    viewModel.updateCurrentNoteBody(bodyTextState.text)*/
                                 },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
@@ -237,10 +281,6 @@ fun NoteScreen(
                     //.focusable()
                     .fillMaxWidth()
                     .focusRequester(bodyFocusRequester),
-                keyboardActions = KeyboardActions(
-                    onDone = { bodyFocusRequester.requestFocus() },
-                    onNext = { bodyFocusRequester.requestFocus() },
-                ),
                 decorationBox = { innerTextField ->
                     Box(
                         modifier = Modifier
