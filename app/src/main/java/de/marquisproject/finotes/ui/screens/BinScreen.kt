@@ -43,12 +43,17 @@ fun BinScreen(
     navController: NavController,
     viewModel: MainViewModel
 ) {
-
-    val uiState by viewModel.uiState.collectAsState()
+    //val notesList by viewModel.
+    val inSelectionMode by viewModel.inSelectionMode.collectAsState()
+    val selectedNotes by viewModel.selectedNotes.collectAsState()
+    val binList by viewModel.binList.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
 
+    viewModel.fetchBinNotes() // fetch them here when the screen is opened
+
     BackHandler {
-        if (uiState.inSelectionMode) {
+        if (inSelectionMode) {
             viewModel.clearSelection()
         } else {
             navController.popBackStack()
@@ -60,9 +65,9 @@ fun BinScreen(
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            if (uiState.inSelectionMode) {
+            if (inSelectionMode) {
                 SelectionBar(
-                    numSelected = uiState.selectedNotes.size,
+                    numSelected = selectedNotes.size,
                     onSelectionClear = { viewModel.clearSelection() },
                     actionButtons = listOf(
                         painterResource(id = R.drawable.baseline_restore_from_trash_24) to { viewModel.restoreSelectedNotes() },
@@ -86,7 +91,7 @@ fun BinScreen(
             }
         },
         floatingActionButton = {
-            if (uiState.binList.isNotEmpty()) {
+            if (binList.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = {
                         viewModel.selectAllBinned()
@@ -97,7 +102,7 @@ fun BinScreen(
             }
         }
     ) { innerPadding ->
-        if (uiState.binList.isEmpty()) {
+        if (binList.isEmpty()) {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -117,13 +122,13 @@ fun BinScreen(
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
                 items(
-                    items = uiState.binList,
+                    items = binList,
                     key = { note -> note.id }
                 ) { note ->
                     NoteCard(
                         note = note,
-                        searchQuery = uiState.searchQuery,
-                        selected = uiState.selectedNotes.contains(note),
+                        searchQuery = searchQuery,
+                        selected = selectedNotes.contains(note),
                         onClick = {
                             viewModel.shortClickSelect(note = note, navController = navController)
                         },

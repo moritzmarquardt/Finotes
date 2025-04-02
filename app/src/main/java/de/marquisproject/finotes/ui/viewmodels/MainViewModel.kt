@@ -9,53 +9,63 @@ import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
-    // Expose screen UI state
-    private val _uiState = MutableStateFlow(MainUiState())
+    // private vals to hold the state of the UI internally (marked with _)
     private val _searchQuery = MutableStateFlow("")
+    private val _selectedNotes = MutableStateFlow<List<Note>>(emptyList())
+    private val _inSelectionMode = _selectedNotes.map { it.isNotEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    private val _currentNote = MutableStateFlow(Note())
+    private val _currentNoteIsNeverEdited = MutableStateFlow(false)
+
     private val _notesList = _searchQuery
         .flatMapLatest { searchQuery ->
             if (searchQuery.isBlank()) {
-                noteRepository.getAllNotes()
+                noteRepository.fetchAllNotes()
             } else {
-                noteRepository.searchNotes(searchQuery)
+                noteRepository.fetchNotesWithQuery(searchQuery)
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _archivedList = noteRepository.fetchAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _binList = MutableStateFlow<List<Note>>(emptyList())
 
-    private val _archivedList = noteRepository.getAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    private val _binList = noteRepository.getAllDeletedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-    val uiState = combine(_uiState, _notesList, _searchQuery, _archivedList, _binList) {
-        uiState, notesList, searchQuery, archivedList, binList ->
-        uiState.copy(
-            notesList = notesList,
-            searchQuery = searchQuery,
-            archivedList = archivedList,
-            binList = binList)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainUiState())
+    // public vals to expose the state of the UI to the UI layer (marked with val)
+    val searchQuery: StateFlow<String> = _searchQuery
+    val notesList: StateFlow<List<Note>> = _notesList
+    val archivedList: StateFlow<List<Note>> = _archivedList
+    val binList: StateFlow<List<Note>> = _binList
+    val currentNote: StateFlow<Note> = _currentNote
+    val currentNoteIsNeverEdited: StateFlow<Boolean> = _currentNoteIsNeverEdited
+    val inSelectionMode: StateFlow<Boolean> = _inSelectionMode
+    val selectedNotes: StateFlow<List<Note>> = _selectedNotes
 
 
+
+    // Functions to update the state of the UI and perform repository operations which in turn interact with the database
+    // These functions are called from the UI layer
+
+    fun fetchBinNotes() {
+        viewModelScope.launch {
+            noteRepository.fetchAllDeletedNotes().collect { notes ->
+                _binList.value = notes
+            }
+        }
+    }
+
+    // Pure interactions with the database
     private fun updateNote(note: Note) {
         //viewmodel scope because we use suspend functions
         viewModelScope.launch {
             noteRepository.updateNote(note)
-        }
-    }
-
-    fun insertAndShowNewEmptyNote() {
-        viewModelScope.launch {
-            val emptyNote = Note()
-            setCurrentNote(emptyNote)
-            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = true)
-            //val newId = noteRepository.insertNote(emptyNote)
-            //setCurrentNote(emptyNote.copy(id = newId))
         }
     }
 
@@ -72,7 +82,6 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     }
 
     fun binNote(note: Note) {
-        //viewmodel scope because we use suspend functions
         viewModelScope.launch {
             noteRepository.binNote(note)
         }
@@ -85,83 +94,100 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     }
 
     fun deleteNoteFromBin(note: Note) {
-        //viewmodel scope because we use suspend functions
         viewModelScope.launch {
             noteRepository.deleteNoteFromBin(note)
         }
     }
 
+    // Functions to handle the UI state and perform database operations
+    // set methods are to update the UI state
+
     private fun setCurrentNote(note: Note) {
-        _uiState.value = _uiState.value.copy(currentNote = note)
+        _currentNote.update { note }
+    }
+
+    private fun setCurrentNoteIsNeverEdited(isNeverEdited: Boolean) {
+        _currentNoteIsNeverEdited.update { isNeverEdited }
+    }
+
+    fun setQuery(query: String) {
+        _searchQuery.update { query }
+    }
+
+    fun setNewEmptyNote() {
+        /** Create a new empty note which has never been edited
+         * - Create empty note and set it as current note
+         * - Set current note as never edited (only gets set to true here)
+         */
+        viewModelScope.launch {
+            val emptyNote = Note()
+            setCurrentNote(note = emptyNote)
+            setCurrentNoteIsNeverEdited(true)
+        }
+    }
+
+    private fun insertNewOrUpdateNote(updatedNote: Note, neverEdited: Boolean) {
+        /** If the updatedNote has never been edited (neverEdited = true), set it as edited and insert it into the database
+         *  If the note has been edited before, update it in the database
+         */
+        setCurrentNote(updatedNote)
+        if (neverEdited) {
+            setCurrentNoteIsNeverEdited(false)
+            viewModelScope.launch {
+                val newId = noteRepository.insertNote(updatedNote)
+                setCurrentNote(updatedNote.copy(id = newId))
+            }
+        } else {
+            updateNote(updatedNote)
+        }
     }
 
     fun updateCurrentNoteTitle(title: String) {
-        setCurrentNote(note = _uiState.value.currentNote.copy(title = title))
-        //_uiState.value = _uiState.value.copy(currentNote = _uiState.value.currentNote.copy(title = title))
-        if (_uiState.value.currentNoteIsNeverEdited) {
-            viewModelScope.launch {
-                val newId = noteRepository.insertNote(_uiState.value.currentNote)
-                setCurrentNote(_uiState.value.currentNote.copy(id = newId))
-            }
-            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = false)
-        } else {
-            updateNote(_uiState.value.currentNote)
-        }
+        /** Update the current note title and set it as current note
+         * - If the note has never been edited, set it as edited and insert it into the database
+         * - If the note has been edited, update it in the database
+         */
+        val updatedNote = _currentNote.value.copy(title = title)
+        val neverEdited = _currentNoteIsNeverEdited.value
+        insertNewOrUpdateNote(updatedNote, neverEdited)
     }
 
     fun updateCurrentNoteBody(body: String) {
-        setCurrentNote(note = _uiState.value.currentNote.copy(body = body))
-        if (_uiState.value.currentNoteIsNeverEdited) {
-            viewModelScope.launch {
-                val newId = noteRepository.insertNote(_uiState.value.currentNote)
-                setCurrentNote(_uiState.value.currentNote.copy(id = newId))
-            }
-            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = false)
-        } else {
-            updateNote(_uiState.value.currentNote)
-        }
+        /** Update the current note body and set it as current note
+         * - If the note has never been edited, set it as edited and insert it into the database
+         * - If the note has been edited, update it in the database
+         */
+        val updatedNote = _currentNote.value.copy(body = body)
+        val neverEdited = _currentNoteIsNeverEdited.value
+        insertNewOrUpdateNote(updatedNote, neverEdited)
     }
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
-        setCurrentNote(note = _uiState.value.currentNote.copy(isPinned = isPinned))
-        if (_uiState.value.currentNoteIsNeverEdited) {
-            viewModelScope.launch {
-                val newId = noteRepository.insertNote(_uiState.value.currentNote)
-                setCurrentNote(_uiState.value.currentNote.copy(id = newId))
-            }
-            _uiState.value = _uiState.value.copy(currentNoteIsNeverEdited = false)
-        } else {
-            updateNote(_uiState.value.currentNote)
-        }
-    }
-
-    fun updateQuery(query: String) {
-        _searchQuery.value = query
+        /** Update the current note isPinned and set it as current note
+         * - If the note has never been edited, set it as edited and insert it into the database
+         * - If the note has been edited, update it in the database
+         */
+        val updatedNote = _currentNote.value.copy(isPinned = isPinned)
+        val neverEdited = _currentNoteIsNeverEdited.value
+        insertNewOrUpdateNote(updatedNote, neverEdited)
     }
 
     fun longClickSelect(note: Note) {
-        if (!_uiState.value.inSelectionMode) {
+        /*if (!_inSelectionMode.value) {
             _uiState.value = _uiState.value.copy(inSelectionMode = true)
+        }*/
+        if (!_selectedNotes.value.contains(note)) {
+            _selectedNotes.update { it + note }
         }
-        val selectedNotes = _uiState.value.selectedNotes.toMutableList()
-        if (!selectedNotes.contains(note)) {
-            selectedNotes.add(note)
-        }
-        _uiState.value = _uiState.value.copy(selectedNotes = selectedNotes)
     }
 
     fun shortClickSelect(note: Note, navController: NavController) {
-        if(_uiState.value.inSelectionMode) {
-            val selectedNotes = _uiState.value.selectedNotes.toMutableList()
-            if (selectedNotes.contains(note)) {
-                selectedNotes.remove(note)
-                if (selectedNotes.isEmpty()) {
-                    _uiState.value = _uiState.value.copy(inSelectionMode = false)
-                }
+        if (_inSelectionMode.value) {
+            if (_selectedNotes.value.contains(note)) {
+                _selectedNotes.update { it - note }
             } else {
-                selectedNotes.add(note)
+                _selectedNotes.update { it + note }
             }
-            _uiState.value = _uiState.value.copy(selectedNotes = selectedNotes)
         } else {
             setCurrentNote(note)
             navController.navigate(NoteRoute)
@@ -169,16 +195,16 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     }
 
     fun clearSelection() {
-        _uiState.value = _uiState.value.copy(selectedNotes = emptyList(), inSelectionMode = false)
+        _selectedNotes.update { emptyList() }
     }
 
     fun selectAllBinned() {
-        _uiState.value = _uiState.value.copy(selectedNotes = _binList.value, inSelectionMode = true)
+        _selectedNotes.update { _binList.value }
     }
 
     fun archiveSelectedNotes() {
         viewModelScope.launch {
-            _uiState.value.selectedNotes.forEach { note ->
+            _selectedNotes.value.forEach { note ->
                 noteRepository.archiveNote(note)
             }
             clearSelection()
@@ -187,7 +213,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun unarchiveSelectedNotes() {
         viewModelScope.launch {
-            _uiState.value.selectedNotes.forEach { note ->
+            _selectedNotes.value.forEach { note ->
                 noteRepository.unarchiveNote(note)
             }
             clearSelection()
@@ -196,7 +222,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun binSelectedNotes() {
         viewModelScope.launch {
-            _uiState.value.selectedNotes.forEach { note ->
+            _selectedNotes.value.forEach { note ->
                 noteRepository.binNote(note)
             }
             clearSelection()
@@ -205,7 +231,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun restoreSelectedNotes() {
         viewModelScope.launch {
-            _uiState.value.selectedNotes.forEach { note ->
+            _selectedNotes.value.forEach { note ->
                 noteRepository.restoreNote(note)
             }
             clearSelection()
@@ -214,7 +240,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun permanentlyDeleteSelection() {
         viewModelScope.launch {
-            _uiState.value.selectedNotes.forEach { note ->
+            _selectedNotes.value.forEach { note ->
                 noteRepository.deleteNoteFromBin(note)
             }
             clearSelection()
@@ -223,7 +249,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun pinSelectedNotes() {
         viewModelScope.launch {
-            _uiState.value.selectedNotes.forEach { note ->
+            selectedNotes.value.forEach { note ->
                 noteRepository.updateNote(note.copy(isPinned = true))
             }
             clearSelection()
@@ -232,7 +258,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
     fun unpinSelectedNotes() {
         viewModelScope.launch {
-            _uiState.value.selectedNotes.forEach { note ->
+            _selectedNotes.value.forEach { note ->
                 noteRepository.updateNote(note.copy(isPinned = false))
             }
             clearSelection()

@@ -51,13 +51,14 @@ fun NoteScreen(
     viewModel: MainViewModel,
 ) {
 
-    val uiState by viewModel.uiState.collectAsState()
+    val currentNote by viewModel.currentNote.collectAsState()
+    val currentNoteIsNeverEdited by viewModel.currentNoteIsNeverEdited.collectAsState()
     val bodyFocusRequester = FocusRequester()
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
-    var bodyTextState by remember { mutableStateOf(TextFieldValue(uiState.currentNote.body)) }
+    var bodyTextState by remember { mutableStateOf(TextFieldValue(currentNote.body)) }
 
-    LaunchedEffect(key1 = uiState.currentNote.id) {
-        if (uiState.currentNoteIsNeverEdited) {
+    LaunchedEffect(key1 = currentNote.id) {
+        if (currentNoteIsNeverEdited) {
             bodyFocusRequester.requestFocus()
         }
     }
@@ -74,11 +75,11 @@ fun NoteScreen(
                     }
                 },
                 actions = {
-                    if (uiState.currentNote.noteStatus == NoteStatus.ACTIVE) {
+                    if (currentNote.noteStatus == NoteStatus.ACTIVE) {
                         IconButton(onClick = {
-                            viewModel.updateCurrentNoteIsPinned(!uiState.currentNote.isPinned)
+                            viewModel.updateCurrentNoteIsPinned(!currentNote.isPinned)
                         }) {
-                            if (uiState.currentNote.isPinned) {
+                            if (currentNote.isPinned) {
                                 Icon(
                                     painterResource(id = R.drawable.baseline_push_pin_24),
                                     contentDescription = "Localized description"
@@ -91,33 +92,33 @@ fun NoteScreen(
                             }
                         }
                     }
-                    if (uiState.currentNote.noteStatus == NoteStatus.ACTIVE) {
+                    if (currentNote.noteStatus == NoteStatus.ACTIVE) {
                         IconButton(onClick = {
-                            viewModel.archiveNote(uiState.currentNote)
+                            viewModel.archiveNote(currentNote)
                             navController.popBackStack()
                         }) {
                             Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
                         }
                     }
-                    if (uiState.currentNote.noteStatus == NoteStatus.ARCHIVED) {
+                    if (currentNote.noteStatus == NoteStatus.ARCHIVED) {
                         IconButton(onClick = {
-                            viewModel.unarchiveNote(uiState.currentNote)
+                            viewModel.unarchiveNote(currentNote)
                             navController.popBackStack()
                         }) {
                             Icon(painterResource(id = R.drawable.outline_unarchive_24), contentDescription = "Localized description")
                         }
                     }
-                    if (uiState.currentNote.noteStatus == NoteStatus.BINNED) {
+                    if (currentNote.noteStatus == NoteStatus.BINNED) {
                         IconButton(onClick = {
-                            viewModel.restoreNote(uiState.currentNote)
+                            viewModel.restoreNote(currentNote)
                             navController.popBackStack()
                         }) {
                             Icon(painterResource(id = R.drawable.baseline_restore_from_trash_24), contentDescription = "Localized description")
                         }
                     }
-                    if (uiState.currentNote.noteStatus == NoteStatus.ACTIVE || uiState.currentNote.noteStatus == NoteStatus.ARCHIVED) {
+                    if (currentNote.noteStatus == NoteStatus.ACTIVE || currentNote.noteStatus == NoteStatus.ARCHIVED) {
                         IconButton(onClick = {
-                            viewModel.binNote(uiState.currentNote)
+                            viewModel.binNote(currentNote)
                             navController.popBackStack()
                         }) {
                             Icon(
@@ -126,7 +127,7 @@ fun NoteScreen(
                             )
                         }
                     }
-                    if (uiState.currentNote.noteStatus == NoteStatus.BINNED) {
+                    if (currentNote.noteStatus == NoteStatus.BINNED) {
                         IconButton(onClick = {
                             //viewModel.deleteNoteFromBin(uiState.currentNote)
                             //navController.popBackStack()
@@ -157,7 +158,7 @@ fun NoteScreen(
                         Button(onClick = {
                             openFinalDeleteAlert.value = false
                             navController.popBackStack()
-                            viewModel.deleteNoteFromBin(uiState.currentNote)
+                            viewModel.deleteNoteFromBin(currentNote)
                         }) {
                             Text("Delete")
                         }
@@ -177,7 +178,7 @@ fun NoteScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             BasicTextField(
-                value = uiState.currentNote.title,
+                value = currentNote.title,
                 onValueChange = { viewModel.updateCurrentNoteTitle(it) },
                 textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
@@ -196,7 +197,7 @@ fun NoteScreen(
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.TopStart
                     ) {
-                        if (uiState.currentNote.title.isEmpty()) {
+                        if (currentNote.title.isEmpty()) {
                             Text("Title", style = MaterialTheme.typography.titleLarge, color = Color.Gray)
                         }
                         innerTextField()
@@ -287,7 +288,7 @@ fun NoteScreen(
                             .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.TopStart
                     ) {
-                        if (uiState.currentNote.body.isEmpty()) {
+                        if (currentNote.body.isEmpty()) {
                             Text("Body", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
                         }
                         innerTextField()

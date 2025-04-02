@@ -43,10 +43,13 @@ fun HomeScreen(
     viewModel: MainViewModel
 ) {
     
-    val uiState by viewModel.uiState.collectAsState()
+    val inSelectionMode by viewModel.inSelectionMode.collectAsState()
+    val selectedNotes by viewModel.selectedNotes.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val notesList by viewModel.notesList.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    BackHandler(uiState.inSelectionMode) {
+    BackHandler(inSelectionMode) {
         viewModel.clearSelection()
     }
 
@@ -54,15 +57,15 @@ fun HomeScreen(
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            if (uiState.inSelectionMode) {
+            if (inSelectionMode) {
                 var pinIcon = painterResource(id = R.drawable.outline_push_pin_24)
                 var pinAction = { viewModel.pinSelectedNotes() }
-                if (uiState.selectedNotes.all { it.isPinned }){
+                if (selectedNotes.all { it.isPinned }){
                     pinIcon = painterResource(id = R.drawable.baseline_push_pin_24)
                     pinAction = { viewModel.unpinSelectedNotes() }
                 }
                 SelectionBar(
-                    numSelected = uiState.selectedNotes.size,
+                    numSelected = selectedNotes.size,
                     onSelectionClear = { viewModel.clearSelection() },
                     actionButtons = listOf(
                         pinIcon to pinAction,
@@ -73,15 +76,15 @@ fun HomeScreen(
             } else {
                 TopBarHome(
                     navController = navController,
-                    updateQuery = { viewModel.updateQuery(it) },
-                    searchQuery = uiState.searchQuery,
+                    updateQuery = { viewModel.setQuery(it) },
+                    searchQuery = searchQuery,
                 )
             }
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.insertAndShowNewEmptyNote()
+                    viewModel.setNewEmptyNote()
                     navController.navigate(NoteRoute)
                 },
                 containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
@@ -101,13 +104,13 @@ fun HomeScreen(
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
                 items(
-                    items = uiState.notesList,
+                    items = notesList,
                     key = { note -> note.id }
                 ) { note ->
                     NoteCard(
                         note = note,
-                        searchQuery = uiState.searchQuery,
-                        selected = uiState.selectedNotes.contains(note),
+                        searchQuery = searchQuery,
+                        selected = selectedNotes.contains(note),
                         onClick = {
                             viewModel.shortClickSelect(note = note, navController = navController)
                         },
@@ -129,7 +132,7 @@ fun HomeScreen(
                 }
             }
         )
-        if (uiState.notesList.isEmpty()) {
+        if (notesList.isEmpty()) {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)

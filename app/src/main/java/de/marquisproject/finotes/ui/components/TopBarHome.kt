@@ -56,7 +56,7 @@ fun TopBarHome(
                         if (!focusState.isFocused) {
                             updateQuery("")
                         }
-                    },
+                                    },
                 value = searchQuery,
                 onValueChange = updateQuery,
                 leadingIcon = {

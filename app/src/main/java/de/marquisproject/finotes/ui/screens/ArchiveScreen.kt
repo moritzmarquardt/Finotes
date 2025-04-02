@@ -42,11 +42,14 @@ fun ArchiveScreen(
     viewModel: MainViewModel
 ) {
 
-    val uiState by viewModel.uiState.collectAsState()
+    val inSelectionMode by viewModel.inSelectionMode.collectAsState()
+    val selectedNotes by viewModel.selectedNotes.collectAsState()
+    val archivedList by viewModel.archivedList.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     BackHandler {
-        if (uiState.inSelectionMode) {
+        if (inSelectionMode) {
             viewModel.clearSelection()
         } else {
             navController.popBackStack()
@@ -57,9 +60,9 @@ fun ArchiveScreen(
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            if (uiState.inSelectionMode) {
+            if (inSelectionMode) {
                 SelectionBar(
-                    numSelected = uiState.selectedNotes.size,
+                    numSelected = selectedNotes.size,
                     onSelectionClear = { viewModel.clearSelection() },
                     actionButtons = listOf(
                         painterResource(id = R.drawable.outline_unarchive_24) to { viewModel.unarchiveSelectedNotes() },
@@ -88,7 +91,7 @@ fun ArchiveScreen(
             )
         }
     ) { innerPadding ->
-        if (uiState.archivedList.isEmpty()) {
+        if (archivedList.isEmpty()) {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -108,13 +111,13 @@ fun ArchiveScreen(
             columns = StaggeredGridCells.Adaptive(200.dp),
             content = {
                 items(
-                    items = uiState.archivedList,
+                    items = archivedList,
                     key = { note -> note.id } //necessary for the swiping to work
                 ) { note ->
                     NoteCard(
                         note = note,
-                        searchQuery = uiState.searchQuery,
-                        selected = uiState.selectedNotes.contains(note),
+                        searchQuery = searchQuery,
+                        selected = selectedNotes.contains(note),
                         onClick = {
                             viewModel.shortClickSelect(note = note, navController = navController)
                         },

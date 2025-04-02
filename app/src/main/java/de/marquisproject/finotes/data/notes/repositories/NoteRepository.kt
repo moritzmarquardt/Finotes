@@ -47,13 +47,13 @@ class NoteRepository (
         archiveDb.dao.deleteNote(note)
     }
 
-    fun getAllNotes() = noteDb.dao.getAllNotes()
+    fun fetchAllNotes() = noteDb.dao.getAllNotes()
 
-    fun searchNotes(searchQuery: String) = noteDb.dao.getNotesWithQuery(searchQuery)
+    fun fetchNotesWithQuery(searchQuery: String) = noteDb.dao.getNotesWithQuery(searchQuery)
 
-    fun getAllArchivedNotes() = archiveDb.dao.getAllNotes()
+    fun fetchAllArchivedNotes() = archiveDb.dao.getAllNotes()
 
-    fun getAllDeletedNotes() = binDb.dao.getAllNotes()
+    fun fetchAllDeletedNotes() = binDb.dao.getAllNotes()
 
 
     fun insertNotes(notes: List<Note>) {

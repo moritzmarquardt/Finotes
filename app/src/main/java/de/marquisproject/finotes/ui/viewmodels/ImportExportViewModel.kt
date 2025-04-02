@@ -16,8 +16,8 @@ import kotlinx.coroutines.withContext
 
 class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewModel() {
 
-    private val _notesList = noteRepository.getAllNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    private val _archivedList = noteRepository.getAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _notesList = noteRepository.fetchAllNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _archivedList = noteRepository.fetchAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _importExportState = MutableStateFlow(ImportExportState())
     private val _exportSettings = MutableStateFlow(ExportSettings())
