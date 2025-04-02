@@ -116,9 +116,7 @@ fun HomeScreen(
                         },
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
-                        },
-                        sharedTransitionScope = sharedTransitionScope,
-                        animatedContentScope = animatedContentScope,
+                        }
                         )
                 }
             }
