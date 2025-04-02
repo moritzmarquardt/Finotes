@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -39,14 +40,14 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
     private val _binList = MutableStateFlow<List<Note>>(emptyList())
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
-    val searchQuery: StateFlow<String> = _searchQuery
-    val notesList: StateFlow<List<Note>> = _notesList
-    val archivedList: StateFlow<List<Note>> = _archivedList
-    val binList: StateFlow<List<Note>> = _binList
-    val currentNote: StateFlow<Note> = _currentNote
-    val currentNoteIsNeverEdited: StateFlow<Boolean> = _currentNoteIsNeverEdited
-    val inSelectionMode: StateFlow<Boolean> = _inSelectionMode
-    val selectedNotes: StateFlow<List<Note>> = _selectedNotes
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    val notesList: StateFlow<List<Note>> = _notesList // already a StateFlow
+    val archivedList: StateFlow<List<Note>> = _archivedList // already a StateFlow
+    val binList: StateFlow<List<Note>> = _binList // already a StateFlow
+    val currentNote: StateFlow<Note> = _currentNote.asStateFlow()
+    val currentNoteIsNeverEdited: StateFlow<Boolean> = _currentNoteIsNeverEdited.asStateFlow()
+    val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
+    val selectedNotes: StateFlow<List<Note>> = _selectedNotes.asStateFlow()
 
 
 
@@ -119,11 +120,9 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
          * - Create empty note and set it as current note
          * - Set current note as never edited (only gets set to true here)
          */
-        viewModelScope.launch {
-            val emptyNote = Note()
-            setCurrentNote(note = emptyNote)
-            setCurrentNoteIsNeverEdited(true)
-        }
+        val emptyNote = Note()
+        setCurrentNote(note = emptyNote)
+        setCurrentNoteIsNeverEdited(true)
     }
 
     private fun insertNewOrUpdateNote(updatedNote: Note, neverEdited: Boolean) {
