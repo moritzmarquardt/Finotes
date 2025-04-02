@@ -101,7 +101,7 @@ fun HomeScreen(
     ) { innerPadding ->
         LazyVerticalStaggeredGrid(
             modifier = Modifier.padding(innerPadding),
-            columns = StaggeredGridCells.Adaptive(200.dp),
+            columns = StaggeredGridCells.Adaptive(180.dp),
             content = {
                 items(
                     items = notesList,
@@ -117,18 +117,9 @@ fun HomeScreen(
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
                         },
-                        /*onSwipe = {
-                            viewModel.archiveNote(note)
-                            scope.launch {
-                                snackbarHostState
-                                    .showSnackbar(
-                                        message = "Note archived",
-                                        duration = SnackbarDuration.Short
-                                    )
-                            }
-                                  },
-                        swipeIcon = painterResource(id = R.drawable.outline_archive_24),*/
-                    )
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope,
+                        )
                 }
             }
         )
