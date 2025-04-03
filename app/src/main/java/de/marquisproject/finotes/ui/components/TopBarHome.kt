@@ -1,8 +1,12 @@
 package de.marquisproject.finotes.ui.components
 
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
@@ -15,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -29,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import de.marquisproject.finotes.ArchiveRoute
 import de.marquisproject.finotes.BinRoute
@@ -47,22 +53,23 @@ fun TopBarHome(
 
     CenterAlignedTopAppBar(
         title = {
-            TextField(
+            OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(CircleShape)
                     .focusable()
                     .onFocusChanged { focusState ->
                         if (!focusState.isFocused) {
                             updateQuery("")
                         }
                                     },
+                shape = RoundedCornerShape(50),
                 value = searchQuery,
                 onValueChange = updateQuery,
                 leadingIcon = {
                     Icon(
                         Icons.Filled.Search,
                         contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.tertiary
                     )
                 },
                 trailingIcon = {
@@ -76,13 +83,17 @@ fun TopBarHome(
                 },
                 placeholder = { Text("Search Finotes") },
                 singleLine = true,
+                maxLines = 1,
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
+                    //focusedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    //unfocusedContainerColor = Color.Transparent,
+                    //focusedIndicatorColor = MaterialTheme.colorScheme.tertiary,
+                    //unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                    //cursorColor = MaterialTheme.colorScheme.onSurface,
+                    //unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface,
+                    //focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface,
+                    //disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface,
+                    //focusedTextColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
@@ -127,7 +138,7 @@ fun TopBarHome(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            //containerColor = MaterialTheme.colorScheme.background
         )
     )
 }
