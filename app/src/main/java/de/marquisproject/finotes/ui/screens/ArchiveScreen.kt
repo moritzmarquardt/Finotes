@@ -1,10 +1,7 @@
 package de.marquisproject.finotes.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,8 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import de.marquisproject.finotes.LocalNavAnimatedVisibilityScope
-import de.marquisproject.finotes.LocalSharedTransitionScope
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.components.SelectionBar
@@ -46,7 +41,6 @@ import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 fun ArchiveScreen(
     navController: NavController,
     viewModel: MainViewModel,
-    animatedContentScope: AnimatedContentScope
 ) {
 
     val inSelectionMode by viewModel.inSelectionMode.collectAsState()
@@ -131,7 +125,6 @@ fun ArchiveScreen(
                         onLongClick = {
                             viewModel.longClickSelect(note = note)
                         },
-                        animatedContentScope = animatedContentScope,
                         /*onSwipe = {
                             viewModel.binNote(note)
                             scope.launch {
