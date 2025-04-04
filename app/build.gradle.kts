@@ -42,6 +42,10 @@ android {
 }
 
 dependencies {
+    // animation for shared elements
+    implementation(libs.androidx.animation)
+    implementation(libs.androidx.animation.graphics) // or a newer version
+
     //Moshi for JSON parsing
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)

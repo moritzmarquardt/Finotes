@@ -14,8 +14,28 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -113,53 +133,72 @@ class MainActivity : ComponentActivity() {
     }
 
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
-            FinotesTheme {
-                    NavHost(
-                        navController = navController,
-                        startDestination = HomeRoute,
-                    ) {
-                        composable<HomeRoute> {
-                            HomeScreen(
-                                navController = navController,
-                                viewModel = viewModel,
-                            )
-                        }
-                        composable<ArchiveRoute> {
-                            ArchiveScreen(
-                                navController = navController,
-                                viewModel = viewModel,
-                            )
-                        }
-                        composable<BinRoute> {
-                            BinScreen(
-                                navController = navController,
-                                viewModel = viewModel,
-                            )
-                        }
-                        composable<NoteRoute> {
-                            NoteScreen(
-                                navController = navController,
-                                viewModel = viewModel,
-                            )
-                        }
-                        composable<ExportImportRoute> {
-                            ExportImportScreen(
-                                navControllerMain = navController,
-                                iEviewModel = importExportViewModel,
-                                createFileLauncher = createFileLauncher,
-                                pickFileLauncher = pickFileLauncher,
-                            )
+            SharedTransitionLayout {
+                val navController = rememberNavController()
+                CompositionLocalProvider(
+                    LocalSharedTransitionScope provides this@SharedTransitionLayout
+                ) {
+                    FinotesTheme {
+                        NavHost(
+                            navController = navController,
+                            startDestination = HomeRoute,
+                            enterTransition = {
+                                //fadeIn(animationSpec = spring(stiffness = 3000f, dampingRatio = 0.5f))
+                                EnterTransition.None
+                                              },
+                            exitTransition = {
+                                //fadeOut(animationSpec = spring(stiffness = 3000f, dampingRatio = 0.5f))
+                                ExitTransition.None
+                                             },
+                        ) {
+                            composable<HomeRoute> {
+                                HomeScreen(
+                                    navController = navController,
+                                    viewModel = viewModel,
+                                    animatedContentScope = this@composable
+                                )
+                            }
+                            composable<ArchiveRoute> {
+                                ArchiveScreen(
+                                    navController = navController,
+                                    viewModel = viewModel,
+                                    animatedContentScope = this@composable
+                                )
+                            }
+                            composable<BinRoute> {
+                                BinScreen(
+                                    navController = navController,
+                                    viewModel = viewModel,
+                                    animatedContentScope = this@composable
+                                )
+                            }
+                            composable<NoteRoute> {
+                                NoteScreen(
+                                    navController = navController,
+                                    viewModel = viewModel,
+                                    animatedContentScope = this@composable
+                                )
+                            }
+                            composable<ExportImportRoute> {
+                                ExportImportScreen(
+                                    navControllerMain = navController,
+                                    iEviewModel = importExportViewModel,
+                                    createFileLauncher = createFileLauncher,
+                                    pickFileLauncher = pickFileLauncher,
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
 
 // main routes
 @Serializable object HomeRoute
@@ -167,3 +206,7 @@ class MainActivity : ComponentActivity() {
 @Serializable object BinRoute
 @Serializable object NoteRoute
 @Serializable object ExportImportRoute
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
+val LocalNavAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }

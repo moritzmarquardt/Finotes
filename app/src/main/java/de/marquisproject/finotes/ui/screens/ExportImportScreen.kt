@@ -1,6 +1,8 @@
 package de.marquisproject.finotes.ui.screens
 
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -83,7 +85,9 @@ fun ExportImportScreen(
         NavHost(
             navController = navControllerIE,
             startDestination = ExportRoute,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            exitTransition = { ExitTransition.None},
+            enterTransition = { EnterTransition.None }
         ) {
             composable<ExportRoute> {
                 ExportScreen(

@@ -1,5 +1,8 @@
 package de.marquisproject.finotes.ui.components
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -32,19 +35,25 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import de.marquisproject.finotes.LocalSharedTransitionScope
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.Note
 import kotlin.math.abs
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun OutlinedNoteCard(
     note: Note,
     searchQuery: String,
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,
-    selected: Boolean
+    selected: Boolean,
+    animatedContentScope: AnimatedContentScope
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+        ?: throw IllegalStateException("No SharedTransitionScope provided")
+
+
     fun highlightText(text: String, query: String): AnnotatedString {
         if (query.isBlank()) return AnnotatedString(text)
 
@@ -75,57 +84,73 @@ fun OutlinedNoteCard(
     } else {
         CardDefaults.outlinedCardColors()
     }
-    OutlinedCard(
-        modifier = Modifier
-            .padding(4.dp)
-            .combinedClickable(
-                onClick = {
-                    onClick(note)
-                },
-                onLongClick = {
-                    onLongClick(note)
-                }
-            ),
-        colors = colors
-    ) {
-        Box(
+    with(sharedTransitionScope) {
+        OutlinedCard(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
-            if (note.isPinned) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_push_pin_24),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(20.dp)
+                .padding(4.dp)
+                .combinedClickable(
+                    onClick = {
+                        onClick(note)
+                    },
+                    onLongClick = {
+                        onLongClick(note)
+                    }
                 )
-            }
-            Column {
-                if (note.title.isNotBlank()) {
-                    Text(
-                        modifier = Modifier.padding(end = 20.dp),
-                        text = highlightText(note.title, searchQuery),
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                .sharedBounds(
+                    sharedTransitionScope.rememberSharedContentState(key = "note-${note.id}"),
+                    animatedVisibilityScope = animatedContentScope
+                ),
+            colors = colors
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp)
+            ) {
+                if (note.isPinned) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_push_pin_24),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(20.dp)
                     )
                 }
-                if (note.body.isNotBlank()) {
-                    Text(
-                        text = highlightText(note.body, searchQuery),
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 7,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                Column {
+                    if (note.title.isNotBlank()) {
+                        Text(
+                            modifier = Modifier
+                                .padding(end = 20.dp)
+                                .sharedElement(
+                                    sharedTransitionScope.rememberSharedContentState(key = "title-${note.id}"),
+                                    animatedVisibilityScope = animatedContentScope
+                                ),
+                            text = highlightText(note.title, searchQuery),
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (note.body.isNotBlank()) {
+                        Text(
+                            modifier = Modifier.sharedElement(
+                                sharedTransitionScope.rememberSharedContentState(key = "body-${note.id}"),
+                                animatedVisibilityScope = animatedContentScope
+                            ),
+                            text = highlightText(note.body, searchQuery),
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 7,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun NoteCard(
     note: Note,
@@ -135,6 +160,7 @@ fun NoteCard(
     onLongClick: (Note) -> Unit,
     onSwipe: ((Note) -> Unit)? = null,
     swipeIcon: Painter = painterResource(id = R.drawable.outline_star_outline_24),
+    animatedContentScope: AnimatedContentScope
 ) {
     if (onSwipe != null) {
         val dismissState = rememberSwipeToDismissBoxState(
@@ -180,17 +206,20 @@ fun NoteCard(
                     searchQuery = searchQuery,
                     onClick = onClick,
                     onLongClick = onLongClick,
-                    selected = selected
+                    selected = selected,
+                    animatedContentScope = animatedContentScope,
                 )
             }
         )
     } else {
+
         OutlinedNoteCard(
             note = note,
             searchQuery = searchQuery,
             onClick = onClick,
             onLongClick = onLongClick,
-            selected = selected
+            selected = selected,
+            animatedContentScope = animatedContentScope,
         )
     }
 }

@@ -1,5 +1,6 @@
 [versions]
 agp = "8.9.1"
+animation = "1.7.8"
 kotlin = "2.0.21"
 kotlinKSP = "2.0.21-1.0.27"
 coreKtx = "1.15.0"
@@ -17,6 +18,8 @@ navigationTesting = "2.8.9"
 roomRuntime = "2.6.1"
 
 [libraries]
+androidx-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
+androidx-animation-graphics = { module = "androidx.compose.animation:animation-graphics", version.ref = "animation" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navigationTesting" }
