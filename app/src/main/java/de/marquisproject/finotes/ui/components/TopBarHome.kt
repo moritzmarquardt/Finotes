@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import de.marquisproject.finotes.ArchiveRoute
@@ -61,7 +62,7 @@ fun TopBarHome(
                     Icon(
                         Icons.Filled.Search,
                         contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.tertiary
+                        tint = MaterialTheme.colorScheme.secondary
                     )
                 },
                 trailingIcon = {
@@ -77,10 +78,10 @@ fun TopBarHome(
                 singleLine = true,
                 maxLines = 1,
                 colors = TextFieldDefaults.colors(
-                    //focusedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    //unfocusedContainerColor = Color.Transparent,
-                    //focusedIndicatorColor = MaterialTheme.colorScheme.tertiary,
-                    //unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
                     //cursorColor = MaterialTheme.colorScheme.onSurface,
                     //unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface,
                     //focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface,
@@ -130,7 +131,7 @@ fun TopBarHome(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            //containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.background
         )
     )
 }

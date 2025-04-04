@@ -46,35 +46,16 @@ fun OutlinedNoteCard(
     onLongClick: (Note) -> Unit,
     selected: Boolean,
 ) {
-    fun highlightText(text: String, query: String): AnnotatedString {
-        if (query.isBlank()) return AnnotatedString(text)
-
-        val lowerCaseText = text.lowercase()
-        val lowerCaseQuery = query.lowercase()
-        var startIndex = lowerCaseText.indexOf(lowerCaseQuery)
-        if (startIndex == -1) return AnnotatedString(text)
-
-        return buildAnnotatedString {
-            var currentIndex = 0
-            while (startIndex != -1) {
-                append(text.substring(currentIndex, startIndex))
-                withStyle(style = SpanStyle(background = Color.Yellow)) {
-                    append(text.substring(startIndex, startIndex + query.length))
-                }
-                currentIndex = startIndex + query.length
-                startIndex = lowerCaseText.indexOf(lowerCaseQuery, currentIndex)
-            }
-            append(text.substring(currentIndex))
-        }
-    }
-
     val colors = if (selected) {
         CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         )
     } else {
-        CardDefaults.outlinedCardColors()
+        CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground
+        )
     }
     OutlinedCard(
         modifier = Modifier
@@ -109,7 +90,7 @@ fun OutlinedNoteCard(
                     Text(
                         modifier = Modifier
                             .padding(end = 20.dp),
-                        text = highlightText(note.title, searchQuery),
+                        text = highlightText(note.title, searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -117,7 +98,7 @@ fun OutlinedNoteCard(
                 }
                 if (note.body.isNotBlank()) {
                     Text(
-                        text = highlightText(note.body, searchQuery),
+                        text = highlightText(note.body, searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 7,
                         overflow = TextOverflow.Ellipsis
@@ -197,5 +178,28 @@ fun NoteCard(
             onLongClick = onLongClick,
             selected = selected,
         )
+    }
+}
+
+
+fun highlightText(text: String, query: String, highlightColor: Color): AnnotatedString {
+    if (query.isBlank()) return AnnotatedString(text)
+
+    val lowerCaseText = text.lowercase()
+    val lowerCaseQuery = query.lowercase()
+    var startIndex = lowerCaseText.indexOf(lowerCaseQuery)
+    if (startIndex == -1) return AnnotatedString(text)
+
+    return buildAnnotatedString {
+        var currentIndex = 0
+        while (startIndex != -1) {
+            append(text.substring(currentIndex, startIndex))
+            withStyle(style = SpanStyle(background = highlightColor)) {
+                append(text.substring(startIndex, startIndex + query.length))
+            }
+            currentIndex = startIndex + query.length
+            startIndex = lowerCaseText.indexOf(lowerCaseQuery, currentIndex)
+        }
+        append(text.substring(currentIndex))
     }
 }
