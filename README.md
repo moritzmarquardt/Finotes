@@ -50,5 +50,3 @@ These include:
 This project is licensed under the MIT License.
 
 ---
-
-*Note: This app is a work in progress and new features are being added regularly.*
