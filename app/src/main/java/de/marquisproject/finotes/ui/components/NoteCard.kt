@@ -41,7 +41,7 @@ import kotlin.math.abs
 @Composable
 fun OutlinedNoteCard(
     note: Note,
-    searchQuery: String,
+    searchQuery: String?,
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,
     selected: Boolean,
@@ -114,7 +114,7 @@ fun OutlinedNoteCard(
 @Composable
 fun NoteCard(
     note: Note,
-    searchQuery: String,
+    searchQuery: String? = null,
     selected: Boolean,
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,
@@ -182,8 +182,8 @@ fun NoteCard(
 }
 
 
-fun highlightText(text: String, query: String, highlightColor: Color): AnnotatedString {
-    if (query.isBlank()) return AnnotatedString(text)
+fun highlightText(text: String, query: String?, highlightColor: Color): AnnotatedString {
+    if (query.isNullOrBlank()) return AnnotatedString(text)
 
     val lowerCaseText = text.lowercase()
     val lowerCaseQuery = query.lowercase()
