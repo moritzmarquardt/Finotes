@@ -37,13 +37,13 @@ fun ExportImportScreen(
     pickFileLauncher: ActivityResultLauncher<String>
 ) {
     val navControllerIE = rememberNavController()
-    val iEState by iEviewModel.importExportState.collectAsState()
+    val importExportMode by iEviewModel.importExportMode.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    val title = when (iEState.mode) {
+                    val title = when (importExportMode) {
                         ImportExportMode.EXPORT -> "Export notes"
                         ImportExportMode.IMPORT -> "Import notes"
                     }
@@ -64,7 +64,7 @@ fun ExportImportScreen(
                 NavigationBarItem(
                     icon = { Icon(painterResource(id = R.drawable.outline_file_upload_24), contentDescription = "Home") },
                     label = { Text("Export") },
-                    selected = iEState.mode == ImportExportMode.EXPORT,
+                    selected = importExportMode == ImportExportMode.EXPORT,
                     onClick = {
                         iEviewModel.setMode(ImportExportMode.EXPORT)
                         navControllerIE.navigate(ExportRoute)
@@ -73,7 +73,7 @@ fun ExportImportScreen(
                 NavigationBarItem(
                     icon = { Icon(painterResource(id = R.drawable.outline_file_download_24), contentDescription = "Home") },
                     label = { Text("Import") },
-                    selected = iEState.mode == ImportExportMode.IMPORT,
+                    selected = importExportMode == ImportExportMode.IMPORT,
                     onClick = {
                         iEviewModel.setMode(ImportExportMode.IMPORT)
                         navControllerIE.navigate(ImportRoute)
@@ -91,14 +91,14 @@ fun ExportImportScreen(
         ) {
             composable<ExportRoute> {
                 ExportScreen(
-                    iEState = iEState,
                     iEviewModel = iEviewModel,
                     createFileLauncher = createFileLauncher
                 )
             }
             composable<ImportRoute> {
                 ImportScreen(
-                    pickFileLauncher = pickFileLauncher
+                    pickFileLauncher = pickFileLauncher,
+                    iEviewModel = iEviewModel,
                 )
             }
         }

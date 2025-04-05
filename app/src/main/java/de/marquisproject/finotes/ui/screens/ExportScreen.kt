@@ -15,20 +15,26 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import de.marquisproject.finotes.ui.viewmodels.ExportFileFormat
-import de.marquisproject.finotes.ui.viewmodels.ImportExportState
+import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
 
 @Composable
 fun ExportScreen(
-    iEState: ImportExportState,
     iEviewModel: ImportExportViewModel,
     createFileLauncher: ActivityResultLauncher<String>
 ) {
+    val exportSettings = iEviewModel.exportSettings.collectAsState()
+    val exportData = iEviewModel.exportData.collectAsState()
+
+    iEviewModel.setMode(ImportExportMode.EXPORT)
+
+
     Column (
         modifier = Modifier.padding(16.dp)
     ) {
@@ -44,14 +50,14 @@ fun ExportScreen(
                 verticalArrangement = Arrangement.Top
             ) {
                 Text("Include archived notes", style = MaterialTheme.typography.titleMedium)
-                val subtitle = if (iEState.exportSettings.includeArchived) "Yes" else "No"
+                val subtitle = if (exportSettings.value.includeArchived) "Yes" else "No"
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium)
             }
             Switch(
-                checked = iEState.exportSettings.includeArchived,
+                checked = exportSettings.value.includeArchived,
                 onCheckedChange = {
                     iEviewModel.setExportSettings (
-                        iEState.exportSettings.copy(includeArchived = it)
+                        exportSettings.value.copy(includeArchived = it)
                     )
                                   },
                 modifier = Modifier.align(Alignment.CenterVertically)
@@ -63,7 +69,7 @@ fun ExportScreen(
         ) {
             Column {
                 Text("Choose export format", style = MaterialTheme.typography.titleMedium)
-                Text("${iEState.exportSettings.exportFileFormat}", style = MaterialTheme.typography.bodyMedium)
+                Text("${exportSettings.value.exportFileFormat}", style = MaterialTheme.typography.bodyMedium)
             }
         }
         Column(modifier = Modifier.selectableGroup()) {
@@ -73,10 +79,10 @@ fun ExportScreen(
                         .fillMaxWidth()
                         .height(56.dp)
                         .selectable(
-                            selected = (iEState.exportSettings.exportFileFormat == format),
+                            selected = (exportSettings.value.exportFileFormat == format),
                             onClick = {
                                 iEviewModel.setExportSettings (
-                                    iEState.exportSettings.copy(exportFileFormat = format)
+                                    exportSettings.value.copy(exportFileFormat = format)
                                 )
                             },
                             role = Role.RadioButton
@@ -85,7 +91,7 @@ fun ExportScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
-                        selected = (iEState.exportSettings.exportFileFormat == format),
+                        selected = (exportSettings.value.exportFileFormat == format),
                         onClick = null // null recommended for accessibility with screen readers
                     )
                     Text(
@@ -98,12 +104,11 @@ fun ExportScreen(
         }
         Button(
             onClick = {
-                iEviewModel.setExportJson()
-                createFileLauncher.launch("notes_backup.json")
+                createFileLauncher.launch("Finotes_backup.json")
                       },
             modifier = Modifier.fillMaxWidth().padding(top = 30.dp)
         ) {
-            val numExportNotes = iEState.exportData.notes.size + iEState.exportData.archivedNotes.size
+            val numExportNotes = exportData.value.notes.size + exportData.value.archivedNotes.size
             Text("Export $numExportNotes notes")
         }
     }

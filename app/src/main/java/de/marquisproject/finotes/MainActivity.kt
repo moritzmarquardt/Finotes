@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
 
     private val createFileLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let {
-            val jsonString = importExportViewModel.importExportState.value.exportJson
+            val jsonString = importExportViewModel.createExportDataJson()
 
             try {
                 contentResolver.openOutputStream(it)?.bufferedWriter().use { writer ->
@@ -104,8 +104,8 @@ class MainActivity : ComponentActivity() {
                 contentResolver.openInputStream(it)?.bufferedReader().use { reader ->
                     val jsonString = reader?.readText()
                     jsonString?.let {
-                        importExportViewModel.restoreBackup(it)
-                        Toast.makeText(this, "Backup restored!", Toast.LENGTH_SHORT).show()
+                        importExportViewModel.loadBackupFile(it)
+                        Toast.makeText(this, "Backup file loaded successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: IOException) {
