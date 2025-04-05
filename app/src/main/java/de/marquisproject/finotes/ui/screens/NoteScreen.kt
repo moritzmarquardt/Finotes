@@ -182,6 +182,7 @@ fun NoteScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             BasicTextField(
+                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE,
                 value = currentNote.title,
                 onValueChange = { viewModel.updateCurrentNoteTitle(it) },
                 textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
@@ -209,6 +210,7 @@ fun NoteScreen(
                 }
             )
             BasicTextField(
+                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE,
                 value = bodyTextState,
                 onValueChange = { textFieldValue ->
                     val bodyText = textFieldValue.text
