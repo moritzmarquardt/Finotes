@@ -17,6 +17,7 @@ import androidx.activity.viewModels
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
@@ -27,10 +28,13 @@ import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import de.marquisproject.finotes.ui.screens.ArchiveScreen
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 import de.marquisproject.finotes.ui.screens.BinScreen
+import de.marquisproject.finotes.ui.screens.SettingsScreen
 import de.marquisproject.finotes.ui.theme.FinotesTheme
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
+import de.marquisproject.finotes.ui.viewmodels.SettingsViewModel
 import kotlinx.serialization.Serializable
 import java.io.IOException
+import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
     private val noteDb by lazy {
@@ -82,6 +86,16 @@ class MainActivity : ComponentActivity() {
         }
     )
 
+    private val settingsViewModel by viewModels<SettingsViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return SettingsViewModel(application) as T
+                }
+            }
+        }
+    )
+
     private val createFileLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let {
             val jsonString = importExportViewModel.createExportDataJson()
@@ -122,7 +136,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
-            FinotesTheme {
+            FinotesTheme(
+                themeVariant = settingsViewModel.themeVariant.collectAsState().value
+            ) {
                 NavHost(
                     navController = navController,
                     startDestination = HomeRoute,
@@ -153,6 +169,12 @@ class MainActivity : ComponentActivity() {
                             viewModel = viewModel,
                         )
                     }
+                    composable<SettingsRoute> {
+                        SettingsScreen(
+                            navController = navController,
+                            viewModel = settingsViewModel,
+                        )
+                    }
                     composable<NoteRoute> {
                         NoteScreen(
                             navController = navController,
@@ -179,4 +201,4 @@ class MainActivity : ComponentActivity() {
 @Serializable object BinRoute
 @Serializable object NoteRoute
 @Serializable object ExportImportRoute
-
+@Serializable object SettingsRoute

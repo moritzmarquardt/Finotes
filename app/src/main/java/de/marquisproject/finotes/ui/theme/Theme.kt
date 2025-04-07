@@ -1,110 +1,149 @@
 package de.marquisproject.finotes.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.lightColorScheme
 
-private val LightColorScheme = lightColorScheme(
-    primary = primaryLight,
-    onPrimary = onPrimaryLight,
-    primaryContainer = primaryContainerLight,
-    onPrimaryContainer = onPrimaryContainerLight,
-    secondary = secondaryLight,
-    onSecondary = onSecondaryLight,
-    secondaryContainer = secondaryContainerLight,
-    onSecondaryContainer = onSecondaryContainerLight,
-    tertiary = tertiaryLight,
-    onTertiary = onTertiaryLight,
-    tertiaryContainer = tertiaryContainerLight,
-    onTertiaryContainer = onTertiaryContainerLight,
-    error = errorLight,
-    onError = onErrorLight,
-    errorContainer = errorContainerLight,
-    onErrorContainer = onErrorContainerLight,
-    background = backgroundLight,
-    onBackground = onBackgroundLight,
-    surface = surfaceLight,
-    onSurface = onSurfaceLight,
-    surfaceVariant = surfaceVariantLight,
-    onSurfaceVariant = onSurfaceVariantLight,
-    outline = outlineLight,
-    outlineVariant = outlineVariantLight,
-    scrim = scrimLight,
-    inverseSurface = inverseSurfaceLight,
-    inverseOnSurface = inverseOnSurfaceLight,
-    inversePrimary = inversePrimaryLight,
-    surfaceDim = surfaceDimLight,
-    surfaceBright = surfaceBrightLight,
-    surfaceContainerLowest = surfaceContainerLowestLight,
-    surfaceContainerLow = surfaceContainerLowLight,
-    surfaceContainer = surfaceContainerLight,
-    surfaceContainerHigh = surfaceContainerHighLight,
-    surfaceContainerHighest = surfaceContainerHighestLight,
-)
 
-private val DarkColorScheme = darkColorScheme(
-    primary = primaryDark,
-    onPrimary = onPrimaryDark,
-    primaryContainer = primaryContainerDark,
-    onPrimaryContainer = onPrimaryContainerDark,
-    secondary = secondaryDark,
-    onSecondary = onSecondaryDark,
-    secondaryContainer = secondaryContainerDark,
-    onSecondaryContainer = onSecondaryContainerDark,
-    tertiary = tertiaryDark,
-    onTertiary = onTertiaryDark,
-    tertiaryContainer = tertiaryContainerDark,
-    onTertiaryContainer = onTertiaryContainerDark,
-    error = errorDark,
-    onError = onErrorDark,
-    errorContainer = errorContainerDark,
-    onErrorContainer = onErrorContainerDark,
-    background = backgroundDark,
-    onBackground = onBackgroundDark,
-    surface = surfaceDark,
-    onSurface = onSurfaceDark,
-    surfaceVariant = surfaceVariantDark,
-    onSurfaceVariant = onSurfaceVariantDark,
-    outline = outlineDark,
-    outlineVariant = outlineVariantDark,
-    scrim = scrimDark,
-    inverseSurface = inverseSurfaceDark,
-    inverseOnSurface = inverseOnSurfaceDark,
-    inversePrimary = inversePrimaryDark,
-    surfaceDim = surfaceDimDark,
-    surfaceBright = surfaceBrightDark,
-    surfaceContainerLowest = surfaceContainerLowestDark,
-    surfaceContainerLow = surfaceContainerLowDark,
-    surfaceContainer = surfaceContainerDark,
-    surfaceContainerHigh = surfaceContainerHighDark,
-    surfaceContainerHighest = surfaceContainerHighestDark,
-)
 
+/*private fun colourPaletteToLightColorScheme(
+    colorPalette: ColourPalette
+): ColorScheme {
+    return lightColorScheme(
+        primary = colorPalette.primaryLight,
+        onPrimary = colorPalette.onPrimaryLight,
+        primaryContainer = colorPalette.primaryContainerLight,
+        onPrimaryContainer = colorPalette.onPrimaryContainerLight,
+        secondary = colorPalette.secondaryLight,
+        onSecondary = colorPalette.onSecondaryLight,
+        secondaryContainer = colorPalette.secondaryContainerLight,
+        onSecondaryContainer = colorPalette.onSecondaryContainerLight,
+        tertiary = colorPalette.tertiaryLight,
+        onTertiary = colorPalette.onTertiaryLight,
+        tertiaryContainer = colorPalette.tertiaryContainerLight,
+        onTertiaryContainer = colorPalette.onTertiaryContainerLight,
+        error = colorPalette.errorLight,
+        onError = colorPalette.onErrorLight,
+        errorContainer = colorPalette.errorContainerLight,
+        onErrorContainer = colorPalette.onErrorContainerLight,
+        background = colorPalette.backgroundLight,
+        onBackground = colorPalette.onBackgroundLight,
+        surface = colorPalette.surfaceLight,
+        onSurface = colorPalette.onSurfaceLight,
+        surfaceVariant = colorPalette.surfaceVariantLight,
+        onSurfaceVariant = colorPalette.onSurfaceVariantLight,
+        outline = colorPalette.outlineLight,
+        outlineVariant = colorPalette.outlineVariantLight,
+        scrim = colorPalette.scrimLight,
+        inverseSurface = colorPalette.inverseSurfaceLight,
+        inverseOnSurface = colorPalette.inverseOnSurfaceLight,
+        inversePrimary = colorPalette.inversePrimaryLight,
+        surfaceDim = colorPalette.surfaceDimLight,
+        surfaceBright = colorPalette.surfaceBrightLight,
+        surfaceContainerLowest = colorPalette.surfaceContainerLowestLight,
+        surfaceContainerLow = colorPalette.surfaceContainerLowLight,
+        surfaceContainer = colorPalette.surfaceContainerLight,
+        surfaceContainerHigh = colorPalette.surfaceContainerHighLight,
+        surfaceContainerHighest = colorPalette.surfaceContainerHighestLight,
+    )
+}*/
+
+private fun colourPaletteToLightColorScheme(
+    colorPalette: ColourPalette
+): ColorScheme {
+    return lightColorScheme(
+        primary = colorPalette.primaryLight,
+        secondary = colorPalette.secondaryLight,
+        tertiary = colorPalette.tertiaryLight,
+        error = colorPalette.errorLight,
+        background = colorPalette.backgroundLight,
+        surface = colorPalette.surfaceLight,
+    )
+}
+
+private fun colourPaletteToDarkColorScheme(
+    colorPalette: ColourPalette
+): ColorScheme {
+    return darkColorScheme(
+        primary = colorPalette.primaryDark,
+        secondary = colorPalette.secondaryDark,
+        tertiary = colorPalette.tertiaryDark,
+        error = colorPalette.errorDark,
+        background = colorPalette.backgroundDark,
+        surface = colorPalette.surfaceDark,
+    )
+}
+
+
+/*private fun colourPaletteToDarkColorScheme(
+    colorPalette: ColourPalette
+): ColorScheme {
+    return darkColorScheme(
+        primary = colorPalette.primaryDark,
+        onPrimary = colorPalette.onPrimaryDark,
+        primaryContainer = colorPalette.primaryContainerDark,
+        onPrimaryContainer = colorPalette.onPrimaryContainerDark,
+        secondary = colorPalette.secondaryDark,
+        onSecondary = colorPalette.onSecondaryDark,
+        secondaryContainer = colorPalette.secondaryContainerDark,
+        onSecondaryContainer = colorPalette.onSecondaryContainerDark,
+        tertiary = colorPalette.tertiaryDark,
+        onTertiary = colorPalette.onTertiaryDark,
+        tertiaryContainer = colorPalette.tertiaryContainerDark,
+        onTertiaryContainer = colorPalette.onTertiaryContainerDark,
+        error = colorPalette.errorDark,
+        onError = colorPalette.onErrorDark,
+        errorContainer = colorPalette.errorContainerDark,
+        onErrorContainer = colorPalette.onErrorContainerDark,
+        background = colorPalette.backgroundDark,
+        onBackground = colorPalette.onBackgroundDark,
+        surface = colorPalette.surfaceDark,
+        onSurface = colorPalette.onSurfaceDark,
+        surfaceVariant = colorPalette.surfaceVariantDark,
+        onSurfaceVariant = colorPalette.onSurfaceVariantDark,
+        outline = colorPalette.outlineDark,
+        outlineVariant = colorPalette.outlineVariantDark,
+        scrim = colorPalette.scrimDark,
+        inverseSurface = colorPalette.inverseSurfaceDark,
+        inverseOnSurface = colorPalette.inverseOnSurfaceDark,
+        inversePrimary = colorPalette.inversePrimaryDark,
+        surfaceDim = colorPalette.surfaceDimDark,
+        surfaceBright = colorPalette.surfaceBrightDark,
+        surfaceContainerLowest = colorPalette.surfaceContainerLowestDark,
+        surfaceContainerLow = colorPalette.surfaceContainerLowDark,
+        surfaceContainer = colorPalette.surfaceContainerDark,
+        surfaceContainerHigh = colorPalette.surfaceContainerHighDark,
+        surfaceContainerHighest = colorPalette.surfaceContainerHighestDark,
+    )
+}*/
 
 
 @Composable
 fun FinotesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false, // do not use to actually use the defined color scheme
-    content: @Composable () -> Unit
+    themeVariant: ThemeVariant? = ThemeVariant.FIONA,
+    content: @Composable (() -> Unit)
 ) {
+    //val darkColorSchemeVariant = colourPaletteToDarkColorScheme(ThemeVariantMap[themeVariant] ?: error("Theme not found"))
+    //val lightColorSchemeVariant = colourPaletteToLightColorScheme(ThemeVariantMap[themeVariant] ?: error("Theme not found"))
+    val lightColorSchemeVariant = when (themeVariant) {
+        ThemeVariant.FIONA -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+        ThemeVariant.MARQUI -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.MARQUI] ?: error("Marqui theme not found"))
+        ThemeVariant.MINION -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.MINION] ?: error("Minion theme not found"))
+        null -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+    }
+    val darkColorSchemeVariant = when (themeVariant) {
+        ThemeVariant.FIONA -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+        ThemeVariant.MARQUI -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.MARQUI] ?: error("Marqui theme not found"))
+        ThemeVariant.MINION -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.MINION] ?: error("Minion theme not found"))
+        null -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+    }
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> darkColorSchemeVariant
+        else -> lightColorSchemeVariant
     }
 
     MaterialTheme(

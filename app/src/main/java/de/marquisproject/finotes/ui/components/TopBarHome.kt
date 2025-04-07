@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -33,6 +34,7 @@ import de.marquisproject.finotes.ArchiveRoute
 import de.marquisproject.finotes.BinRoute
 import de.marquisproject.finotes.ExportImportRoute
 import de.marquisproject.finotes.R
+import de.marquisproject.finotes.SettingsRoute
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,6 +128,16 @@ fun TopBarHome(
                     },
                     leadingIcon = {
                         Icon(painterResource(id = R.drawable.baseline_import_export_24), contentDescription = "Bin")
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Settings") },
+                    onClick = {
+                        expandedMenu = false
+                        navController.navigate(SettingsRoute)
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 )
             }

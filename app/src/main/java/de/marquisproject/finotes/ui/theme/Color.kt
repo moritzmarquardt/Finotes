@@ -1,111 +1,332 @@
 package de.marquisproject.finotes.ui.theme
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.rememberNavController
-import de.marquisproject.finotes.data.notes.model.Note
-import de.marquisproject.finotes.ui.components.TopBarHome
-import de.marquisproject.finotes.ui.components.NoteCard
 
-val primaryLight = Color(0xFF8F4952)
-val onPrimaryLight = Color(0xFFFFFFFF)
-val primaryContainerLight = Color(0xFFFFDADC)
-val onPrimaryContainerLight = Color(0xFF72333B)
+enum class ThemeVariant {
+    FIONA, // inspired by Fiona
+    MARQUI, // inspired by Marqui
+    MINION, // inspired by Minions
+}
 
-val secondaryLight = Color(0xFF2A6A47)
-val onSecondaryLight = Color(0xFFFFFFFF)
-val secondaryContainerLight = Color(0xFFAFF2C4)
-val onSecondaryContainerLight = Color(0xFF0B5130)
+data class ColourPalette(
+    val primaryLight: Color,
+    val onPrimaryLight: Color,
+    val primaryContainerLight: Color,
+    val onPrimaryContainerLight: Color,
+    val secondaryLight: Color,
+    val onSecondaryLight: Color,
+    val secondaryContainerLight: Color,
+    val onSecondaryContainerLight: Color,
+    val tertiaryLight: Color,
+    val onTertiaryLight: Color,
+    val tertiaryContainerLight: Color,
+    val onTertiaryContainerLight: Color,
+    val errorLight: Color,
+    val onErrorLight: Color,
+    val errorContainerLight: Color,
+    val onErrorContainerLight: Color,
+    val backgroundLight: Color,
+    val onBackgroundLight: Color,
+    val surfaceLight: Color,
+    val onSurfaceLight: Color,
+    val surfaceVariantLight: Color,
+    val onSurfaceVariantLight: Color,
+    val outlineLight: Color,
+    val outlineVariantLight: Color,
+    val scrimLight: Color,
+    val inverseSurfaceLight: Color,
+    val inverseOnSurfaceLight: Color,
+    val inversePrimaryLight: Color,
+    val surfaceDimLight: Color,
+    val surfaceBrightLight: Color,
+    val surfaceContainerLowestLight: Color,
+    val surfaceContainerLowLight: Color,
+    val surfaceContainerLight: Color,
+    val surfaceContainerHighLight: Color,
+    val surfaceContainerHighestLight: Color,
 
-val tertiaryLight = Color(0xFF576422)
-val onTertiaryLight = Color(0xFFFFFFFF)
-val tertiaryContainerLight = Color(0xFFDAEA99)
-val onTertiaryContainerLight = Color(0xFF3F4C0A)
+    val primaryDark: Color,
+    val onPrimaryDark: Color,
+    val primaryContainerDark: Color,
+    val onPrimaryContainerDark: Color,
+    val secondaryDark: Color,
+    val onSecondaryDark: Color,
+    val secondaryContainerDark: Color,
+    val onSecondaryContainerDark: Color,
+    val tertiaryDark: Color,
+    val onTertiaryDark: Color,
+    val tertiaryContainerDark: Color,
+    val onTertiaryContainerDark: Color,
+    val errorDark: Color,
+    val onErrorDark: Color,
+    val errorContainerDark: Color,
+    val onErrorContainerDark: Color,
+    val backgroundDark: Color,
+    val onBackgroundDark: Color,
+    val surfaceDark: Color,
+    val onSurfaceDark: Color,
+    val surfaceVariantDark: Color,
+    val onSurfaceVariantDark: Color,
+    val outlineDark: Color,
+    val outlineVariantDark: Color,
+    val scrimDark: Color,
+    val inverseSurfaceDark: Color,
+    val inverseOnSurfaceDark: Color,
+    val inversePrimaryDark: Color,
+    val surfaceDimDark: Color,
+    val surfaceBrightDark: Color,
+    val surfaceContainerLowestDark: Color,
+    val surfaceContainerLowDark: Color,
+    val surfaceContainerDark: Color,
+    val surfaceContainerHighDark: Color,
+    val surfaceContainerHighestDark: Color,
+    )
 
-val errorLight = Color(0xFFBA1A1A)
-val onErrorLight = Color(0xFFFFFFFF)
-val errorContainerLight = Color(0xFFFFDAD6)
-val onErrorContainerLight = Color(0xFF93000A)
 
-val backgroundLight = Color(0xFFFFF8F7)
-val onBackgroundLight = Color(0xFF22191A)
+// Marqui's theme colours
+val MarquiColorPalette = ColourPalette(
+    primaryLight = Color(0xFF8F4952),
+    onPrimaryLight = Color(0xFFFFFFFF),
+    primaryContainerLight = Color(0xFFFFDADC),
+    onPrimaryContainerLight = Color(0xFF72333B),
 
-val surfaceLight = Color(0xFFFFF8F7)
-val onSurfaceLight = Color(0xFF22191A)
+    secondaryLight = Color(0xFF2A6A47),
+    onSecondaryLight = Color(0xFFFFFFFF),
+    secondaryContainerLight = Color(0xFFAFF2C4),
+    onSecondaryContainerLight = Color(0xFF0B5130),
 
-val surfaceVariantLight = Color(0xFFF4DDDE)
-val onSurfaceVariantLight = Color(0xFF524344)
+    tertiaryLight = Color(0xFF576422),
+    onTertiaryLight = Color(0xFFFFFFFF),
+    tertiaryContainerLight = Color(0xFFDAEA99),
+    onTertiaryContainerLight = Color(0xFF3F4C0A),
 
-val outlineLight = Color(0xFFD5DAB4)
-val outlineVariantLight = Color(0xFFD7C1C2)
+    errorLight = Color(0xFFBA1A1A),
+    onErrorLight = Color(0xFFFFFFFF),
+    errorContainerLight = Color(0xFFFFDAD6),
+    onErrorContainerLight = Color(0xFF93000A),
 
-val scrimLight = Color(0xFF000000)
-val inverseSurfaceLight = Color(0xFF382E2E)
-val inverseOnSurfaceLight = Color(0xFFFFEDED)
-val inversePrimaryLight = Color(0xFFFFB2B9)
-val surfaceDimLight = Color(0xFFE7D6D6)
-val surfaceBrightLight = Color(0xFFFFF8F7)
-val surfaceContainerLowestLight = Color(0xFFFFFFFF)
-val surfaceContainerLowLight = Color(0xFFFFF0F0)
-val surfaceContainerLight = Color(0xFFFCEAEA)
-val surfaceContainerHighLight = Color(0xFFF6E4E4)
-val surfaceContainerHighestLight = Color(0xFFF0DEDF)
+    backgroundLight = Color(0xFFFFF8F7),
+    onBackgroundLight = Color(0xFF22191A),
+
+    surfaceLight = Color(0xFFFFF8F7),
+    onSurfaceLight = Color(0xFF22191A),
+
+    surfaceVariantLight = Color(0xFFF4DDDE),
+    onSurfaceVariantLight = Color(0xFF524344),
+
+    outlineLight = Color(0xFFD5DAB4),
+    outlineVariantLight = Color(0xFFD7C1C2),
+
+    scrimLight = Color(0xFF000000),
+    inverseSurfaceLight = Color(0xFF382E2E),
+    inverseOnSurfaceLight = Color(0xFFFFEDED),
+    inversePrimaryLight = Color(0xFFFFB2B9),
+    surfaceDimLight = Color(0xFFE7D6D6),
+    surfaceBrightLight = Color(0xFFFFF8F7),
+    surfaceContainerLowestLight = Color(0xFFFFFFFF),
+    surfaceContainerLowLight = Color(0xFFFFF0F0),
+    surfaceContainerLight = Color(0xFFFCEAEA),
+    surfaceContainerHighLight = Color(0xFFF6E4E4),
+    surfaceContainerHighestLight = Color(0xFFF0DEDF),
+
+    primaryDark = Color(0xFFFFB2B9),
+    onPrimaryDark = Color(0xFF561D26),
+    primaryContainerDark = Color(0xFF72333B),
+    onPrimaryContainerDark = Color(0xFFFFDADC),
+
+    secondaryDark = Color(0xFF93D5AA),
+    onSecondaryDark = Color(0xFF00391F),
+    secondaryContainerDark = Color(0xFF0B5130),
+    onSecondaryContainerDark = Color(0xFFAFF2C4),
+
+    tertiaryDark = Color(0xFFBECE7F),
+    onTertiaryDark = Color(0xFF2A3400),
+    tertiaryContainerDark = Color(0xFF3F4C0A),
+    onTertiaryContainerDark = Color(0xFFDAEA99),
+
+    errorDark = Color(0xFFFFB4AB),
+    onErrorDark = Color(0xFF690005),
+    errorContainerDark = Color(0xFF93000A),
+    onErrorContainerDark = Color(0xFFFFDAD6),
+
+    backgroundDark = Color(0xFF0C0A0A),
+    onBackgroundDark = Color(0xFFF0DEDF),
+    surfaceDark = Color(0xFF1A1112),
+    onSurfaceDark = Color(0xFFF0DEDF),
+    surfaceVariantDark = Color(0xFF524344),
+    onSurfaceVariantDark = Color(0xFFD7C1C2),
+    outlineDark = Color(0xFF9F8C8D),
+    outlineVariantDark = Color(0xFF524344),
+    scrimDark = Color(0xFF000000),
+    inverseSurfaceDark = Color(0xFFF0DEDF),
+    inverseOnSurfaceDark = Color(0xFF382E2E),
+    inversePrimaryDark = Color(0xFF8F4952),
+    surfaceDimDark = Color(0xFF1A1112),
+    surfaceBrightDark = Color(0xFF413737),
+    surfaceContainerLowestDark = Color(0xFF140C0D),
+    surfaceContainerLowDark = Color(0xFF22191A),
+    surfaceContainerDark = Color(0xFF271D1E),
+    surfaceContainerHighDark = Color(0xFF312828),
+    surfaceContainerHighestDark = Color(0xFF3D3233)
+)
 
 
+// FIona's Theme colours
+val FionaColorPalette = ColourPalette(
+    primaryLight = Color(0xFFFDD084),
+    onPrimaryLight = Color(0xFF000000),
+    primaryContainerLight = Color(0xFF976C37),
+    onPrimaryContainerLight = Color(0xFFFFFBFF),
+    secondaryLight = Color(0xFF9D542C),
+    onSecondaryLight = Color(0xFFFFFFFF),
+    secondaryContainerLight = Color(0xFFFBDEBF),
+    onSecondaryContainerLight = Color(0xFF766148),
+    tertiaryLight = Color(0xFFDE9836),
+    onTertiaryLight = Color(0xFF262626),
+    tertiaryContainerLight = Color(0xFF72793F),
+    onTertiaryContainerLight = Color(0xFFFDFFDC),
+    errorLight = Color(0xFFBA1A1A),
+    onErrorLight = Color(0xFFFFFFFF),
+    errorContainerLight = Color(0xFFFFDAD6),
+    onErrorContainerLight = Color(0xFF93000A),
+    backgroundLight = Color(0xFFFFF8F4),
+    onBackgroundLight = Color(0xFF1F1B17),
+    surfaceLight = Color(0xFFFFF8F4),
+    onSurfaceLight = Color(0xFF1F1B17),
+    surfaceVariantLight = Color(0xFFF0E0D0),
+    onSurfaceVariantLight = Color(0xFF50453A),
+    outlineLight = Color(0xFF827568),
+    outlineVariantLight = Color(0xFFD4C4B5),
+    scrimLight = Color(0xFF000000),
+    inverseSurfaceLight = Color(0xFF352F2B),
+    inverseOnSurfaceLight = Color(0xFFF9EFE7),
+    inversePrimaryLight = Color(0xFFF1BD80),
+    surfaceDimLight = Color(0xFFE2D8D1),
+    surfaceBrightLight = Color(0xFFFFF8F4),
+    surfaceContainerLowestLight = Color(0xFFFFFFFF),
+    surfaceContainerLowLight = Color(0xFFFCF2EA),
+    surfaceContainerLight = Color(0xFFF6ECE5),
+    surfaceContainerHighLight = Color(0xFFF0E6DF),
+    surfaceContainerHighestLight = Color(0xFFEAE1D9),
 
-val primaryDark = Color(0xFFFFB2B9)
-val onPrimaryDark = Color(0xFF561D26)
-val primaryContainerDark = Color(0xFF72333B)
-val onPrimaryContainerDark = Color(0xFFFFDADC)
+    primaryDark = Color(0xFFFDD084),
+    onPrimaryDark = Color(0xFF472A00),
+    primaryContainerDark = Color(0xFFB68850),
+    onPrimaryContainerDark = Color(0xFF301B00),
+    secondaryDark = Color(0xFF9D542C),
+    onSecondaryDark = Color(0xFF3E2D18),
+    secondaryContainerDark = Color(0xFF57432D),
+    onSecondaryContainerDark = Color(0xFFCCB194),
+    tertiaryDark = Color(0xFFDE9836),
+    onTertiaryDark = Color(0xFF2E3301),
+    tertiaryContainerDark = Color(0xFF8E9558),
+    onTertiaryContainerDark = Color(0xFF1D2100),
+    errorDark = Color(0xFFFFB4AB),
+    onErrorDark = Color(0xFF690005),
+    errorContainerDark = Color(0xFF93000A),
+    onErrorContainerDark = Color(0xFFFFDAD6),
+    backgroundDark = Color(0xFF17130F),
+    onBackgroundDark = Color(0xFFEAE1D9),
+    surfaceDark = Color(0xFF17130F),
+    onSurfaceDark = Color(0xFFEAE1D9),
+    surfaceVariantDark = Color(0xFF50453A),
+    onSurfaceVariantDark = Color(0xFFD4C4B5),
+    outlineDark = Color(0xFF9C8E81),
+    outlineVariantDark = Color(0xFF50453A),
+    scrimDark = Color(0xFF000000),
+    inverseSurfaceDark = Color(0xFFEAE1D9),
+    inverseOnSurfaceDark = Color(0xFF352F2B),
+    inversePrimaryDark = Color(0xFF7E5623),
+    surfaceDimDark = Color(0xFF17130F),
+    surfaceBrightDark = Color(0xFF3E3833),
+    surfaceContainerLowestDark = Color(0xFF110E0A),
+    surfaceContainerLowDark = Color(0xFF1F1B17),
+    surfaceContainerDark = Color(0xFF231F1A),
+    surfaceContainerHighDark = Color(0xFF2E2924),
+    surfaceContainerHighestDark = Color(0xFF39342F),
+)
 
-val secondaryDark = Color(0xFF93D5AA)
-val onSecondaryDark = Color(0xFF00391F)
-val secondaryContainerDark = Color(0xFF0B5130)
-val onSecondaryContainerDark = Color(0xFFAFF2C4)
+val MinionColorPalette = ColourPalette(
+    primaryLight = Color(0xFFFBDF69),
+    onPrimaryLight = Color(0xFF262626),
+    primaryContainerLight = Color(0xFFFFE240),
+    onPrimaryContainerLight = Color(0xFF736400),
+    secondaryLight = Color(0xFF395B75),
+    onSecondaryLight = Color(0xFFFFFFFF),
+    secondaryContainerLight = Color(0xFF52748F),
+    onSecondaryContainerLight = Color(0xFFEFF6FF),
+    tertiaryLight = Color(0xFF1E2F3B),
+    onTertiaryLight = Color(0xFFFFFFFF),
+    tertiaryContainerLight = Color(0xFF344552),
+    onTertiaryContainerLight = Color(0xFFA0B2C2),
+    errorLight = Color(0xFFBA1A1A),
+    onErrorLight = Color(0xFFFFFFFF),
+    errorContainerLight = Color(0xFFFFDAD6),
+    onErrorContainerLight = Color(0xFF93000A),
+    backgroundLight = Color(0xFFFFF9EC),
+    onBackgroundLight = Color(0xFF1E1C11),
+    surfaceLight = Color(0xFFFFF9EC),
+    onSurfaceLight = Color(0xFF1E1C11),
+    surfaceVariantLight = Color(0xFFEBE2C8),
+    onSurfaceVariantLight = Color(0xFF4B4733),
+    outlineLight = Color(0xFF7D7761),
+    outlineVariantLight = Color(0xFFCEC6AD),
+    scrimLight = Color(0xFF000000),
+    inverseSurfaceLight = Color(0xFF333025),
+    inverseOnSurfaceLight = Color(0xFFF7F0DF),
+    inversePrimaryLight = Color(0xFFE2C621),
+    surfaceDimLight = Color(0xFFE0DAC9),
+    surfaceBrightLight = Color(0xFFFFF9EC),
+    surfaceContainerLowestLight = Color(0xFFFFFFFF),
+    surfaceContainerLowLight = Color(0xFFFAF3E2),
+    surfaceContainerLight = Color(0xFFF4EDDC),
+    surfaceContainerHighLight = Color(0xFFEEE8D7),
+    surfaceContainerHighestLight = Color(0xFFE9E2D1),
 
-val tertiaryDark = Color(0xFFBECE7F)
-val onTertiaryDark = Color(0xFF2A3400)
-val tertiaryContainerDark = Color(0xFF3F4C0A)
-val onTertiaryContainerDark = Color(0xFFDAEA99)
 
-val errorDark = Color(0xFFFFB4AB)
-val onErrorDark = Color(0xFF690005)
-val errorContainerDark = Color(0xFF93000A)
-val onErrorContainerDark = Color(0xFFFFDAD6)
+    primaryDark = Color(0xFFFBDF69),
+    onPrimaryDark = Color(0xFF393000),
+    primaryContainerDark = Color(0xFFFFE240),
+    onPrimaryContainerDark = Color(0xFF736400),
+    secondaryDark = Color(0xFFA8CBE9),
+    onSecondaryDark = Color(0xFF0B334C),
+    secondaryContainerDark = Color(0xFF52748F),
+    onSecondaryContainerDark = Color(0xFFEFF6FF),
+    tertiaryDark = Color(0xFFB7C9D9),
+    onTertiaryDark = Color(0xFF21323F),
+    tertiaryContainerDark = Color(0xFF344552),
+    onTertiaryContainerDark = Color(0xFFA0B2C2),
+    errorDark = Color(0xFFFFB4AB),
+    onErrorDark = Color(0xFF690005),
+    errorContainerDark = Color(0xFF93000A),
+    onErrorContainerDark = Color(0xFFFFDAD6),
+    backgroundDark = Color(0xFF16130A),
+    onBackgroundDark = Color(0xFFE9E2D1),
+    surfaceDark = Color(0xFF16130A),
+    onSurfaceDark = Color(0xFFE9E2D1),
+    surfaceVariantDark = Color(0xFF4B4733),
+    onSurfaceVariantDark = Color(0xFFCEC6AD),
+    outlineDark = Color(0xFF979179),
+    outlineVariantDark = Color(0xFF4B4733),
+    scrimDark = Color(0xFF000000),
+    inverseSurfaceDark = Color(0xFFE9E2D1),
+    inverseOnSurfaceDark = Color(0xFF333025),
+    inversePrimaryDark = Color(0xFF6D5E00),
+    surfaceDimDark = Color(0xFF16130A),
+    surfaceBrightDark = Color(0xFF3C392D),
+    surfaceContainerLowestDark = Color(0xFF100E06),
+    surfaceContainerLowDark = Color(0xFF1E1C11),
+    surfaceContainerDark = Color(0xFF222015),
+    surfaceContainerHighDark = Color(0xFF2D2A1F),
+    surfaceContainerHighestDark = Color(0xFF383529),
+)
 
-val backgroundDark = Color(0xFF0C0A0A)
-val onBackgroundDark = Color(0xFFF0DEDF)
-val surfaceDark = Color(0xFF1A1112)
-val onSurfaceDark = Color(0xFFF0DEDF)
-val surfaceVariantDark = Color(0xFF524344)
-val onSurfaceVariantDark = Color(0xFFD7C1C2)
-val outlineDark = Color(0xFF9F8C8D)
-val outlineVariantDark = Color(0xFF524344)
-val scrimDark = Color(0xFF000000)
-val inverseSurfaceDark = Color(0xFFF0DEDF)
-val inverseOnSurfaceDark = Color(0xFF382E2E)
-val inversePrimaryDark = Color(0xFF8F4952)
-val surfaceDimDark = Color(0xFF1A1112)
-val surfaceBrightDark = Color(0xFF413737)
-val surfaceContainerLowestDark = Color(0xFF140C0D)
-val surfaceContainerLowDark = Color(0xFF22191A)
-val surfaceContainerDark = Color(0xFF271D1E)
-val surfaceContainerHighDark = Color(0xFF312828)
-val surfaceContainerHighestDark = Color(0xFF3D3233)
+// create data struc that has for each variant the enum and the colour palette
+val ThemeVariantMap: Map<ThemeVariant, ColourPalette> = mapOf(
+    ThemeVariant.FIONA to FionaColorPalette,
+    ThemeVariant.MARQUI to MarquiColorPalette,
+    ThemeVariant.MINION to MinionColorPalette
+)

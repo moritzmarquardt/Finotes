@@ -43,6 +43,9 @@ android {
 }
 
 dependencies {
+    // datastore preference for settings storage
+    implementation(libs.androidx.datastore.preferences)
+
     // animation for shared elements
     implementation(libs.androidx.animation)
     implementation(libs.androidx.animation.graphics) // or a newer version
