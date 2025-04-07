@@ -41,12 +41,15 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
 
     private val _importExportMode = MutableStateFlow(ImportExportMode.EXPORT)
 
+    private val _showFileInfoAlert = MutableStateFlow(false)
+
     // exposing the state
     val importExportMode : StateFlow<ImportExportMode> = _importExportMode.asStateFlow()
     val exportSettings : StateFlow<ExportSettings> = _exportSettings.asStateFlow()
     val exportData : StateFlow<ExportData> = _exportData
     val importData : StateFlow<ExportData> = _importData.asStateFlow()
     val loadedData : StateFlow<ExportData> = _loadedData.asStateFlow()
+    val showFileInfoAlert : StateFlow<Boolean> = _showFileInfoAlert.asStateFlow()
 
     fun setMode(mode: ImportExportMode) {
         _importExportMode.update { mode }
@@ -54,6 +57,10 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
 
     fun setExportSettings(exportSettings: ExportSettings) {
         _exportSettings.update { exportSettings }
+    }
+
+    fun setShowFileInfoAlert(show: Boolean) {
+        _showFileInfoAlert.update { show }
     }
 
     fun createExportDataJson() : String {

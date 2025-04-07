@@ -119,7 +119,8 @@ class MainActivity : ComponentActivity() {
                     val jsonString = reader?.readText()
                     jsonString?.let {
                         importExportViewModel.loadBackupFile(it)
-                        Toast.makeText(this, "Backup file loaded successfully", Toast.LENGTH_SHORT).show()
+                        importExportViewModel.setShowFileInfoAlert(true)
+                        //Toast.makeText(this, "Backup file loaded successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: IOException) {

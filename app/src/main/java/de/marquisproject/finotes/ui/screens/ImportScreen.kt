@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -42,6 +45,7 @@ fun ImportScreen(
     val loadedData = iEviewModel.loadedData.collectAsState()
     val importData = iEviewModel.importData.collectAsState()
     val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
+    val openInfoAlert = iEviewModel.showFileInfoAlert.collectAsState()
 
     iEviewModel.setMode(ImportExportMode.IMPORT)
 
@@ -61,26 +65,8 @@ fun ImportScreen(
                 }) {
                     Text("Load notes from JSON file")
                 }
-            } else {
-                Button(
-                    onClick = {
-                        iEviewModel.clearImportData()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError,
-                    )
-                ) {
-                    Text("Clear loaded file")
-                }
             }
 
-        }
-        if (notesLoaded) {
-            Text(
-                color = Color.Gray,
-                text = "File contains ${loadedData.value.notes.size} notes and ${loadedData.value.archivedNotes.size} archived notes",
-            )
         }
 
         if (notesLoaded) {
@@ -187,6 +173,16 @@ fun ImportScreen(
                                 onLongClick = { iEviewModel.longClickSelect(note) },
                             )
                         }
+                        item(
+                            span = StaggeredGridItemSpan.FullLine
+                        ) {
+                            // spacer at the bottom of heigth 200.dp
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp)
+                            )
+                        }
                     }
                 )
             }
@@ -208,6 +204,18 @@ fun ImportScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Button(
+                    enabled = notesLoaded,
+                    onClick = {
+                        iEviewModel.clearImportData()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                ) {
+                    Text("Cancel")
+                }
+                Button(
                     modifier = Modifier
                         .padding(16.dp),
                     onClick = { iEviewModel.importImportData() },
@@ -221,6 +229,26 @@ fun ImportScreen(
                 }
             }
 
+        }
+    }
+    when {
+        openInfoAlert.value -> {
+            AlertDialog(
+                onDismissRequest = { iEviewModel.setShowFileInfoAlert(false) },
+                title = {
+                    Text("File opened successfully")
+                },
+                text = {
+                    Text("The file contains ${loadedData.value.notes.size} notes and ${loadedData.value.archivedNotes.size} archived notes")
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        iEviewModel.setShowFileInfoAlert(false)
+                    }) {
+                        Text("Okay")
+                    }
+                }
+            )
         }
     }
 }
