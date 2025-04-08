@@ -33,6 +33,7 @@ import androidx.navigation.NavController
 import de.marquisproject.finotes.ArchiveRoute
 import de.marquisproject.finotes.BinRoute
 import de.marquisproject.finotes.ExportImportRoute
+import de.marquisproject.finotes.NavItem
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.SettingsRoute
 
@@ -96,50 +97,30 @@ fun TopBarHome(
                 onDismissRequest = { expandedMenu = false },
                 containerColor = MaterialTheme.colorScheme.surface,
             ) {
-                DropdownMenuItem(
-                    text = { Text("Archive") },
-                    onClick = {
-                        expandedMenu = false
-                        navController.navigate(ArchiveRoute)
-                    },
-                    leadingIcon = {
-                        Icon(painterResource(id = R.drawable.inventory_2_24dp), contentDescription = "Archive")
-                    }
+                val navItems = listOf(
+                    NavItem(ArchiveRoute, "Archive", R.drawable.inventory_2_24dp),
+                    NavItem(BinRoute, "Bin", R.drawable.baseline_delete_24),
+                    NavItem(ExportImportRoute, "Export/Import", R.drawable.baseline_import_export_24),
+                    NavItem(SettingsRoute, "Settings", R.drawable.baseline_settings_24)
                 )
-                DropdownMenuItem(
-                    text = { Text("Bin") },
-                    onClick = {
-                        expandedMenu = false
-                        navController.navigate(BinRoute)
-                    },
-                    leadingIcon = {
-                        Icon(Icons.Default.Delete, contentDescription = "Bin")
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Export/Import notes") },
-                    onClick = {
-                        expandedMenu = false
-                        navController.navigate(ExportImportRoute)
-                    },
-                    leadingIcon = {
-                        Icon(painterResource(id = R.drawable.baseline_import_export_24), contentDescription = "Bin")
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Settings") },
-                    onClick = {
-                        expandedMenu = false
-                        navController.navigate(SettingsRoute)
-                    },
-                    leadingIcon = {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                )
+                navItems.forEach { navItem ->
+                    DropdownMenuItem(
+                        modifier = Modifier.padding(end = 20.dp),
+                        text = { Text(navItem.label) },
+                        onClick = {
+                            expandedMenu = false
+                            navController.navigate(navItem.route)
+                        },
+                        leadingIcon = {
+                            Icon(
+                                painterResource(id = navItem.iconPainterResource),
+                                contentDescription = navItem.label
+                            )
+                        }
+                    )
+
+                }
             }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+        }
     )
 }

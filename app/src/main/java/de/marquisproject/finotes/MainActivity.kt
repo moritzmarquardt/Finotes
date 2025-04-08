@@ -203,3 +203,11 @@ class MainActivity : ComponentActivity() {
 @Serializable object NoteRoute
 @Serializable object ExportImportRoute
 @Serializable object SettingsRoute
+
+
+// Data class for navigation item
+data class NavItem(
+    val route: Any,
+    val label: String,
+    val iconPainterResource: Int,
+)
