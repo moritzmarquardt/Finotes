@@ -23,6 +23,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -42,21 +43,26 @@ fun SettingsScreen(
     val themeVariant = viewModel.themeVariant.collectAsState()
 
     Scaffold(
-        topBar = {TopAppBar(
-            title = {
-                Text(
-                    text = "Settings",
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = "Settings")
+                        },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
                 )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            }
-        )}
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier.selectableGroup()
@@ -64,7 +70,7 @@ fun SettingsScreen(
         ) {
             Text(
                 text = "Select your preferred theme",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(8.dp)
             )
             ThemeVariant.entries.forEach { themeV ->
@@ -123,13 +129,13 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(50.dp)
-                                        .background(color = secondaryColorLight ?: MaterialTheme.colorScheme.primary)
+                                        .background(color = secondaryColorLight ?: MaterialTheme.colorScheme.secondary)
                                 )
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(50.dp)
-                                        .background(color = tertiaryColorLight ?: MaterialTheme.colorScheme.primary)
+                                        .background(color = tertiaryColorLight ?: MaterialTheme.colorScheme.tertiary)
                                 )
                             }
                             Row {
@@ -143,13 +149,13 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(50.dp)
-                                        .background(color = secondaryColorDark ?: MaterialTheme.colorScheme.primary)
+                                        .background(color = secondaryColorDark ?: MaterialTheme.colorScheme.secondary)
                                 )
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(50.dp)
-                                        .background(color = tertiaryColorDark ?: MaterialTheme.colorScheme.primary)
+                                        .background(color = tertiaryColorDark ?: MaterialTheme.colorScheme.tertiary)
                                 )
 
                             }

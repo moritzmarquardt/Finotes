@@ -80,15 +80,10 @@ fun TopBarHome(
                 singleLine = true,
                 maxLines = 1,
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
+                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    //cursorColor = MaterialTheme.colorScheme.onSurface,
-                    //unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface,
-                    //focusedPlaceholderColor = MaterialTheme.colorScheme.onSurface,
-                    //disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface,
-                    //focusedTextColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
@@ -98,7 +93,8 @@ fun TopBarHome(
             }
             DropdownMenu(
                 expanded = expandedMenu,
-                onDismissRequest = { expandedMenu = false }
+                onDismissRequest = { expandedMenu = false },
+                containerColor = MaterialTheme.colorScheme.surface,
             ) {
                 DropdownMenuItem(
                     text = { Text("Archive") },

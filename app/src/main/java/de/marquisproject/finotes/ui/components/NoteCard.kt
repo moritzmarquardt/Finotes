@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +58,13 @@ fun OutlinedNoteCard(
             contentColor = MaterialTheme.colorScheme.onBackground
         )
     }
+
+    val pinnedTint = if (selected) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
     OutlinedCard(
         modifier = Modifier
             .padding(4.dp)
@@ -68,7 +76,7 @@ fun OutlinedNoteCard(
                     onLongClick(note)
                 }
             ),
-        colors = colors
+        colors = colors,
     ) {
         Box(
             modifier = Modifier
@@ -79,7 +87,7 @@ fun OutlinedNoteCard(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.baseline_push_pin_24),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = pinnedTint,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(20.dp)

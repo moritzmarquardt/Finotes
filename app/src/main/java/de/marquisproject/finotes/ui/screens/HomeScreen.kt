@@ -83,18 +83,10 @@ fun HomeScreen(
                 )
             }
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    viewModel.setNewEmptyNote()
-                    navController.navigate(NoteRoute)
-                },
-                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
-            ) {
-                Icon(Icons.Filled.Add, "Localized description")
-            }
-        },
+        floatingActionButton = { AddNoteFAB(onClick = {
+            viewModel.setNewEmptyNote()
+            navController.navigate(NoteRoute)
+        }) },
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,
@@ -138,5 +130,19 @@ fun HomeScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AddNoteFAB(
+    onClick : () -> Unit,
+) {
+    FloatingActionButton(
+        onClick = { onClick() },
+        containerColor = MaterialTheme.colorScheme.secondary,
+        contentColor = MaterialTheme.colorScheme.onSecondary,
+        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+    ) {
+        Icon(Icons.Filled.Add, "Localized description")
     }
 }

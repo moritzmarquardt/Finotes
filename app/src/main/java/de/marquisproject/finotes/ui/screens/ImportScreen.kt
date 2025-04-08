@@ -22,16 +22,16 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
@@ -75,42 +75,13 @@ fun ImportScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 content = {
                     item {
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            ),
-                            onClick = { iEviewModel.selectOnlyNonDuplicates() }
-                        ) {
-                            Text("Select non-duplicates")
-                        }
+                        ButtonFastSelection(onClick = {iEviewModel.selectOnlyNonDuplicates()}, text = "Select non-duplicates")
                     }
                     item {
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            ),
-                            onClick = {
-                                iEviewModel.deselectAllNotes()
-                            },
-                        ) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
-                            Text("Unselect all")
-                        }
+                        ButtonFastSelection(onClick = {iEviewModel.deselectAllNotes()}, text = "Unselect all", icon = Icons.Default.Clear)
                     }
                     item {
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            ),
-                            onClick = {
-                                iEviewModel.selectAllNotes()
-                            },
-                        ) {
-                            Text("Select all")
-                        }
+                        ButtonFastSelection(onClick = {iEviewModel.selectAllNotes()}, text = "Select all")
                     }
                 }
             )
@@ -200,8 +171,9 @@ fun ImportScreen(
                     )
             )
             Row(
-                modifier = Modifier.align(Alignment.BottomCenter),
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 Button(
                     enabled = notesLoaded,
@@ -209,21 +181,15 @@ fun ImportScreen(
                         iEviewModel.clearImportData()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
                     )
                 ) {
                     Text("Cancel")
                 }
                 Button(
-                    modifier = Modifier
-                        .padding(16.dp),
                     onClick = { iEviewModel.importImportData() },
                     enabled = notesLoaded,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary,
-                    )
                 ) {
                     Text("Import selected Notes (${importData.value.notes.size + importData.value.archivedNotes.size})")
                 }
@@ -250,5 +216,24 @@ fun ImportScreen(
                 }
             )
         }
+    }
+}
+
+@Composable
+fun ButtonFastSelection(onClick: () -> Unit, text: String, icon: ImageVector? = null) {
+    Button(
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary,
+        ),
+        onClick = onClick,
+    ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+            )
+        }
+        Text(text)
     }
 }

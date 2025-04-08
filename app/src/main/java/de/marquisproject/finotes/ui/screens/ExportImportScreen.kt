@@ -6,18 +6,23 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -38,6 +43,10 @@ fun ExportImportScreen(
 ) {
     val navControllerIE = rememberNavController()
     val importExportMode by iEviewModel.importExportMode.collectAsState()
+    val loadedData = iEviewModel.loadedData.collectAsState()
+    val importData = iEviewModel.importData.collectAsState()
+    val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
+
 
     Scaffold(
         topBar = {
@@ -57,10 +66,31 @@ fun ExportImportScreen(
                         )
                     }
                 },
+                actions = {
+                    if (importExportMode == ImportExportMode.IMPORT && notesLoaded) {
+                        IconButton(onClick = {
+                            iEviewModel.setShowFileInfoAlert(true)
+                        }) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = "File info"
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground,
+                ),
             )
         },
         bottomBar = {
-            NavigationBar( ) {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ) {
                 NavigationBarItem(
                     icon = { Icon(painterResource(id = R.drawable.outline_file_upload_24), contentDescription = "Home") },
                     label = { Text("Export") },
@@ -68,7 +98,14 @@ fun ExportImportScreen(
                     onClick = {
                         iEviewModel.setMode(ImportExportMode.EXPORT)
                         navControllerIE.navigate(ExportRoute)
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        indicatorColor = MaterialTheme.colorScheme.secondary,
+                    )
                 )
                 NavigationBarItem(
                     icon = { Icon(painterResource(id = R.drawable.outline_file_download_24), contentDescription = "Home") },
@@ -77,7 +114,14 @@ fun ExportImportScreen(
                     onClick = {
                         iEviewModel.setMode(ImportExportMode.IMPORT)
                         navControllerIE.navigate(ImportRoute)
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        indicatorColor = MaterialTheme.colorScheme.secondary,
+                    )
                 )
             }
         }
