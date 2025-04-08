@@ -1,6 +1,8 @@
 package de.marquisproject.finotes.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
@@ -28,6 +30,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.marquisproject.finotes.HomeRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
@@ -44,7 +47,6 @@ fun ExportImportScreen(
     val navControllerIE = rememberNavController()
     val importExportMode by iEviewModel.importExportMode.collectAsState()
     val loadedData = iEviewModel.loadedData.collectAsState()
-    val importData = iEviewModel.importData.collectAsState()
     val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
 
 

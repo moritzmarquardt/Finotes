@@ -1,7 +1,9 @@
 package de.marquisproject.finotes.ui.screens
 
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,21 +23,33 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.room.util.TableInfo
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
+import kotlin.math.exp
 
 @Composable
 fun ImportScreen(
@@ -46,8 +60,29 @@ fun ImportScreen(
     val importData = iEviewModel.importData.collectAsState()
     val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
     val openInfoAlert = iEviewModel.showFileInfoAlert.collectAsState()
+    val showFinalImportAlert = iEviewModel.showFinalImportAlert.collectAsState()
+    val onlyNonDuplicatesInImportData = iEviewModel.onlyNonDuplicatesInImportData.collectAsState()
 
     iEviewModel.setMode(ImportExportMode.IMPORT)
+
+    if (!notesLoaded){
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Load notes from a JSON file to import them.")
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(top = 20.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(onClick = {
+                    pickFileLauncher.launch("application/json")
+                }) {
+                    Text("Load notes from JSON file")
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -55,19 +90,6 @@ fun ImportScreen(
             .padding(8.dp),
         verticalArrangement = Arrangement.Top,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (!notesLoaded){
-                Button(onClick = {
-                    pickFileLauncher.launch("application/json")
-                }) {
-                    Text("Load notes from JSON file")
-                }
-            }
-
-        }
 
         if (notesLoaded) {
             LazyRow(
@@ -75,13 +97,13 @@ fun ImportScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 content = {
                     item {
-                        ButtonFastSelection(onClick = {iEviewModel.selectOnlyNonDuplicates()}, text = "Select non-duplicates")
+                        ButtonFastSelection(onClick = {iEviewModel.selectOnlyNonDuplicates()}, text = "Select non-duplicates", selected = onlyNonDuplicatesInImportData.value)
                     }
                     item {
-                        ButtonFastSelection(onClick = {iEviewModel.deselectAllNotes()}, text = "Unselect all", icon = Icons.Default.Clear)
+                        ButtonFastSelection(onClick = {iEviewModel.deselectAllNotes()}, text = "Unselect all", icon = Icons.Default.Clear, selected = importData.value.notes.isEmpty() && importData.value.archivedNotes.isEmpty())
                     }
                     item {
-                        ButtonFastSelection(onClick = {iEviewModel.selectAllNotes()}, text = "Select all")
+                        ButtonFastSelection(onClick = {iEviewModel.selectAllNotes()}, text = "Select all", selected = (importData.value.notes == loadedData.value.notes && importData.value.archivedNotes == loadedData.value.archivedNotes))
                     }
                 }
             )
@@ -159,39 +181,40 @@ fun ImportScreen(
             }
 
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
+            if (notesLoaded){
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
+                            )
                         )
-                    )
-            )
-            Row(
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Button(
-                    enabled = notesLoaded,
-                    onClick = {
-                        iEviewModel.clearImportData()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError,
-                    )
+                )
+                Row(
+                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    Text("Cancel")
-                }
-                Button(
-                    onClick = { iEviewModel.importImportData() },
-                    enabled = notesLoaded,
-                ) {
-                    Text("Import selected Notes (${importData.value.notes.size + importData.value.archivedNotes.size})")
+                    Button(
+                        onClick = {
+                            iEviewModel.clearImportData()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                    Button(
+                        onClick = { iEviewModel.setShowFinalImportAlert(true) },
+                        enabled = importData.value.notes.isNotEmpty() || importData.value.archivedNotes.isNotEmpty(),
+                    ) {
+                        Text("Import selected Notes (${importData.value.notes.size + importData.value.archivedNotes.size})")
+                    }
                 }
             }
 
@@ -205,7 +228,10 @@ fun ImportScreen(
                     Text("File opened successfully")
                 },
                 text = {
-                    Text("The file contains ${loadedData.value.notes.size} notes and ${loadedData.value.archivedNotes.size} archived notes")
+                    Column {
+                        Text("The file contains ${loadedData.value.notes.size} notes and ${loadedData.value.archivedNotes.size} archived notes")
+                        Text("Select the notes you want to import and click on the import button.")
+                    }
                 },
                 confirmButton = {
                     Button(onClick = {
@@ -217,23 +243,70 @@ fun ImportScreen(
             )
         }
     }
+    when {
+        showFinalImportAlert.value -> {
+            AlertDialog(
+                onDismissRequest = { iEviewModel.setShowFinalImportAlert(false) },
+                title = {
+                    Text("Import selected notes")
+                },
+                text = {
+                    Column {
+                        Text("This will add ${importData.value.notes.size} note(s) and ${importData.value.archivedNotes.size} archived note(s) to your database.")
+                        Text(text = buildAnnotatedString {
+                            append("This action is ")
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("irreversible")
+                            }
+                            append(".")
+                        })
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        iEviewModel.setShowFinalImportAlert(false)
+                        iEviewModel.importImportData()
+                    }) {
+                        Text("Import")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { iEviewModel.setShowFinalImportAlert(false) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+
 }
 
 @Composable
-fun ButtonFastSelection(onClick: () -> Unit, text: String, icon: ImageVector? = null) {
-    Button(
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary,
-        ),
+fun ButtonFastSelection(onClick: () -> Unit, text: String, icon: ImageVector? = null, selected: Boolean) {
+    FilterChip(
+        selected = selected,
         onClick = onClick,
-    ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-            )
-        }
-        Text(text)
-    }
+        label = {
+            Text(text)
+        },
+        leadingIcon = {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                )
+            }
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.tertiary,
+            selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiary,
+        ),
+    )
 }

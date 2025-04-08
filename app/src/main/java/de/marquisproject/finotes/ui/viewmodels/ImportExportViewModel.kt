@@ -42,6 +42,24 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
     private val _importExportMode = MutableStateFlow(ImportExportMode.EXPORT)
 
     private val _showFileInfoAlert = MutableStateFlow(false)
+    private val _showFinalImportAlert = MutableStateFlow(false)
+
+    private val _onlyNonDuplicatesInImportData = combine(
+        _loadedData,
+        _importData,
+        _notesList,
+        _archivedList
+    ) { loadedData, importData, notesList, archivedList ->
+        val notesNonDuplicates = loadedData.notes.filter { note ->
+            !notesList.any { it.title == note.title && it.body == note.body }
+        }
+        val archivedNotesNonDuplicates = loadedData.archivedNotes.filter { note ->
+            !archivedList.any { it.title == note.title && it.body == note.body }
+        }
+        val notesNonDuplicatesSelected = importData.notes.toSet() == notesNonDuplicates.toSet()
+        val archivedNotesNonDuplicatesSelected = importData.archivedNotes.toSet() == archivedNotesNonDuplicates.toSet()
+        return@combine notesNonDuplicatesSelected && archivedNotesNonDuplicatesSelected
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     // exposing the state
     val importExportMode : StateFlow<ImportExportMode> = _importExportMode.asStateFlow()
@@ -50,6 +68,8 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
     val importData : StateFlow<ExportData> = _importData.asStateFlow()
     val loadedData : StateFlow<ExportData> = _loadedData.asStateFlow()
     val showFileInfoAlert : StateFlow<Boolean> = _showFileInfoAlert.asStateFlow()
+    val showFinalImportAlert : StateFlow<Boolean> = _showFinalImportAlert.asStateFlow()
+    val onlyNonDuplicatesInImportData : StateFlow<Boolean> = _onlyNonDuplicatesInImportData
 
     fun setMode(mode: ImportExportMode) {
         _importExportMode.update { mode }
@@ -61,6 +81,10 @@ class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewMo
 
     fun setShowFileInfoAlert(show: Boolean) {
         _showFileInfoAlert.update { show }
+    }
+
+    fun setShowFinalImportAlert(show: Boolean) {
+        _showFinalImportAlert.update { show }
     }
 
     fun createExportDataJson() : String {
