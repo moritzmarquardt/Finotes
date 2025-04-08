@@ -7,8 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
@@ -22,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,52 +53,49 @@ import de.marquisproject.finotes.ui.screens.ButtonFastSelection
  * Preview for the Finotes app using the Fiona theme.
  */
 
-@Preview(
-    showBackground = true,
-    widthDp = 400,
-    heightDp = 100
-)
+@Preview
 @Composable
-fun PreviewNoteCard () {
-    val note = Note(
-        id = 1,
-        title = "Test Note",
-        body = "This is a test note with a lot to display",
-        isPinned = true,
-        noteStatus = NoteStatus.ACTIVE,
-    )
+fun HomeScreenPreview() {
     FinotesTheme {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-            content = {
-                Box(
-                    modifier = Modifier.width(200.dp)
-                ) {
-                    NoteCard(
-                        note = note,
-                        searchQuery = "Test",
-                        selected = false,
-                        onClick = {},
-                        onLongClick = {},
-                        onSwipe = null,
-                    )
-                }
-                Box(
-                    modifier = Modifier.width(200.dp)
-                ) {
-                    NoteCard(
-                        note = note,
-                        searchQuery = "",
-                        selected = true,
-                        onClick = {},
-                        onLongClick = {},
-                        onSwipe = null,
-                    )
-                }
-            }
+        val dummyNoteList = listOf(
+            Note(
+                id = 1,
+                title = "Note 1",
+                body = "This is the content of note 1",
+                isPinned = true,
+                ),
+            Note(
+                id = 2,
+                title = "Note 2",
+                body = "This is the content of note 2",
+                isPinned = true
+            ),
         )
+        Scaffold(
+            topBar = { TopBarHome(navController = rememberNavController(), updateQuery = {}, searchQuery = "note") },
+            floatingActionButton = { AddNoteFAB(onClick = {}) },
+        ) { innerPadding ->
+            LazyVerticalStaggeredGrid(
+                modifier = Modifier.padding(innerPadding),
+                columns = StaggeredGridCells.Adaptive(180.dp),
+                content = {
+                    items(
+                        items = dummyNoteList,
+                        key = { note -> note.id }
+                    ) { note ->
+                        var searchQuery = ""
+                        if (note.id.toInt() !=1) { searchQuery = "note"}
+                        NoteCard(
+                            note = note,
+                            searchQuery = searchQuery,
+                            selected = note.id.toInt() == 1,
+                            onClick = {},
+                            onLongClick = {},
+                        )
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -198,13 +200,13 @@ fun PreviewFastSelectionCarusel() {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             content = {
                 item {
-                    ButtonFastSelection(onClick = {}, text = "Select non-duplicates")
+                    ButtonFastSelection(onClick = {}, text = "Select non-duplicates", selected = false )
                 }
                 item {
-                    ButtonFastSelection(onClick = {}, text = "Unselect all", icon = Icons.Default.Clear)
+                    ButtonFastSelection(onClick = {}, text = "Unselect all", icon = Icons.Default.Clear, selected = true)
                 }
                 item {
-                    ButtonFastSelection(onClick = {}, text = "Select all")
+                    ButtonFastSelection(onClick = {}, text = "Select all", selected = true)
                 }
             }
         )
@@ -467,13 +469,13 @@ fun PreviewFastSelectionCaruselDark() {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             content = {
                 item {
-                    ButtonFastSelection(onClick = {}, text = "Select non-duplicates")
+                    ButtonFastSelection(onClick = {}, text = "Select non-duplicates", selected = false )
                 }
                 item {
-                    ButtonFastSelection(onClick = {}, text = "Unselect all", icon = Icons.Default.Clear)
+                    ButtonFastSelection(onClick = {}, text = "Unselect all", icon = Icons.Default.Clear, selected = true)
                 }
                 item {
-                    ButtonFastSelection(onClick = {}, text = "Select all")
+                    ButtonFastSelection(onClick = {}, text = "Select all", selected = true)
                 }
             }
         )

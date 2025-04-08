@@ -6,33 +6,25 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
-import de.marquisproject.finotes.ui.components.NoteCard
+import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.components.TopBarHome
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
@@ -49,12 +41,10 @@ fun HomeScreen(
     val selectedNotes by viewModel.selectedNotes.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val notesList by viewModel.notesList.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     BackHandler(inSelectionMode) {
         viewModel.clearSelection()
     }
-
 
     Scaffold (
         modifier = Modifier.fillMaxSize(),
@@ -83,36 +73,24 @@ fun HomeScreen(
                 )
             }
         },
-        floatingActionButton = { AddNoteFAB(onClick = {
-            viewModel.setNewEmptyNote()
-            navController.navigate(NoteRoute)
-        }) },
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-            )
-        }
-    ) { innerPadding ->
-        LazyVerticalStaggeredGrid(
-            modifier = Modifier.padding(innerPadding),
-            columns = StaggeredGridCells.Adaptive(180.dp),
-            content = {
-                items(
-                    items = notesList,
-                    key = { note -> note.id }
-                ) { note ->
-                    NoteCard(
-                        note = note,
-                        searchQuery = searchQuery,
-                        selected = selectedNotes.contains(note),
-                        onClick = {
-                            viewModel.shortClickSelect(note = note, navController = navController)
-                        },
-                        onLongClick = {
-                            viewModel.longClickSelect(note = note)
-                        },
-                    )
+        floatingActionButton = {
+            AddNoteFAB(
+                onClick = {
+                    viewModel.setNewEmptyNote()
+                    navController.navigate(NoteRoute)
                 }
+            ) },
+    ) { innerPadding ->
+        NotesList(
+            padding = innerPadding,
+            notesList = notesList,
+            selectedNotes = selectedNotes,
+            searchQuery = searchQuery,
+            onShortClick = { note ->
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute)})
+            },
+            onLongClick = { note ->
+                viewModel.longClickSelect(note = note)
             }
         )
         if (notesList.isEmpty()) {

@@ -15,12 +15,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.IconButton
@@ -32,9 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
-import de.marquisproject.finotes.ui.components.NoteCard
+import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 
@@ -100,6 +98,8 @@ fun BinScreen(
         floatingActionButton = {
             if (binList.isNotEmpty()) {
                 ExtendedFloatingActionButton(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary,
                     onClick = {
                         viewModel.selectAllBinned()
                     },
@@ -124,53 +124,47 @@ fun BinScreen(
                 )
             }
         }
-        LazyVerticalStaggeredGrid(
-            modifier = Modifier.padding(innerPadding),
-            columns = StaggeredGridCells.Adaptive(200.dp),
-            content = {
-                items(
-                    items = binList,
-                    key = { note -> note.id }
-                ) { note ->
-                    NoteCard(
-                        note = note,
-                        searchQuery = searchQuery,
-                        selected = selectedNotes.contains(note),
-                        onClick = {
-                            viewModel.shortClickSelect(note = note, navController = navController)
-                        },
-                        onLongClick = {
-                            viewModel.longClickSelect(note = note)
-                        },
-                    )
-                }
+        NotesList(
+            padding = innerPadding,
+            notesList = binList,
+            selectedNotes = selectedNotes,
+            searchQuery = searchQuery,
+            onShortClick = { note ->
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute)})
+            },
+            onLongClick = { note ->
+                viewModel.longClickSelect(note = note)
             }
         )
-        when {
-            openFinalDeleteAlert.value -> {
-                AlertDialog(
-                    onDismissRequest = { openFinalDeleteAlert.value = false },
-                    title = {
-                        Text("Delete selected notes permanently")
-                    },
-                    text = {
-                        Text("This deletion is irreversible")
-                    },
-                    confirmButton = {
-                        Button(onClick = {
-                            openFinalDeleteAlert.value = false
-                            viewModel.permanentlyDeleteSelection()
-                        }) {
-                            Text("Delete")
-                        }
-                    },
-                    dismissButton = {
-                        Button(onClick = { openFinalDeleteAlert.value = false }) {
-                            Text("Cancel")
-                        }
+        if(openFinalDeleteAlert.value) {
+            AlertDialog(
+                onDismissRequest = { openFinalDeleteAlert.value = false },
+                title = {
+                    Text("Delete selected notes permanently")
+                },
+                text = {
+                    Text("This deletion is irreversible")
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        openFinalDeleteAlert.value = false
+                        viewModel.permanentlyDeleteSelection()
+                    }) {
+                        Text("Delete")
                     }
-                )
-            }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { openFinalDeleteAlert.value = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

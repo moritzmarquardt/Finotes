@@ -120,7 +120,6 @@ class MainActivity : ComponentActivity() {
                     jsonString?.let {
                         importExportViewModel.loadBackupFile(it)
                         importExportViewModel.setShowFileInfoAlert(true)
-                        //Toast.makeText(this, "Backup file loaded successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: IOException) {
@@ -144,11 +143,9 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     startDestination = HomeRoute,
                     enterTransition = {
-                        //fadeIn(animationSpec = spring(stiffness = 3000f, dampingRatio = 0.5f))
                         EnterTransition.None
                                       },
                     exitTransition = {
-                        //fadeOut(animationSpec = spring(stiffness = 3000f, dampingRatio = 0.5f))
                         ExitTransition.None
                                      },
                 ) {

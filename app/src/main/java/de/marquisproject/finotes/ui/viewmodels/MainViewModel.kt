@@ -2,8 +2,6 @@ package de.marquisproject.finotes.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -180,7 +178,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         }
     }
 
-    fun shortClickSelect(note: Note, navController: NavController) {
+    fun shortClickSelect(note: Note, shortClickAction: () -> Unit) {
         if (_inSelectionMode.value) {
             if (_selectedNotes.value.contains(note)) {
                 _selectedNotes.update { it - note }
@@ -189,7 +187,7 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
             }
         } else {
             setCurrentNote(note)
-            navController.navigate(NoteRoute)
+            shortClickAction()
         }
     }
 

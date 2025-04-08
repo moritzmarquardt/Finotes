@@ -31,8 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NoteCard
+import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 
@@ -113,37 +115,16 @@ fun ArchiveScreen(
                 )
             }
         }
-        LazyVerticalStaggeredGrid(
-            modifier = Modifier.padding(innerPadding),
-            columns = StaggeredGridCells.Adaptive(200.dp),
-            content = {
-                items(
-                    items = archivedList,
-                    key = { note -> note.id } //necessary for the swiping to work
-                ) { note ->
-                    NoteCard(
-                        note = note,
-                        searchQuery = searchQuery,
-                        selected = selectedNotes.contains(note),
-                        onClick = {
-                            viewModel.shortClickSelect(note = note, navController = navController)
-                        },
-                        onLongClick = {
-                            viewModel.longClickSelect(note = note)
-                        },
-                        /*onSwipe = {
-                            viewModel.binNote(note)
-                            scope.launch {
-                                snackbarHostState
-                                    .showSnackbar(
-                                        message = "Note moved to bin",
-                                        duration = SnackbarDuration.Short
-                                    )
-                            }
-                                  },
-                        swipeIcon = painterResource(id = R.drawable.outline_delete_24)*/
-                    )
-                }
+        NotesList(
+            padding = innerPadding,
+            notesList = archivedList,
+            selectedNotes = selectedNotes,
+            searchQuery = searchQuery,
+            onShortClick = { note ->
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute)})
+            },
+            onLongClick = { note ->
+                viewModel.longClickSelect(note = note)
             }
         )
     }
