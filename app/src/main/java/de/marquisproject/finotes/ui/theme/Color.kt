@@ -53,7 +53,7 @@ data class ColourPalette(
 val FionaColorPalette = ColourPalette(
     name = "Fiona's Theme",
 
-    primaryLight = Color(0xFFFDD084),
+    primaryLight = Color(0xFFFFCA68),
     onPrimaryLight = Color(0xFF000000),
     primaryContainerLight = Color(0xFF26C6DA),
     onPrimaryContainerLight = Color(0xFF26C6DA),
@@ -71,11 +71,11 @@ val FionaColorPalette = ColourPalette(
     onSurfaceLight = Color(0xFF1F1B17),
 
     primaryDark = Color(0xFFFDD084),
-    onPrimaryDark = Color(0xFF472A00),
+    onPrimaryDark = Color(0xFF2D1B01),
     primaryContainerDark = Color(0xFF26C6DA),
     onPrimaryContainerDark = Color(0xFF26C6DA),
-    secondaryDark = Color(0xFF762E1F),
-    onSecondaryDark = Color(0xFFEEDFD5),
+    secondaryDark = Color(0xFFB47264),
+    onSecondaryDark = Color(0xFF1F1203),
     secondaryContainerDark = Color(0xFF776E13),
     onSecondaryContainerDark = Color(0xFF26C6DA),
     tertiaryDark = Color(0xFFBB9370),
