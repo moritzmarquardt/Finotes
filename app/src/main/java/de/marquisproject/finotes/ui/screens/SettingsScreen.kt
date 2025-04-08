@@ -91,7 +91,9 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
                     ) {
-                        val themename = themeV.name.lowercase().replaceFirstChar { it.uppercase() } + "'s theme"
+                        val themename = ThemeVariantMap[themeV]?.name
+                            ?: (themeV.name.lowercase().replaceFirstChar { it.uppercase() } + "'s theme")
+                        //val themename = themeV.name.lowercase().replaceFirstChar { it.uppercase() } + "'s theme"
                         RadioButton(
                             selected = themeVariant.value == themeV,
                             onClick = null
