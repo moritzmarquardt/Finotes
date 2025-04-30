@@ -3,6 +3,7 @@ package de.marquisproject.finotes.ui.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,6 +30,8 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -99,31 +102,6 @@ fun HomeScreenPreview() {
     }
 }
 
-@Preview(
-    showBackground = true,
-    widthDp = 100,
-    heightDp = 100
-)
-@Composable
-fun PreviewFAB() {
-    FinotesTheme {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(50.dp)
-                    .height(50.dp)
-                    .align(Alignment.Center)
-            ) {
-                AddNoteFAB(
-                    onClick = {}
-                )
-            }
-        }
-    }
-}
-
 
 @Preview(
     showBackground = true,
@@ -133,52 +111,35 @@ fun PreviewFAB() {
 @Composable
 fun PreviewDropDownmenu() {
     FinotesTheme {
-        val navController = rememberNavController()
-        var expandedMenu = true
-        DropdownMenu(
+        Column(
             modifier = Modifier
-                .height(200.dp)
-                .width(200.dp),
-            expanded = expandedMenu,
-            onDismissRequest = { expandedMenu = false },
-            containerColor = MaterialTheme.colorScheme.surface,
+                .fillMaxSize()
+                .background( MaterialTheme.colorScheme.surface )
         ) {
             DropdownMenuItem(
                 text = { Text("Archive") },
-                onClick = {
-                    expandedMenu = false
-                    navController.navigate(ArchiveRoute)
-                },
+                onClick = {},
                 leadingIcon = {
                     Icon(painterResource(id = R.drawable.inventory_2_24dp), contentDescription = "Archive")
                 }
             )
             DropdownMenuItem(
                 text = { Text("Bin") },
-                onClick = {
-                    expandedMenu = false
-                    navController.navigate(BinRoute)
-                },
+                onClick = { },
                 leadingIcon = {
                     Icon(Icons.Default.Delete, contentDescription = "Bin")
                 }
             )
             DropdownMenuItem(
                 text = { Text("Export/Import notes") },
-                onClick = {
-                    expandedMenu = false
-                    navController.navigate(ExportImportRoute)
-                },
+                onClick = {},
                 leadingIcon = {
                     Icon(painterResource(id = R.drawable.baseline_import_export_24), contentDescription = "Bin")
                 }
             )
             DropdownMenuItem(
                 text = { Text("Settings") },
-                onClick = {
-                    expandedMenu = false
-                    navController.navigate(SettingsRoute)
-                },
+                onClick = {},
                 leadingIcon = {
                     Icon(Icons.Default.Settings, contentDescription = "Settings")
                 }
@@ -367,56 +328,22 @@ fun PreviewNoteCardDark () {
     }
 }
 
-@Preview(
-    showBackground = true,
-    widthDp = 100,
-    heightDp = 100,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun PreviewFABDark() {
-    FinotesTheme {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(50.dp)
-                    .height(50.dp)
-                    .align(Alignment.Center)
-            ) {
-                AddNoteFAB(
-                    onClick = {}
-                )
-            }
-        }
-    }
-}
 
-
-@Preview(
-    widthDp = 200,
-    heightDp = 200,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
+@Preview
 @Composable
 fun PreviewDropDownmenuDark() {
     FinotesTheme {
-        val navController = rememberNavController()
         var expandedMenu = true
-        DropdownMenu(
+        Column(
             modifier = Modifier
                 .height(200.dp)
-                .width(200.dp),
-            expanded = expandedMenu,
-            onDismissRequest = { expandedMenu = false },
-            containerColor = MaterialTheme.colorScheme.surface,
+                .width(200.dp)
+            .background( MaterialTheme.colorScheme.surface ),
         ) {
             DropdownMenuItem(
                 text = { Text("Archive") },
                 onClick = {
                     expandedMenu = false
-                    navController.navigate(ArchiveRoute)
                 },
                 leadingIcon = {
                     Icon(painterResource(id = R.drawable.inventory_2_24dp), contentDescription = "Archive")
@@ -426,7 +353,6 @@ fun PreviewDropDownmenuDark() {
                 text = { Text("Bin") },
                 onClick = {
                     expandedMenu = false
-                    navController.navigate(BinRoute)
                 },
                 leadingIcon = {
                     Icon(Icons.Default.Delete, contentDescription = "Bin")
@@ -436,7 +362,6 @@ fun PreviewDropDownmenuDark() {
                 text = { Text("Export/Import notes") },
                 onClick = {
                     expandedMenu = false
-                    navController.navigate(ExportImportRoute)
                 },
                 leadingIcon = {
                     Icon(painterResource(id = R.drawable.baseline_import_export_24), contentDescription = "Bin")
@@ -446,7 +371,6 @@ fun PreviewDropDownmenuDark() {
                 text = { Text("Settings") },
                 onClick = {
                     expandedMenu = false
-                    navController.navigate(SettingsRoute)
                 },
                 leadingIcon = {
                     Icon(Icons.Default.Settings, contentDescription = "Settings")
