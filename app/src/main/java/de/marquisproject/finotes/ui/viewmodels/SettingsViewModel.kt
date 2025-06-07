@@ -3,14 +3,19 @@ package de.marquisproject.finotes.ui.viewmodels
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.repositories.DataStoreInstance
 import de.marquisproject.finotes.ui.theme.ThemeVariant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SettingsViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    application: Application
+) : AndroidViewModel(application) {
     private val _themeVariant = MutableStateFlow<ThemeVariant?>(null)
     val themeVariant: StateFlow<ThemeVariant?> = _themeVariant
 

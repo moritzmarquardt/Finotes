@@ -1,9 +1,16 @@
 package de.marquisproject.finotes.ui.viewmodels
 
+import android.app.Application
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.material3.TopAppBarState
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dagger.hilt.android.lifecycle.HiltViewModel
+import de.marquisproject.finotes.FinotesApplication
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.Dispatchers
@@ -16,9 +23,61 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import java.io.IOException
 
 
-class ImportExportViewModel(private val noteRepository: NoteRepository) : ViewModel() {
+@HiltViewModel
+class ImportExportViewModel @Inject constructor(
+    private val noteRepository: NoteRepository,
+    application: Application
+) : AndroidViewModel(application) {
+
+    fun exportNotesToFile(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) { // Perform file I/O on IO dispatcher
+            val jsonString = createExportDataJson() // Get the JSON string
+            try {
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.bufferedWriter().use { writer ->
+                    writer?.write(jsonString)
+                }
+                // Show toast on the main thread (or emit a UI event for the Composable to show)
+                launch(Dispatchers.Main) {
+                    Toast.makeText(getApplication(), "Backup saved successfully!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(getApplication(), "Failed to save backup: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+
+    fun importNotesFromFile(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) { // Perform file I/O on IO dispatcher
+            try {
+                getApplication<Application>().contentResolver.openInputStream(uri)?.bufferedReader().use { reader ->
+                    val jsonString = reader?.readText()
+                    jsonString?.let {
+                        loadBackupFile(it) // Call your existing loadBackupFile
+                        // setShowFileInfoAlert(true) // Set UI state for the Composable
+                        // Or emit an event to the Composable to show the alert
+                    }
+                }
+                launch(Dispatchers.Main) {
+                    Toast.makeText(getApplication(), "Backup loaded successfully!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(getApplication(), "Failed to load backup: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+
 
     private val _notesList = noteRepository.fetchAllNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _archivedList = noteRepository.fetchAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())

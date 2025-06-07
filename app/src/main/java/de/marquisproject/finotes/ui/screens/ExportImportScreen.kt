@@ -41,8 +41,6 @@ import kotlinx.serialization.Serializable
 fun ExportImportScreen(
     navControllerMain: NavController,
     iEviewModel: ImportExportViewModel,
-    createFileLauncher: ActivityResultLauncher<String>,
-    pickFileLauncher: ActivityResultLauncher<String>
 ) {
     val navControllerIE = rememberNavController()
     val importExportMode by iEviewModel.importExportMode.collectAsState()
@@ -136,16 +134,10 @@ fun ExportImportScreen(
             enterTransition = { EnterTransition.None }
         ) {
             composable<ExportRoute> {
-                ExportScreen(
-                    iEviewModel = iEviewModel,
-                    createFileLauncher = createFileLauncher
-                )
+                ExportScreen()
             }
             composable<ImportRoute> {
-                ImportScreen(
-                    pickFileLauncher = pickFileLauncher,
-                    iEviewModel = iEviewModel,
-                )
+                ImportScreen()
             }
         }
     }

@@ -48,6 +48,7 @@ dependencies {
     //Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // datastore preference for settings storage
     implementation(libs.androidx.datastore.preferences)

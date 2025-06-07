@@ -2,6 +2,7 @@ package de.marquisproject.finotes.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,9 +17,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val noteRepository: NoteRepository
+) : ViewModel() {
     // private vals to hold the state of the UI internally (marked with _)
     private val _searchQuery = MutableStateFlow("")
     private val _selectedNotes = MutableStateFlow<List<Note>>(emptyList())

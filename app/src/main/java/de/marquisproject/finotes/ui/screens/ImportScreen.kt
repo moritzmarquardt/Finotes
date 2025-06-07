@@ -1,6 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
-import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,15 +38,25 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
 
 @Composable
-fun ImportScreen(
-    pickFileLauncher: ActivityResultLauncher<String>,
-    iEviewModel: ImportExportViewModel,
-) {
+fun ImportScreen() {
+    val iEviewModel: ImportExportViewModel = hiltViewModel()
+
+    val pickFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            iEviewModel.importNotesFromFile(it) // Call ViewModel method
+        }
+    }
+
     val loadedData = iEviewModel.loadedData.collectAsState()
     val importData = iEviewModel.importData.collectAsState()
     val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
