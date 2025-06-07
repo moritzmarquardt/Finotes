@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +38,8 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _archivedList = noteRepository.fetchAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _binList = MutableStateFlow<List<Note>>(emptyList())
+
+    private var debounceJob: Job? = null // Job to handle debouncing for the updateCurrentNoteBody function
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -154,9 +158,13 @@ class MainViewModel(private val noteRepository: NoteRepository) : ViewModel() {
          * - If the note has never been edited, set it as edited and insert it into the database
          * - If the note has been edited, update it in the database
          */
-        val updatedNote = _currentNote.value.copy(body = body)
-        val neverEdited = _currentNoteIsNeverEdited.value
-        insertNewOrUpdateNote(updatedNote, neverEdited)
+        debounceJob?.cancel()
+        debounceJob = viewModelScope.launch {
+            delay(300)
+            val updatedNote = _currentNote.value.copy(body = body)
+            val neverEdited = _currentNoteIsNeverEdited.value
+            insertNewOrUpdateNote(updatedNote, neverEdited)
+        }
     }
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
