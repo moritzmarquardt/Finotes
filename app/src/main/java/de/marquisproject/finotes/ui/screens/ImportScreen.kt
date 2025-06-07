@@ -38,7 +38,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
@@ -46,9 +45,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
 
 @Composable
-fun ImportScreen() {
-    val iEviewModel: ImportExportViewModel = hiltViewModel()
-
+fun ImportScreen(
+    iEviewModel: ImportExportViewModel
+) {
     val pickFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->

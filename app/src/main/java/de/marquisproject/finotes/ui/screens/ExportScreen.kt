@@ -1,7 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,16 +21,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import de.marquisproject.finotes.ui.viewmodels.ExportFileFormat
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
 import android.net.Uri
 
 @Composable
-fun ExportScreen() {
-    val iEviewModel: ImportExportViewModel = hiltViewModel()
-
+fun ExportScreen(
+    iEviewModel: ImportExportViewModel
+) {
     val createFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->

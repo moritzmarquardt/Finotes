@@ -5,17 +5,14 @@ import de.marquisproject.finotes.ui.screens.NoteScreen
 import de.marquisproject.finotes.ui.screens.ExportImportScreen
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -25,10 +22,8 @@ import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 import de.marquisproject.finotes.ui.screens.BinScreen
 import de.marquisproject.finotes.ui.screens.SettingsScreen
 import de.marquisproject.finotes.ui.theme.FinotesTheme
-import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
 import de.marquisproject.finotes.ui.viewmodels.SettingsViewModel
 import kotlinx.serialization.Serializable
-import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -41,7 +36,6 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val viewModel: MainViewModel = hiltViewModel()
             val settingsViewModel: SettingsViewModel = hiltViewModel()
-            val importExportViewModel: ImportExportViewModel = hiltViewModel()
 
             FinotesTheme(
                 themeVariant = settingsViewModel.themeVariant.collectAsState().value
@@ -89,7 +83,6 @@ class MainActivity : ComponentActivity() {
                     composable<ExportImportRoute> {
                         ExportImportScreen(
                             navControllerMain = navController,
-                            iEviewModel = importExportViewModel,
                         )
                     }
                 }

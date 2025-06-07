@@ -3,14 +3,11 @@ package de.marquisproject.finotes.ui.viewmodels
 import android.app.Application
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.material3.TopAppBarState
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.marquisproject.finotes.FinotesApplication
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.Dispatchers
@@ -76,8 +73,6 @@ class ImportExportViewModel @Inject constructor(
             }
         }
     }
-
-
 
     private val _notesList = noteRepository.fetchAllNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _archivedList = noteRepository.fetchAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())

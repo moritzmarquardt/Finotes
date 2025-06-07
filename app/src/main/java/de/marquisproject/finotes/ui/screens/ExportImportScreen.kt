@@ -1,8 +1,5 @@
 package de.marquisproject.finotes.ui.screens
 
-import androidx.activity.compose.BackHandler
-import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
@@ -24,13 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.marquisproject.finotes.HomeRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
@@ -40,8 +36,9 @@ import kotlinx.serialization.Serializable
 @Composable
 fun ExportImportScreen(
     navControllerMain: NavController,
-    iEviewModel: ImportExportViewModel,
 ) {
+    val iEviewModel: ImportExportViewModel = hiltViewModel()
+
     val navControllerIE = rememberNavController()
     val importExportMode by iEviewModel.importExportMode.collectAsState()
     val loadedData = iEviewModel.loadedData.collectAsState()
@@ -134,10 +131,14 @@ fun ExportImportScreen(
             enterTransition = { EnterTransition.None }
         ) {
             composable<ExportRoute> {
-                ExportScreen()
+                ExportScreen(
+                    iEviewModel = iEviewModel,
+                )
             }
             composable<ImportRoute> {
-                ImportScreen()
+                ImportScreen(
+                    iEviewModel = iEviewModel,
+                )
             }
         }
     }
