@@ -53,7 +53,6 @@ class MainActivity : ComponentActivity() {
                     composable<HomeRoute> {
                         HomeScreen(
                             navController = navController,
-                            viewModel = viewModel,
                         )
                     }
                     composable<ArchiveRoute> {
@@ -77,7 +76,6 @@ class MainActivity : ComponentActivity() {
                     composable<NoteRoute> {
                         NoteScreen(
                             navController = navController,
-                            viewModel = viewModel,
                         )
                     }
                     composable<ExportImportRoute> {
@@ -95,7 +93,10 @@ class MainActivity : ComponentActivity() {
 @Serializable object HomeRoute
 @Serializable object ArchiveRoute
 @Serializable object BinRoute
-@Serializable object NoteRoute
+@Serializable
+data class NoteRoute(
+    val noteId: Long = -1L, // Default value for new note
+)
 @Serializable object ExportImportRoute
 @Serializable object SettingsRoute
 

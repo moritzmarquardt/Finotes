@@ -49,11 +49,23 @@ class NoteRepository (
 
     fun fetchAllNotes() = noteDb.dao.getAllNotes()
 
+    fun fetchNoteById(noteId: Long) = noteDb.dao.getNoteById(noteId)
+
     fun fetchNotesWithQuery(searchQuery: String) = noteDb.dao.getNotesWithQuery(searchQuery)
 
     fun fetchAllArchivedNotes() = archiveDb.dao.getAllNotes()
 
     fun fetchAllDeletedNotes() = binDb.dao.getAllNotes()
+
+    fun getNotesWithQueryAndPinnedStatusAndCategory (
+        searchQuery: String = "",
+        isPinned: Boolean? = null,
+        categoryQueryIds: List<Int> = emptyList(),
+        ignoreCategoryFilter: Boolean = categoryQueryIds.isEmpty()
+    ) = noteDb.dao.getNotesWithQueryAndPinnedStatusAndCategory(
+        searchQuery, isPinned, categoryQueryIds, ignoreCategoryFilter
+    )
+
 
 
     fun insertNotes(notes: List<Note>) {

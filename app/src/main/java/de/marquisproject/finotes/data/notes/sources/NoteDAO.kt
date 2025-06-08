@@ -53,6 +53,37 @@ interface NoteDAO {
     @Query("SELECT * FROM notes_table WHERE title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%' ORDER BY isPinned DESC, dateCreated DESC")
     fun getNotesWithQuery(searchQuery: String): Flow<List<Note>>
 
+    /**
+     * Get notes with a search query, isPinned and category filter.:
+     * @param searchQuery String to search for in the title or body of the notes
+     * @param isPinned Boolean to filter the notes by pinned status. Can be true or false or null to ignore this filter.
+     * @param categoryQueryIds List of category ids to filter the notes by category
+     * @param ignoreCategoryFilter Boolean to ignore the category filter. If true, the category filter is ignored and all notes are returned.
+     * @return Flow of List of Notes that are pinned and match the search query ordered by lastEdited in descending order
+     */
+    @Query("""
+        SELECT * FROM notes_table 
+        WHERE (title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%') 
+        AND (:isPinned IS NULL OR isPinned = :isPinned)
+        AND (:ignoreCategoryFilter OR color IN (:categoryQueryIds))
+        ORDER BY isPinned DESC, dateCreated DESC
+    """)
+    fun getNotesWithQueryAndPinnedStatusAndCategory(
+        searchQuery: String,
+        isPinned: Boolean?,
+        categoryQueryIds: List<Int>,
+        ignoreCategoryFilter: Boolean
+    ): Flow<List<Note>>
+
+    /**
+     * Get a note by its id.
+     * @param noteId Long id of the note to be fetched
+     * @return Flow of Note object with the given id
+     */
+    @Query("SELECT * FROM notes_table WHERE id = :noteId")
+    fun getNoteById(noteId: Long): Flow<Note>
+
+
     @Insert(onConflict = androidx.room.OnConflictStrategy.ABORT)
     fun insertListOfNotes(notes: List<Note>)
 }

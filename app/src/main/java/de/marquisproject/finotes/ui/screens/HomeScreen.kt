@@ -21,12 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.components.TopBarHome
+import de.marquisproject.finotes.ui.viewmodels.HomeViewModel
 import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 
 
@@ -34,13 +36,14 @@ import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: MainViewModel,
 ) {
+    val viewModel: HomeViewModel = hiltViewModel()
     
     val inSelectionMode by viewModel.inSelectionMode.collectAsState()
     val selectedNotes by viewModel.selectedNotes.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val notesList by viewModel.notesList.collectAsState()
+    val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsState()
+    val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsState()
 
     BackHandler(inSelectionMode) {
         viewModel.clearSelection()
@@ -76,24 +79,23 @@ fun HomeScreen(
         floatingActionButton = {
             AddNoteFAB(
                 onClick = {
-                    viewModel.setNewEmptyNote()
-                    navController.navigate(NoteRoute)
+                    navController.navigate(NoteRoute(noteId = -1L)) // Navigate to new note with id -1
                 }
             ) },
     ) { innerPadding ->
         NotesList(
             padding = innerPadding,
-            notesList = notesList,
+            notesList = pinnedNotesDisplay + normalNotesDisplay,
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute)})
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id))})
             },
             onLongClick = { note ->
                 viewModel.longClickSelect(note = note)
             }
         )
-        if (notesList.isEmpty()) {
+        if (pinnedNotesDisplay.isEmpty() && normalNotesDisplay.isEmpty()) {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)

@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -30,7 +31,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -38,31 +38,32 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
-import de.marquisproject.finotes.ui.viewmodels.MainViewModel
-import de.marquisproject.finotes.utils.handleListLogic
+import de.marquisproject.finotes.ui.viewmodels.NoteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun NoteScreen(
     navController: NavController,
-    viewModel: MainViewModel,
 ) {
+    val viewModel: NoteViewModel = hiltViewModel()
 
     val currentNote by viewModel.currentNote.collectAsState()
-    val currentNoteIsNeverEdited by viewModel.currentNoteIsNeverEdited.collectAsState()
+    val currentBodyTextFieldValue by viewModel.currentBodyTextFieldValue.collectAsState()
+    val noteIsLoaded by viewModel.noteIsLoaded.collectAsState()
+    Log.d("NoteScreen", "Current note: $currentNote")
+    Log.d("NoteScreen", "Current note ID: ${currentNote.id} and body: ${currentNote.body}")
     val bodyFocusRequester = FocusRequester()
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
-    var bodyTextState by remember { mutableStateOf(TextFieldValue(currentNote.body, TextRange(currentNote.body.length))) }
+    Log.d("NoteScreen", "Body text state: $currentBodyTextFieldValue with text ${currentBodyTextFieldValue.text}")
 
 
-    LaunchedEffect(key1 = currentNote.id) {
-        if (currentNoteIsNeverEdited) {
+    LaunchedEffect(key1 = "focusNewNote") {
+        if (currentNote.id == -1L) {
             bodyFocusRequester.requestFocus()
         }
     }
@@ -184,7 +185,7 @@ fun NoteScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             BasicTextField(
-                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE,
+                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
                 value = currentNote.title,
                 onValueChange = { viewModel.updateCurrentNoteTitle(it) },
                 textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
@@ -212,13 +213,9 @@ fun NoteScreen(
                 }
             )
             BasicTextField(
-                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE,
-                value = bodyTextState,
-                onValueChange = { newTextFieldValue ->
-                    val processedTextFieldValue = handleListLogic(bodyTextState, newTextFieldValue)
-                    bodyTextState = processedTextFieldValue
-                    viewModel.updateCurrentNoteBody(processedTextFieldValue.text)
-                },
+                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
+                value = currentBodyTextFieldValue,
+                onValueChange = { viewModel.updateCurrentNoteBody(it) },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
                 modifier = Modifier

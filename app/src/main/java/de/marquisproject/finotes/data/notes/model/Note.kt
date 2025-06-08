@@ -24,7 +24,7 @@ data class Note(
      * Important: If the type of a Field is changed, the App will crash because the db still has the old type.
      * Therefore the App has to be uninstalled and reinstalled to recreate the db.
      */
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = -1L,
     @ColumnInfo(name = "title") val title: String = "",
     @ColumnInfo(name = "body") val body: String = "",
     @ColumnInfo(name = "dateCreated") val dateCreated: Long = System.currentTimeMillis(),
