@@ -51,6 +51,10 @@ class NoteRepository (
 
     fun fetchNoteById(noteId: Long) = noteDb.dao.getNoteById(noteId)
 
+    fun fetchArchivedNoteById(noteId: Long) = archiveDb.dao.getNoteById(noteId)
+
+    fun fetchBinNoteById(noteId: Long) = binDb.dao.getNoteById(noteId)
+
     fun fetchNotesWithQuery(searchQuery: String) = noteDb.dao.getNotesWithQuery(searchQuery)
 
     fun fetchAllArchivedNotes() = archiveDb.dao.getAllNotes()

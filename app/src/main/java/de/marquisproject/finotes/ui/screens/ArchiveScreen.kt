@@ -15,42 +15,35 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
-import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
-import de.marquisproject.finotes.ui.viewmodels.MainViewModel
+import de.marquisproject.finotes.ui.viewmodels.ArchiveViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ArchiveScreen(
     navController: NavController,
-    viewModel: MainViewModel,
 ) {
+
+    val viewModel: ArchiveViewModel = hiltViewModel()
 
     val inSelectionMode by viewModel.inSelectionMode.collectAsState()
     val selectedNotes by viewModel.selectedNotes.collectAsState()
-    val archivedList by viewModel.archivedList.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val notesList by viewModel.notesList.collectAsState()
 
     BackHandler {
         if (inSelectionMode) {
@@ -93,14 +86,9 @@ fun ArchiveScreen(
                     )
                 )
             }
-        },
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-            )
         }
     ) { innerPadding ->
-        if (archivedList.isEmpty()) {
+        if (notesList.isEmpty()) {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -117,11 +105,11 @@ fun ArchiveScreen(
         }
         NotesList(
             padding = innerPadding,
-            notesList = archivedList,
+            notesList = notesList,
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute)})
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id, noteStatus = note.noteStatus))} )
             },
             onLongClick = { note ->
                 viewModel.longClickSelect(note = note)

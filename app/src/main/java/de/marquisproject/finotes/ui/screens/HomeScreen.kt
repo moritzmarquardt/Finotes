@@ -25,11 +25,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
+import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.components.TopBarHome
 import de.marquisproject.finotes.ui.viewmodels.HomeViewModel
-import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -79,17 +79,20 @@ fun HomeScreen(
         floatingActionButton = {
             AddNoteFAB(
                 onClick = {
-                    navController.navigate(NoteRoute(noteId = -1L)) // Navigate to new note with id -1
+                    navController.navigate(NoteRoute(noteId = -1L, noteStatus = NoteStatus.ACTIVE)) // Navigate to new note with id -1
                 }
             ) },
     ) { innerPadding ->
         NotesList(
             padding = innerPadding,
-            notesList = pinnedNotesDisplay + normalNotesDisplay,
+            title = "Pinned Notes",
+            notesList = pinnedNotesDisplay,
+            title2 = "Notes",
+            notesList2 = normalNotesDisplay,
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id))})
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id, noteStatus = note.noteStatus))} )
             },
             onLongClick = { note ->
                 viewModel.longClickSelect(note = note)

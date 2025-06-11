@@ -17,8 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.ui.screens.ArchiveScreen
-import de.marquisproject.finotes.ui.viewmodels.MainViewModel
 import de.marquisproject.finotes.ui.screens.BinScreen
 import de.marquisproject.finotes.ui.screens.SettingsScreen
 import de.marquisproject.finotes.ui.theme.FinotesTheme
@@ -34,7 +34,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
-            val viewModel: MainViewModel = hiltViewModel()
             val settingsViewModel: SettingsViewModel = hiltViewModel()
 
             FinotesTheme(
@@ -58,13 +57,11 @@ class MainActivity : ComponentActivity() {
                     composable<ArchiveRoute> {
                         ArchiveScreen(
                             navController = navController,
-                            viewModel = viewModel,
                         )
                     }
                     composable<BinRoute> {
                         BinScreen(
                             navController = navController,
-                            viewModel = viewModel,
                         )
                     }
                     composable<SettingsRoute> {
@@ -96,6 +93,7 @@ class MainActivity : ComponentActivity() {
 @Serializable
 data class NoteRoute(
     val noteId: Long = -1L, // Default value for new note
+    val noteStatus: NoteStatus,
 )
 @Serializable object ExportImportRoute
 @Serializable object SettingsRoute

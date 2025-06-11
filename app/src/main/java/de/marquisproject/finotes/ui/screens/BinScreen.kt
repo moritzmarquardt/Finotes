@@ -30,27 +30,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
-import de.marquisproject.finotes.ui.viewmodels.MainViewModel
+import de.marquisproject.finotes.ui.viewmodels.BinViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun BinScreen(
     navController: NavController,
-    viewModel: MainViewModel,
 ) {
+    val viewModel: BinViewModel = hiltViewModel()
     //val notesList by viewModel.
     val inSelectionMode by viewModel.inSelectionMode.collectAsState()
     val selectedNotes by viewModel.selectedNotes.collectAsState()
-    val binList by viewModel.binList.collectAsState()
+    val notesList by viewModel.notesList.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
-
-    viewModel.fetchBinNotes() // fetch them here when the screen is opened
 
     BackHandler {
         if (inSelectionMode) {
@@ -96,7 +95,7 @@ fun BinScreen(
             }
         },
         floatingActionButton = {
-            if (binList.isNotEmpty()) {
+            if (notesList.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     contentColor = MaterialTheme.colorScheme.onSecondary,
@@ -109,7 +108,7 @@ fun BinScreen(
             }
         }
     ) { innerPadding ->
-        if (binList.isEmpty()) {
+        if (notesList.isEmpty()) {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
@@ -126,11 +125,11 @@ fun BinScreen(
         }
         NotesList(
             padding = innerPadding,
-            notesList = binList,
+            notesList = notesList,
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute)})
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id, noteStatus = note.noteStatus))} )
             },
             onLongClick = { note ->
                 viewModel.longClickSelect(note = note)

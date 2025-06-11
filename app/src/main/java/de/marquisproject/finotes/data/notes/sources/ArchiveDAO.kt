@@ -21,6 +21,9 @@ interface ArchiveDAO {
     @Query("SELECT * FROM notes_table ORDER BY dateCreated DESC")
     fun getAllNotes(): Flow<List<Note>>
 
+    @Query("SELECT * FROM notes_table WHERE id = :noteId")
+    fun getNoteById(noteId: Long): Flow<Note>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     fun insertListOfNotes(notes: List<Note>)
 }

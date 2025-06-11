@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
+import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import de.marquisproject.finotes.utils.handleListLogic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
@@ -38,6 +38,9 @@ class NoteViewModel @Inject constructor(
     private val _currentNoteId: MutableStateFlow<Long> = MutableStateFlow(
         savedStateHandle.get<Long>("noteId") ?: -2L
     )
+    private val _currentNoteStatus: MutableStateFlow<NoteStatus> = MutableStateFlow(
+        savedStateHandle.get<NoteStatus>("noteStatus") ?: NoteStatus.ACTIVE
+    )
     private val _noteIsLoaded = MutableStateFlow(false)
 
     private val _editableNote = MutableStateFlow(Note(id = -2L))
@@ -53,16 +56,22 @@ class NoteViewModel @Inject constructor(
                 .filter { it != -2L } // Wait for a valid ID
                 .take(1) // Only want the first valid ID
                 .first() // Use first() to suspend until value is emitted
+            val status = _currentNoteStatus
+                .take(1) // Only want the first valid status
+                .first() // Use first() to suspend until value is emitted
 
             val fetchedNote = if (id == -1L) {
                 Log.d("NoteViewModel", "Creating new empty note.")
                 Note()
             } else {
                 Log.d("NoteViewModel", "Fetching note with ID: $id")
-                noteRepository.fetchNoteById(id)
-                    .filterNotNull() // Ensure we only proceed if the note is found
-                    .map { it.copy() } // Create a copy to avoid mutable state issues
-                    .first() // Suspend until the note is fetched
+                Log.d("NoteViewModel", "Fetching note with status: $status")
+
+                when (status) {
+                    NoteStatus.ARCHIVED -> noteRepository.fetchArchivedNoteById(id).filterNotNull().map { it.copy() }.first()
+                    NoteStatus.BINNED -> noteRepository.fetchBinNoteById(id).filterNotNull().map { it.copy() }.first()
+                    NoteStatus.ACTIVE -> noteRepository.fetchNoteById(id).filterNotNull().map { it.copy() }.first()
+                }
             }
 
             _editableNote.value = fetchedNote
