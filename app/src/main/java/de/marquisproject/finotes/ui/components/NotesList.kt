@@ -17,33 +17,35 @@ import de.marquisproject.finotes.data.notes.model.Note
 @Composable
 fun NotesList(
     padding: PaddingValues = PaddingValues(0.dp),
+    title: String = "",
     notesList: List<Note>,
+    title2: String = "",
+    notesList2: List<Note> = emptyList(),
     selectedNotes: List<Note> = emptyList(),
     searchQuery: String = "",
     onShortClick: (Note) -> Unit = {},
     onLongClick: (Note) -> Unit = {},
 ){
-    val pinnedNotes = notesList.filter { it.isPinned }
-    val nonPinnedNotes = notesList.filterNot { it.isPinned }
-
     LazyVerticalStaggeredGrid(
         modifier = Modifier.padding(padding),
         columns = StaggeredGridCells.Adaptive(180.dp),
         content = {
-            if (pinnedNotes.isNotEmpty()){
-                item(
-                    span = StaggeredGridItemSpan.FullLine
-                ) {
-                    Text(
-                        text = "Pinned Notes",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 12.dp)
-                    )
+            if (notesList.isNotEmpty()){
+                if (title.isNotEmpty()) {
+                    item(
+                        span = StaggeredGridItemSpan.FullLine
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp, horizontal = 12.dp)
+                        )
+                    }
                 }
                 items(
-                    items = pinnedNotes,
+                    items = notesList,
                     key = { note -> note.id }
                 ) { note ->
                     NoteCard(
@@ -55,20 +57,22 @@ fun NotesList(
                     )
                 }
             }
-            if (nonPinnedNotes.isNotEmpty()){
-                item(
-                    span = StaggeredGridItemSpan.FullLine
-                ) {
-                    Text(
-                        text = "Notes",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 12.dp)
-                    )
+            if (notesList2.isNotEmpty()){
+                if (title2.isNotEmpty()) {
+                    item(
+                        span = StaggeredGridItemSpan.FullLine
+                    ) {
+                        Text(
+                            text = title2,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp, horizontal = 12.dp)
+                        )
+                    }
                 }
                 items(
-                    items = nonPinnedNotes,
+                    items = notesList2,
                     key = { note -> "archived_${note.id}" }
                 ) { note ->
                     // Insert separator before the first unpinned note
