@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    id("kotlin-kapt")
     alias(libs.plugins.hilt)
 }
 
@@ -36,26 +35,29 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
 
 dependencies {
     //Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    ksp(libs.hilt.android.compiler)
 
     // datastore preference for settings storage
     implementation(libs.androidx.datastore.preferences)
 
     // animation for shared elements
     implementation(libs.androidx.animation)
-    implementation(libs.androidx.animation.graphics) // or a newer version
+    implementation(libs.androidx.animation.graphics)
 
     //Moshi for JSON parsing
     implementation(libs.moshi)

@@ -1,25 +1,24 @@
 [versions]
-agp = "8.10.1"
-animation = "1.8.2"
+agp = "8.11.0"
+animation = "1.8.3"
 datastorePreferences = "1.1.7"
-hiltAndroid = "2.55"
-hiltAndroidCompiler = "2.55"
+hiltAndroid = "2.56.2"
 hiltNavigationCompose = "1.2.0"
-kotlin = "2.1.10"
-kotlinKSP = "2.1.10-1.0.31"
+kotlin = "2.2.0"
+kotlinKSP = "2.2.0-2.0.2"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-kotlinxSerializationJsonVersion = "1.8.0"
+kotlinxSerializationJsonVersion = "1.9.0"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
-composeBom = "2025.06.00"
+composeBom = "2025.06.01"
 moshi = "1.15.2"
-moshiKotlin = "1.15.0"
-navigationCompose = "2.9.0"
-navigationTesting = "2.9.0"
-roomRuntime = "2.7.1"
+moshiKotlin = "1.15.2"
+navigationCompose = "2.9.1"
+navigationTesting = "2.9.1"
+roomRuntime = "2.7.2"
 
 [libraries]
 androidx-animation = { module = "androidx.compose.animation:animation", version.ref = "animation" }
@@ -34,7 +33,6 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRunt
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
-hilt-android-compiler-v2511 = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 jetbrains-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJsonVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
