@@ -36,6 +36,8 @@ import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.viewmodels.BinViewModel
+import de.marquisproject.finotes.utils.NoteSection
+import kotlin.collections.listOf
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -125,7 +127,12 @@ fun BinScreen(
         }
         NotesList(
             padding = innerPadding,
-            notesList = notesList,
+            noteSections = listOf(
+                NoteSection(
+                    title = "Binned Notes",
+                    notesList = notesList,
+                )
+            ),
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->

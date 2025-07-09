@@ -30,6 +30,8 @@ import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.components.TopBarHome
 import de.marquisproject.finotes.ui.viewmodels.HomeViewModel
+import de.marquisproject.finotes.utils.NoteSection
+import kotlinx.coroutines.flow.collectLatest
 
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -85,10 +87,16 @@ fun HomeScreen(
     ) { innerPadding ->
         NotesList(
             padding = innerPadding,
-            title = "Pinned Notes",
-            notesList = pinnedNotesDisplay,
-            title2 = "Notes",
-            notesList2 = normalNotesDisplay,
+            noteSections = listOf(
+                NoteSection(
+                    title = "Pinned Notes",
+                    notesList = pinnedNotesDisplay,
+                ),
+                NoteSection(
+                    title = "Notes",
+                    notesList = normalNotesDisplay,
+                )
+            ),
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->

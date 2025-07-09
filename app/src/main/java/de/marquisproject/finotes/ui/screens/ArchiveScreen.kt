@@ -30,6 +30,7 @@ import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.viewmodels.ArchiveViewModel
+import de.marquisproject.finotes.utils.NoteSection
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -105,7 +106,12 @@ fun ArchiveScreen(
         }
         NotesList(
             padding = innerPadding,
-            notesList = notesList,
+            noteSections = listOf(
+                NoteSection(
+                    title = "Archived Notes",
+                    notesList = notesList,
+                )
+            ),
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->
