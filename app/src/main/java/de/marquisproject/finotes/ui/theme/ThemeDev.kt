@@ -308,7 +308,6 @@ fun PreviewNoteCardDark () {
                         selected = false,
                         onClick = {},
                         onLongClick = {},
-                        onSwipe = null,
                     )
                 }
                 Box(
@@ -320,7 +319,6 @@ fun PreviewNoteCardDark () {
                         selected = true,
                         onClick = {},
                         onLongClick = {},
-                        onSwipe = null,
                     )
                 }
             }

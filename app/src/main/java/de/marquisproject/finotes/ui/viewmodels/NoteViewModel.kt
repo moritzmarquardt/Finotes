@@ -74,7 +74,7 @@ class NoteViewModel @Inject constructor(
                 }
             }
 
-            _editableNote.value = fetchedNote
+            _editableNote.update { fetchedNote }
             _editableBodyTextFieldValue.value = TextFieldValue(
                 text = fetchedNote.body,
                 selection = TextRange(fetchedNote.body.length)
@@ -88,7 +88,7 @@ class NoteViewModel @Inject constructor(
         viewModelScope.launch {
             _editableNote
                 .debounce(500L) // Wait 500ms after the last change
-                .distinctUntilChanged() // Only react if the Note object itself has changed
+                .distinctUntilChanged() // Only emit if the value has changed
                 .filter { noteToSave ->
                     val isExistingNote = noteToSave.id >= 0L
                     val isNewNoteWithContent = noteToSave.id < 0L && (noteToSave.title.isNotBlank() || noteToSave.body.isNotBlank())

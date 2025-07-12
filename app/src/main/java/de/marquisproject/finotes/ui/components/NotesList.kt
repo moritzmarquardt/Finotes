@@ -28,7 +28,7 @@ fun NotesList(
         modifier = Modifier.padding(padding),
         columns = StaggeredGridCells.Adaptive(180.dp),
         content = {
-            noteSections.forEachIndexed { index, section ->
+            noteSections.forEach { section ->
                 if (section.notesList.isNotEmpty()){
                     if (section.title.isNotEmpty()) {
                         item(
