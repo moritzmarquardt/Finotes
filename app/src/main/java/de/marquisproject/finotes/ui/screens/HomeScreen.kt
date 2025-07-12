@@ -13,10 +13,14 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,8 +51,29 @@ fun HomeScreen(
     val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsState()
     val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsState()
 
+    // Create a SnackbarHostState to control the Snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+
     BackHandler(inSelectionMode) {
         viewModel.clearSelection()
+    }
+
+    // Observe Snackbar events from the ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEventFlow.collectLatest { event ->
+            when (event) {
+                is HomeViewModel.SnackbarEvent.ShowSnackbar -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.message,
+                        actionLabel = event.actionLabel,
+                        withDismissAction = true // Allows dismissal by swipe or timeout
+                    )
+                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                        viewModel.performUndo()
+                    }
+                }
+            }
+        }
     }
 
     Scaffold (
@@ -84,6 +109,7 @@ fun HomeScreen(
                     navController.navigate(NoteRoute(noteId = -1L, noteStatus = NoteStatus.ACTIVE)) // Navigate to new note with id -1
                 }
             ) },
+        snackbarHost = { SnackbarHost(snackbarHostState) } // Provide the SnackbarHost
     ) { innerPadding ->
         NotesList(
             padding = innerPadding,

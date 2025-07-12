@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,6 +30,9 @@ class HomeViewModel @Inject constructor(
     private val _selectedNotes = MutableStateFlow<List<Note>>(emptyList())
     private val _inSelectionMode = _selectedNotes.map { it.isNotEmpty() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    private val _snackbarEventChannel = Channel<SnackbarEvent>()
+    val snackbarEventFlow = _snackbarEventChannel.receiveAsFlow()
+    private var lastAction: LastAction? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _pinnedNotesDisplay = combine(
@@ -105,18 +110,38 @@ class HomeViewModel @Inject constructor(
 
     fun archiveSelectedNotes() {
         viewModelScope.launch {
-            _selectedNotes.value.forEach { note ->
-                noteRepository.archiveNote(note)
+            val notesToArchive = _selectedNotes.value.toList()
+            val archivedNotes = mutableListOf<Note>()
+            notesToArchive.forEach { note ->
+                val newId = noteRepository.archiveNote(note) //TODO() make this a batch operation
+                archivedNotes.add(note.copy(id = newId))
             }
+            lastAction = LastAction.Archive(archivedNotes)
+            _snackbarEventChannel.send(
+                SnackbarEvent.ShowSnackbar(
+                    message = "${archivedNotes.size} note(s) archived",
+                    actionLabel = "Undo"
+                )
+            )
             clearSelection()
         }
     }
 
     fun binSelectedNotes() {
         viewModelScope.launch {
-            _selectedNotes.value.forEach { note ->
-                noteRepository.binNote(note)
+            val notesToBin = _selectedNotes.value.toList()
+            val binnedNotes = mutableListOf<Note>()
+            notesToBin.forEach { note ->
+                val newId = noteRepository.binNote(note)
+                binnedNotes.add(note.copy(id = newId))
             }
+            lastAction = LastAction.Bin(binnedNotes)
+            _snackbarEventChannel.send(
+                SnackbarEvent.ShowSnackbar(
+                    message = "${binnedNotes.size} note(s) moved to bin",
+                    actionLabel = "Undo"
+                )
+            )
             clearSelection()
         }
     }
@@ -137,6 +162,82 @@ class HomeViewModel @Inject constructor(
             }
             clearSelection()
         }
+    }
+
+    fun performUndo() {
+        viewModelScope.launch {
+            when (val action = lastAction) {
+                is LastAction.Archive -> {
+                    val notesArchived = action.notes
+                    notesArchived.forEach { note ->
+                        noteRepository.unarchiveNote(note)
+                    }
+                    _snackbarEventChannel.send(
+                        SnackbarEvent.ShowSnackbar(
+                            message = "Archived note(s) restored",
+                            actionLabel = null // No undo for undo
+                        )
+                    )
+                }
+                is LastAction.Bin -> {
+                    val notesBinned = action.notes
+                    notesBinned.forEach { note ->
+                        noteRepository.restoreNote(note)
+                    }
+                    _snackbarEventChannel.send(
+                        SnackbarEvent.ShowSnackbar(
+                            message = "Note(s) restored from bin",
+                            actionLabel = null // No undo for undo
+                        )
+                    )
+                }
+                null -> {
+                    // No action to undo
+                    _snackbarEventChannel.send(
+                        SnackbarEvent.ShowSnackbar(
+                            message = "Error: No action to undo",
+                            actionLabel = null
+                        )
+                    )
+                }
+            }
+            lastAction = null // Clear the last action after undo
+        }
+    }
+
+
+    // Sealed class to represent different types of Snackbar events
+    sealed class SnackbarEvent {
+        data class ShowSnackbar(val message: String, val actionLabel: String?) : SnackbarEvent()
+    }
+
+    // Sealed class to represent the last action performed for undo
+    private sealed class LastAction {
+        /**
+         * Represents an action to archive notes.
+         * @property notes The list of notes that has been archived. with the ids in the archive after archiving
+         */
+        data class Archive(val notes: List<Note>) : LastAction()
+        data class Bin(val notes: List<Note>) : LastAction()
+        // Add other actions if needed
+    }
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun getNotesDisplayFlow(isPinned: Boolean): StateFlow<List<Note>> {
+        return combine(
+            _searchQuery,
+            _selectedCategories
+        ) { query, categories ->
+            query to categories
+        }.flatMapLatest { (query, categories) ->
+            noteRepository.getNotesWithQueryAndPinnedStatusAndCategory(
+                searchQuery = query,
+                isPinned = isPinned,
+                categoryQueryIds = categories,
+                ignoreCategoryFilter = categories.isEmpty()
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 
 }

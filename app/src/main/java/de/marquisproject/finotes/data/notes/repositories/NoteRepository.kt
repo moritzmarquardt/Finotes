@@ -5,6 +5,7 @@ import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.sources.ArchiveDatabase
 import de.marquisproject.finotes.data.notes.sources.BinDatabase
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
+import kotlinx.coroutines.flow.first
 
 class NoteRepository (
     private val noteDb: NoteDatabase,
@@ -19,13 +20,14 @@ class NoteRepository (
         return noteDb.dao.insertNote(note.copy(id = 0))
     }
 
-    suspend fun binNote(note: Note) {
+    suspend fun binNote(note: Note) : Long {
+        val newIdBinned = binDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.BINNED))
         if (note.noteStatus == NoteStatus.ACTIVE) {
             noteDb.dao.deleteNote(note)
         } else if (note.noteStatus == NoteStatus.ARCHIVED) {
             archiveDb.dao.deleteNote(note)
         }
-        binDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.BINNED))
+        return newIdBinned
     }
 
     suspend fun restoreNote (note: Note) {
@@ -37,9 +39,10 @@ class NoteRepository (
         binDb.dao.deleteNote(note)
     }
 
-    suspend fun archiveNote(note: Note) {
-        archiveDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ARCHIVED))
+    suspend fun archiveNote(note: Note) : Long {
+        val newIdArchived = archiveDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ARCHIVED))
         noteDb.dao.deleteNote(note)
+        return newIdArchived
     }
 
     suspend fun unarchiveNote(note: Note) {
