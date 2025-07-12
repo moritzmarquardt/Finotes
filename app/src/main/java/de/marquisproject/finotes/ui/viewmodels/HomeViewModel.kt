@@ -27,53 +27,25 @@ class HomeViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedCategories = MutableStateFlow<List<Int>>(emptyList())
-    private val _selectedNotes = MutableStateFlow<List<Note>>(emptyList())
-    private val _inSelectionMode = _selectedNotes.map { it.isNotEmpty() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    private val _selectedNotes = MutableStateFlow<Set<Note>>(emptySet())
+    private val _inSelectionMode = _selectedNotes.map {
+        it.isNotEmpty()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     private val _snackbarEventChannel = Channel<SnackbarEvent>()
     val snackbarEventFlow = _snackbarEventChannel.receiveAsFlow()
     private var lastAction: LastAction? = null
+    private val _pinnedNotesDisplay: StateFlow<List<Note>> = getNotesDisplayFlow(isPinned = true)
+    private val _normalNotesDisplay: StateFlow<List<Note>> = getNotesDisplayFlow(isPinned = false)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val _pinnedNotesDisplay = combine(
-        _searchQuery,
-        _selectedCategories
-    ) { query, categories ->
-        query to categories
-    }.flatMapLatest{
-            (query, categories) ->
-        noteRepository.getNotesWithQueryAndPinnedStatusAndCategory(
-            searchQuery = query,
-            isPinned = true,
-            categoryQueryIds = categories,
-            ignoreCategoryFilter = categories.isEmpty()
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val _normalNotesDisplay = combine(
-        _searchQuery,
-        _selectedCategories
-    ) { query, categories ->
-        query to categories
-    }.flatMapLatest{
-            (query, categories) ->
-        noteRepository.getNotesWithQueryAndPinnedStatusAndCategory(
-            searchQuery = query,
-            isPinned = false,
-            categoryQueryIds = categories,
-            ignoreCategoryFilter = categories.isEmpty()
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     val selectedCategories: StateFlow<List<Int>> = _selectedCategories.asStateFlow()
     val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
-    val selectedNotes: StateFlow<List<Note>> = _selectedNotes.asStateFlow()
-    val pinnedNotesDisplay = _pinnedNotesDisplay
+    val selectedNotes: StateFlow<Set<Note>> = _selectedNotes.asStateFlow()
+    val pinnedNotesDisplay: StateFlow<List<Note>> = _pinnedNotesDisplay
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    val normalNotesDisplay = _normalNotesDisplay
+    val normalNotesDisplay: StateFlow<List<Note>> = _normalNotesDisplay
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     // Functions to update the state of the UI and perform repository operations which in turn interact with the database
@@ -101,11 +73,66 @@ class HomeViewModel @Inject constructor(
     }
 
     fun clearSelection() {
-        _selectedNotes.update { emptyList() }
+        _selectedNotes.update { emptySet() }
     }
 
     fun selectAllNotes() {
-        _selectedNotes.update { _pinnedNotesDisplay.value + _normalNotesDisplay.value }
+        val allDisplayNotes: Set<Note> = _pinnedNotesDisplay.value.toSet() + _normalNotesDisplay.value.toSet()
+        _selectedNotes.update { allDisplayNotes }
+    }
+
+    /**
+     * Toggles the selection of all pinned notes. SO if all are selected, they are deselected.
+     */
+    fun toggleSelectAllPinnedNotes(add: Boolean = false) {
+        if (_selectedNotes.value.containsAll(_pinnedNotesDisplay.value)) {
+            _selectedNotes.update { _selectedNotes.value - _pinnedNotesDisplay.value.toSet() }
+            return
+        } else if (add) {
+            _selectedNotes.update { it + _pinnedNotesDisplay.value.toSet()}
+        } else {
+            _selectedNotes.update { _pinnedNotesDisplay.value.toSet() }
+        }
+    }
+
+    fun toggleSelectAllNonPinnedNotes(add: Boolean = false) {
+        if (_selectedNotes.value.containsAll(_normalNotesDisplay.value)) {
+            _selectedNotes.update { _selectedNotes.value - _normalNotesDisplay.value.toSet() }
+            return
+        } else if (add) {
+            _selectedNotes.update { it + _normalNotesDisplay.value.toSet() }
+        } else {
+            _selectedNotes.update { _normalNotesDisplay.value.toSet() }
+        }
+    }
+
+    fun allNotesSelected(): Boolean {
+        val allDisplayNotes: Set<Note> = _pinnedNotesDisplay.value.toSet() + _normalNotesDisplay.value.toSet()
+        return _selectedNotes.value == allDisplayNotes
+    }
+
+    /**
+     * Checks if all pinned notes are selected.
+     * @param exclusive If true, checks if the selected notes are exactly the pinned notes. If false, checks if all pinned notes are included in the selected notes.
+     */
+    fun allPinnedNotesSelected(exclusive: Boolean = false): Boolean {
+        return if (exclusive) {
+            _selectedNotes.value == _pinnedNotesDisplay.value
+        } else {
+            _selectedNotes.value.containsAll(_pinnedNotesDisplay.value) && _pinnedNotesDisplay.value.isNotEmpty()
+        }
+    }
+
+    /**
+     * Checks if all non-pinned notes are selected.
+     * @param exclusive If true, checks if the selected notes are exactly the non-pinned notes. If false, checks if all non-pinned notes are included in the selected notes.
+     */
+    fun allNonPinnedNotesSelected(exclusive: Boolean = false): Boolean {
+        return if (exclusive) {
+            _selectedNotes.value == _normalNotesDisplay.value
+        } else {
+            _selectedNotes.value.containsAll(_normalNotesDisplay.value) && _normalNotesDisplay.value.isNotEmpty()
+        }
     }
 
     fun archiveSelectedNotes() {
@@ -148,7 +175,8 @@ class HomeViewModel @Inject constructor(
 
     fun pinSelectedNotes() {
         viewModelScope.launch {
-            selectedNotes.value.forEach { note ->
+            val notesToPin: List<Note> = _selectedNotes.value.toList()
+            notesToPin.forEach { note ->
                 noteRepository.updateNote(note.copy(isPinned = true))
             }
             clearSelection()
@@ -157,7 +185,8 @@ class HomeViewModel @Inject constructor(
 
     fun unpinSelectedNotes() {
         viewModelScope.launch {
-            _selectedNotes.value.forEach { note ->
+            val notesToUnpin: List<Note> = _selectedNotes.value.toList()
+            notesToUnpin.forEach { note ->
                 noteRepository.updateNote(note.copy(isPinned = false))
             }
             clearSelection()

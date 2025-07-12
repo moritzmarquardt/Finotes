@@ -5,7 +5,6 @@ import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.sources.ArchiveDatabase
 import de.marquisproject.finotes.data.notes.sources.BinDatabase
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
-import kotlinx.coroutines.flow.first
 
 class NoteRepository (
     private val noteDb: NoteDatabase,

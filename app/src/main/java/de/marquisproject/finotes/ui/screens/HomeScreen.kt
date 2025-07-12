@@ -117,13 +117,18 @@ fun HomeScreen(
                 NoteSection(
                     title = "Pinned Notes",
                     notesList = pinnedNotesDisplay,
+                    onSelectSection = { viewModel.toggleSelectAllPinnedNotes(add = true) },
+                    isSectionSelected = viewModel.allPinnedNotesSelected(exclusive = false)
                 ),
                 NoteSection(
                     title = "Notes",
                     notesList = normalNotesDisplay,
+                    onSelectSection = { viewModel.toggleSelectAllNonPinnedNotes(add = true) },
+                    isSectionSelected = viewModel.allNonPinnedNotesSelected(exclusive = false)
                 )
             ),
-            selectedNotes = selectedNotes,
+            inSelectionMode = inSelectionMode,
+            selectedNotes = selectedNotes.toList(),
             searchQuery = searchQuery,
             onShortClick = { note ->
                 viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id, noteStatus = note.noteStatus))} )
