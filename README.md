@@ -7,13 +7,14 @@ This is a project for friends and family.
 
 ## Features
 
+- **Privacy**: The app does not communicate with the internet. All data is stored locally on your phone and can be backed up.
+- **Export and Import**: Export notes to a file and import them back.
 - **Create Notes**: Easily create and edit notes with auto-saving functionality.
 - **Search**: Quickly find notes using the search functionality.
 - **Pin Notes**: Pin important notes to keep them at the top.
 - **Archive**: Archive notes to keep them out of the way but still accessible.
 - **Bin**: Move notes to the bin and restore or permanently delete them.
 - **Dark Mode**: Use the app in dark mode for a better reading experience.
-- **Export and Import**: Export notes to a file and import them back.
 
 
 ## Screenshots
@@ -43,6 +44,7 @@ These include:
   - Use a database class to define the database instance.
   - Use a repository class to manage the data operations of several data sources of notes.
   - Instantiate the database and repository in the MainActivity and pass them to the ViewModel which is then passed to the Screens.
+- Using dependency injection (HILT) for managing dependencies which is the recommended way to manage dependencies in Android.
 
 
 ## License
