@@ -57,21 +57,21 @@ private fun colourPaletteToDarkColorScheme(
 @Composable
 fun FinotesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    themeVariant: ThemeVariant? = ThemeVariant.FIONA,
+    themeVariant: ThemeVariant? = ThemeVariant.AU,
     content: @Composable (() -> Unit)
 ) {
     val lightColorSchemeVariant = when (themeVariant) {
-        ThemeVariant.FIONA -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+        ThemeVariant.AU -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.AU] ?: error("Fiona theme not found"))
         ThemeVariant.MARQUI -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.MARQUI] ?: error("Marqui theme not found"))
         ThemeVariant.MINION -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.MINION] ?: error("Minion theme not found"))
-        null -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+        null -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.AU] ?: error("Fiona theme not found"))
         ThemeVariant.MATERIAL -> colourPaletteToLightColorScheme(ThemeVariantMap[ThemeVariant.MATERIAL] ?: error("Material theme not found"))
     }
     val darkColorSchemeVariant = when (themeVariant) {
-        ThemeVariant.FIONA -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+        ThemeVariant.AU -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.AU] ?: error("Fiona theme not found"))
         ThemeVariant.MARQUI -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.MARQUI] ?: error("Marqui theme not found"))
         ThemeVariant.MINION -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.MINION] ?: error("Minion theme not found"))
-        null -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.FIONA] ?: error("Fiona theme not found"))
+        null -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.AU] ?: error("Fiona theme not found"))
         ThemeVariant.MATERIAL -> colourPaletteToDarkColorScheme(ThemeVariantMap[ThemeVariant.MATERIAL] ?: error("Material theme not found"))
     }
     val colorScheme = when {

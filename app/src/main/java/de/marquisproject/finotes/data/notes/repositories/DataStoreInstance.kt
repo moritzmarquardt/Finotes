@@ -1,13 +1,11 @@
 package de.marquisproject.finotes.data.notes.repositories
 
 import android.content.Context
-import androidx.compose.ui.input.key.Key
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import de.marquisproject.finotes.ui.theme.ThemeVariant
 import kotlinx.coroutines.flow.Flow
@@ -34,9 +32,14 @@ object DataStoreInstance {
         return context.dataStore.data.map { settings ->
             val theme = settings[THEME_KEY]
             if (theme == null) {
-                ThemeVariant.FIONA // default theme
+                ThemeVariant.AU // default theme
             } else {
-                ThemeVariant.valueOf(theme)
+                try {
+                    ThemeVariant.valueOf(theme)
+                } catch (e: IllegalArgumentException) {
+                    Log.w("DataStoreInstance", "Invalid theme value found in DataStore. Falling back to default.", e)
+                    ThemeVariant.AU
+                }
             }
         }
     }

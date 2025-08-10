@@ -5,7 +5,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 enum class ThemeVariant {
-    FIONA, // inspired by Fiona
+    AU, // inspired by AU TODO() anonymize the names
     MARQUI, // inspired by Marqui
     MINION, // inspired by Minions
     MATERIAL, // Material 3 standard by Google
@@ -50,8 +50,8 @@ data class ColourPalette(
 )
 
 
-val FionaColorPalette = ColourPalette(
-    name = "Fiona's Theme",
+val AuColorPalette = ColourPalette(
+    name = "Au's Theme",
 
     primaryLight = Color(0xFFFFCA68),
     onPrimaryLight = Color(0xFF000000),
@@ -211,7 +211,7 @@ val MaterialColorPalette = ColourPalette(
 
 // create data struc that has for each variant the enum and the colour palette
 val ThemeVariantMap: Map<ThemeVariant, ColourPalette> = mapOf(
-    ThemeVariant.FIONA to FionaColorPalette,
+    ThemeVariant.AU to AuColorPalette,
     ThemeVariant.MARQUI to MarquiColorPalette,
     ThemeVariant.MINION to MinionColorPalette,
     ThemeVariant.MATERIAL to MaterialColorPalette,
