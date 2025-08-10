@@ -5,7 +5,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 enum class ThemeVariant {
-    AU, // inspired by AU TODO() anonymize the names
+    AU, // inspired by AU
     MARQUI, // inspired by Marqui
     MINION, // inspired by Minions
     MATERIAL, // Material 3 standard by Google
