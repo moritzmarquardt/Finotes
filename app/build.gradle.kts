@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "de.marquisproject.finotes"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "de.marquisproject.finotes"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 4
         versionName = "v1.0.1"
 
