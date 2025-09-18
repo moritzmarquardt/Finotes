@@ -33,6 +33,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true // necessary for the nc sso lib
     }
     buildFeatures {
         compose = true
@@ -82,6 +83,16 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+
+    // Nextcloud Single Sign On (SSO) library
+    implementation(libs.android.singlesignon)
+
+    // Desugaring (necessary for the nextcloud sso library)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    // retrofit to make api calls
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 
     // Initial from Android Studio Template
     implementation(libs.androidx.core.ktx)

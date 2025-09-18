@@ -44,7 +44,6 @@ fun ExportImportScreen(
     val loadedData = iEviewModel.loadedData.collectAsState()
     val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
 
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,6 +51,7 @@ fun ExportImportScreen(
                     val title = when (importExportMode) {
                         ImportExportMode.EXPORT -> "Export notes"
                         ImportExportMode.IMPORT -> "Import notes"
+                        ImportExportMode.SYNC -> "Sync notes"
                     }
                     Text(text = title)
                 },
@@ -120,6 +120,22 @@ fun ExportImportScreen(
                         indicatorColor = MaterialTheme.colorScheme.secondary,
                     )
                 )
+                NavigationBarItem(
+                    icon = { Icon(painterResource(id = R.drawable.baseline_cloud_sync_24), contentDescription = "Cloud Sync") },
+                    label = { Text("Cloud Sync") },
+                    selected = importExportMode == ImportExportMode.SYNC,
+                    onClick = {
+                        iEviewModel.setMode(ImportExportMode.SYNC)
+                        navControllerIE.navigate(SyncRoute)
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                        selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                        indicatorColor = MaterialTheme.colorScheme.secondary,
+                    )
+                )
             }
         }
     ) { innerPadding ->
@@ -140,6 +156,9 @@ fun ExportImportScreen(
                     iEviewModel = iEviewModel,
                 )
             }
+            composable<SyncRoute> {
+                SyncScreen()
+            }
         }
     }
 
@@ -147,3 +166,4 @@ fun ExportImportScreen(
 
 @Serializable object ExportRoute
 @Serializable object ImportRoute
+@Serializable object SyncRoute

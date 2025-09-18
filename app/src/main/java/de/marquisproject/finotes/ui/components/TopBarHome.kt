@@ -65,7 +65,7 @@ fun TopBarHome(
                 val navItems = listOf(
                     NavItem(ArchiveRoute, "Archive", R.drawable.inventory_2_24dp),
                     NavItem(BinRoute, "Bin", R.drawable.baseline_delete_24),
-                    NavItem(ExportImportRoute, "Export/Import", R.drawable.baseline_import_export_24),
+                    NavItem(ExportImportRoute, "Export/Import/Sync", R.drawable.baseline_import_export_24),
                     NavItem(SettingsRoute, "Settings", R.drawable.baseline_settings_24)
                 )
                 navItems.forEach { navItem ->
