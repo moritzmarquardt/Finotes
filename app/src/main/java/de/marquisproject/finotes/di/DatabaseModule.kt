@@ -22,7 +22,9 @@ object DatabaseModule {
             app.applicationContext,
             NoteDatabase::class.java,
             "note.db"
-        ).build()
+        )
+            .addMigrations(NoteDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
