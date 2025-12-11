@@ -7,7 +7,10 @@ import androidx.room.Query
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
+import androidx.room.RawQuery
 import androidx.room.Update
+import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -33,60 +36,12 @@ interface NoteDAO {
     suspend fun updateNote(note: Note)
 
     /**
-     * Updates the status of a specific note and its last modified timestamp.
-     * @param noteId The ID of the note to update.
-     * @param noteStatus The new status for the note.
-     * @param lastModified The new timestamp for when the note was last modified.
-     */
-    @Query("UPDATE notes_table SET noteStatus = :noteStatus, lastModified = :lastModified, needsSync = 1 WHERE id = :noteId")
-    suspend fun updateNoteStatus(noteId: Long, noteStatus: NoteStatus, lastModified: Long)
-
-    /**
      * Delete a note from the database.
      * Suspend is used because it is a coroutine function and we use it here because no data is returned.
      * @param note Note object to be deleted
      */
     @Delete
     suspend fun deleteNote(note: Note)
-
-    /**
-     * With flow we get an observable which will notify us when there is a change in the database.
-     * @return Flow of List of Notes ordered by lastEdited in descending order
-     */
-    @Query("SELECT * FROM notes_table ORDER BY isPinned DESC, dateCreated DESC")
-    fun getAllNotes(): Flow<List<Note>>
-
-    /**
-     * With flow we get an observable which will notify us when there is a change in the database.
-     * @param searchQuery String to search for in the title or body of the notes
-     * @return Flow of List of Notes ordered by lastEdited in descending order
-     */
-    @Query("SELECT * FROM notes_table WHERE title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%' ORDER BY isPinned DESC, dateCreated DESC")
-    fun getNotesWithQuery(searchQuery: String): Flow<List<Note>>
-
-    /**
-     * Get notes with a search query, isPinned and category filter.:
-     * @param searchQuery String to search for in the title or body of the notes
-     * @param isPinned Boolean to filter the notes by pinned status. Can be true or false or null to ignore this filter.
-     * @param categoryQueryIds List of category ids to filter the notes by category
-     * @param ignoreCategoryFilter Boolean to ignore the category filter. If true, the category filter is ignored and all notes are returned.
-     * @return Flow of List of Notes that are pinned and match the search query ordered by lastEdited in descending order
-     */
-    @Query(
-        """
-        SELECT * FROM notes_table 
-        WHERE (title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%') 
-        AND (:isPinned IS NULL OR isPinned = :isPinned)
-        AND (:ignoreCategoryFilter OR category IN (:categoryQueryIds))
-        ORDER BY isPinned DESC, dateCreated DESC
-    """
-    )
-    fun getNotesWithQueryAndPinnedStatusAndCategory(
-        searchQuery: String,
-        isPinned: Boolean?,
-        categoryQueryIds: List<Int>,
-        ignoreCategoryFilter: Boolean
-    ): Flow<List<Note>>
 
     /**
      * Get a note by its id.
@@ -96,15 +51,81 @@ interface NoteDAO {
     @Query("SELECT * FROM notes_table WHERE id = :noteId")
     fun getNoteById(noteId: Long): Flow<Note>
 
+    /**
+     * With flow we get an observable which will notify us when there is a change in the database.
+     * @return Flow of List of Notes ordered by lastEdited in descending order
+     */
+    @Query("SELECT * FROM notes_table ORDER BY isPinned DESC, dateCreated DESC")
+    fun getAllNotes(): Flow<List<Note>>
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    fun insertListOfNotes(notes: List<Note>)
+//    /**
+//     * Get notes with a search query, isPinned and category filter.:
+//     * @param searchQuery String to search for in the title or body of the notes
+//     * @param isPinned Boolean to filter the notes by pinned status. Can be true or false or null to ignore this filter.
+//     * @param categories List of Strings to filter the notes by category. Can be empty or null to ignore this filter.
+//     * @param noteStatus NoteStatus to filter the notes by status. Can be null to ignore this filter.
+//     * @return Flow of List of Notes that match the query
+//     */
+//    @Query(
+//        """
+//        SELECT * FROM notes_table
+//        WHERE (title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%')
+//        AND (:isPinned IS NULL OR isPinned = :isPinned)
+//        AND (:categories IS NULL OR category IN (:categories))
+//        AND (:noteStatus IS NULL OR noteStatus = :noteStatus)
+//        ORDER BY isPinned DESC, dateCreated DESC
+//    """
+//    )
+//    fun getNotesWithQuery(
+//        searchQuery: String,
+//        isPinned: Boolean?,
+//        categories: List<String>?,
+//        noteStatus: NoteStatus?,
+//    ): Flow<List<Note>>
 
     /**
-     * Get notes by noteStatus.
-     * @param noteStatus String to filter the notes by noteStatus
-     * @return Flow of List of Notes that are pinned and match the search query ordered by lastEdited in descending order
+     * Get notes with a dynamic search query, isPinned, and category filter.
+     * This uses @RawQuery for a more flexible and potentially more performant query
+     * compared to a single complex query with multiple nullable parameters.
+     * @return Flow of List of Notes that match the query
      */
-    @Query("SELECT * FROM notes_table WHERE noteStatus = :noteStatus ORDER BY isPinned DESC, dateCreated DESC")
-    fun getNotesByNoteStatus(noteStatus: String): Flow<List<Note>>
+    @RawQuery(observedEntities = [Note::class])
+    fun getNotesWithQuery(query: SupportSQLiteQuery): Flow<List<Note>>
+
+    // Helper function to build the query and call the RawQuery method
+    fun getNotesWithQuery(
+        searchQuery: String?,
+        isPinned: Boolean?,
+        categories: List<String>?,
+        noteStatus: NoteStatus?,
+    ): Flow<List<Note>> {
+        val queryString = StringBuilder("SELECT * FROM ${Note.TABLE_NAME} WHERE 1=1")
+        val args = mutableListOf<Any>()
+
+        if (!searchQuery.isNullOrBlank()) {
+            queryString.append(" AND (title LIKE ? OR body LIKE ?)")
+            args.add("%$searchQuery%")
+            args.add("%$searchQuery%")
+        }
+
+        isPinned?.let {
+            queryString.append(" AND isPinned = ?")
+            args.add(if (it) 1 else 0) // Room expects 1 or 0 for Booleans
+        }
+
+        if (!categories.isNullOrEmpty()) {
+            // Create a placeholder for each category in the list
+            queryString.append(" AND category IN (${categories.joinToString(",") { "?" }})")
+            args.addAll(categories)
+        }
+
+        noteStatus?.let {
+            queryString.append(" AND noteStatus = ?")
+            args.add(it.name)
+        }
+
+        queryString.append(" ORDER BY isPinned DESC, dateCreated DESC")
+
+        return getNotesWithQuery(SimpleSQLiteQuery(queryString.toString(), args.toTypedArray()))
+    }
 }

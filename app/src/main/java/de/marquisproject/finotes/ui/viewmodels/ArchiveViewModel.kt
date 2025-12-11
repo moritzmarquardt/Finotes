@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
+import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +31,12 @@ class ArchiveViewModel @Inject constructor(
 
     private val _notesList = _searchQuery
         .flatMapLatest { searchQuery ->
-            if (searchQuery.isBlank()) {
-                noteRepository.fetchAllArchivedNotes()
-            } else {
-                noteRepository.fetchAllArchivedNotes() // TODO implement search in archived notes
-            }
+            noteRepository.fetchNotesWithQuery(
+                searchQuery = searchQuery.takeIf { it.isNotBlank() },
+                noteStatus = NoteStatus.ARCHIVED,
+                isPinned = null,
+                categories = null
+            )
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
@@ -80,7 +82,7 @@ class ArchiveViewModel @Inject constructor(
     fun unarchiveSelectedNotes() {
         viewModelScope.launch {
             _selectedNotes.value.forEach { note ->
-                noteRepository.unarchiveNote(note)
+                noteRepository.restoreNote(note)
             }
             clearSelection()
         }
