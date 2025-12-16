@@ -6,11 +6,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.RawQuery
 import androidx.room.Update
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import kotlinx.coroutines.flow.Flow
 
