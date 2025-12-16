@@ -57,7 +57,7 @@ fun NoteScreen(
     val noteIsLoaded by viewModel.noteIsLoaded.collectAsState()
     Log.d("NoteScreen", "Current note: $currentNote")
     Log.d("NoteScreen", "Current note ID: ${currentNote.id} and body: ${currentNote.body}")
-    val bodyFocusRequester = FocusRequester()
+    val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
     Log.d("NoteScreen", "Body text state: $currentBodyTextFieldValue with text ${currentBodyTextFieldValue.text}")
 
