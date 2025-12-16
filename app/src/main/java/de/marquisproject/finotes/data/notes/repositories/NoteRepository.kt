@@ -9,7 +9,7 @@ class NoteRepository (
     private val noteDb: NoteDatabase
 ) {
     suspend fun insertNote(note: Note) : Long {
-        return noteDb.dao.insertNote(note.copy(id = 0))
+        return noteDb.dao.insertNote(note.prepareForUpdate().copy(id = 0))
     }
 
     /**

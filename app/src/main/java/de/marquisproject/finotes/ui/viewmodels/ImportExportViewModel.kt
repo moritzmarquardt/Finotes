@@ -2,6 +2,7 @@ package de.marquisproject.finotes.ui.viewmodels
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -95,6 +96,7 @@ class ImportExportViewModel @Inject constructor(
     private val _importExportMode = MutableStateFlow(ImportExportMode.EXPORT)
     private val _showFileInfoAlert = MutableStateFlow(false)
     private val _showFinalImportAlert = MutableStateFlow(false)
+    private val _showImportLoading = MutableStateFlow(false)
 
     private val _onlyNonDuplicatesInImportData = combine(
         _loadedData,
@@ -122,6 +124,8 @@ class ImportExportViewModel @Inject constructor(
     val showFileInfoAlert : StateFlow<Boolean> = _showFileInfoAlert.asStateFlow()
     val showFinalImportAlert : StateFlow<Boolean> = _showFinalImportAlert.asStateFlow()
     val onlyNonDuplicatesInImportData : StateFlow<Boolean> = _onlyNonDuplicatesInImportData
+    val showImportLoading : StateFlow<Boolean> = _showImportLoading.asStateFlow()
+
 
     fun setMode(mode: ImportExportMode) {
         _importExportMode.update { mode }
@@ -168,6 +172,7 @@ class ImportExportViewModel @Inject constructor(
             )
             _loadedData.update { loadedData }
             _importData.update { loadedData }
+            Log.d("ImportExportViewModel", "Loaded data: ${loadedData.notes.size} notes, ${loadedData.archivedNotes.size} archived notes")
         }
     }
 
@@ -211,15 +216,26 @@ class ImportExportViewModel @Inject constructor(
     fun importImportData() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                _importData.value.notes.forEach { note ->
-                    noteRepository.updateNote(note.copy(noteStatus = NoteStatus.ACTIVE))
-                }
-                _importData.value.archivedNotes.forEach { note ->
-                    noteRepository.updateNote(note.copy(noteStatus = NoteStatus.ARCHIVED))
+                _showImportLoading.update { true }
+                try {
+                    _importData.value.notes.forEach { note ->
+                        noteRepository.insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+                    }
+                    _importData.value.archivedNotes.forEach { note ->
+                        noteRepository.insertNote(note.copy(noteStatus = NoteStatus.ARCHIVED))
+                    }
+
+                    // Clear only after all updates completed successfully
+                    withContext(Dispatchers.Main) {
+                        _importData.update { ExportData() }
+                        _loadedData.update { ExportData() }
+                        _showImportLoading.update { false }
+                    }
+                } catch (e: Exception) {
+                    Log.e("ImportExportViewModel", "Import failed", e)
+                    // Optionally report the error to UI here
                 }
             }
-            _importData.update { ExportData() }
-            _loadedData.update { ExportData() }
         }
     }
 
