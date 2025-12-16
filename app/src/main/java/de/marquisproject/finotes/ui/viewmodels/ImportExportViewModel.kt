@@ -9,6 +9,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
+import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,9 +75,8 @@ class ImportExportViewModel @Inject constructor(
         }
     }
 
-    private val _notesList = noteRepository.fetchAllNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    private val _archivedList = noteRepository.fetchAllArchivedNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
+    private val _notesList = noteRepository.fetchAllNotesByStatus(NoteStatus.ACTIVE).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _archivedList = noteRepository.fetchAllNotesByStatus(NoteStatus.ARCHIVED).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
     private val _exportSettings = MutableStateFlow(ExportSettings())
     private val _exportData = combine(
         _notesList,
@@ -92,9 +92,7 @@ class ImportExportViewModel @Inject constructor(
 
     private val _importData = MutableStateFlow(ExportData())
     private val _loadedData = MutableStateFlow(ExportData())
-
     private val _importExportMode = MutableStateFlow(ImportExportMode.EXPORT)
-
     private val _showFileInfoAlert = MutableStateFlow(false)
     private val _showFinalImportAlert = MutableStateFlow(false)
 
@@ -213,8 +211,12 @@ class ImportExportViewModel @Inject constructor(
     fun importImportData() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                noteRepository.insertNotes(_importData.value.notes)
-                noteRepository.insertNotesToArchive(_importData.value.archivedNotes)
+                _importData.value.notes.forEach { note ->
+                    noteRepository.updateNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+                }
+                _importData.value.archivedNotes.forEach { note ->
+                    noteRepository.updateNote(note.copy(noteStatus = NoteStatus.ARCHIVED))
+                }
             }
             _importData.update { ExportData() }
             _loadedData.update { ExportData() }

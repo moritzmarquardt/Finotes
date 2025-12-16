@@ -14,7 +14,7 @@ enum class NoteStatus {
 @Entity(tableName = Note.TABLE_NAME, indices = [Index(value = [Note.COLUMN_NOTE_STATUS])])
 data class Note(
     /**
-     * @property id: unique identifier for the note
+     * @property id: unique identifier for the note.
      * @property title: title of the note
      * @property body: content of the note
      * @property category: category of the note
@@ -32,10 +32,10 @@ data class Note(
      * Important: If the type of a Field is changed, the App will crash because the db still has the old type.
      * Therefore the App has to be uninstalled and reinstalled to recreate the db. Or a migration has to be created.
      */
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = -1L,
     @ColumnInfo(name = COLUMN_TITLE) val title: String = "",
     @ColumnInfo(name = COLUMN_BODY) val body: String = "",
-    @ColumnInfo(name = COLUMN_CATEGORY) val category: String = "",
+    @ColumnInfo(name = COLUMN_CATEGORY) val category: Long = 0,
     @ColumnInfo(name = COLUMN_IS_PINNED) val isPinned: Boolean = false,
     @ColumnInfo(name = COLUMN_DATE_CREATED) val dateCreated: Long = System.currentTimeMillis(),
     @ColumnInfo(name = COLUMN_LAST_MODIFIED) val lastModified: Long = System.currentTimeMillis(),
@@ -57,7 +57,8 @@ data class Note(
     }
 
     /**
-     * Returns a copy of the Note with the needsSync field set to true and the lastModified field set to the current time.
+     * This is used to mark the note as needing to be synced to the server.
+     * @return Note with the needsSync field set to true and the lastModified field set to the current time.
      */
     fun prepareForUpdate(): Note {
         return this.copy(

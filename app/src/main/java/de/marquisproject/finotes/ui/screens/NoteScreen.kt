@@ -75,7 +75,10 @@ fun NoteScreen(
                     //Text(text = "Note View with id: ${uiState.currentNoteId}")
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        // TODO() before navigating back, make sure that the note is saved
+                        navController.popBackStack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Localized description")
                     }
                 },

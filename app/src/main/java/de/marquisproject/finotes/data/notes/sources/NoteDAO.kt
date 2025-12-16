@@ -48,84 +48,37 @@ interface NoteDAO {
      * @param noteId Long id of the note to be fetched
      * @return Flow of Note object with the given id
      */
-    @Query("SELECT * FROM notes_table WHERE id = :noteId")
+    @Query("SELECT * FROM ${Note.TABLE_NAME} WHERE id = :noteId")
     fun getNoteById(noteId: Long): Flow<Note>
 
     /**
      * With flow we get an observable which will notify us when there is a change in the database.
      * @return Flow of List of Notes ordered by lastEdited in descending order
      */
-    @Query("SELECT * FROM notes_table ORDER BY isPinned DESC, dateCreated DESC")
+    @Query("SELECT * FROM ${Note.TABLE_NAME} ORDER BY isPinned DESC, dateCreated DESC")
     fun getAllNotes(): Flow<List<Note>>
 
-//    /**
-//     * Get notes with a search query, isPinned and category filter.:
-//     * @param searchQuery String to search for in the title or body of the notes
-//     * @param isPinned Boolean to filter the notes by pinned status. Can be true or false or null to ignore this filter.
-//     * @param categories List of Strings to filter the notes by category. Can be empty or null to ignore this filter.
-//     * @param noteStatus NoteStatus to filter the notes by status. Can be null to ignore this filter.
-//     * @return Flow of List of Notes that match the query
-//     */
-//    @Query(
-//        """
-//        SELECT * FROM notes_table
-//        WHERE (title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%')
-//        AND (:isPinned IS NULL OR isPinned = :isPinned)
-//        AND (:categories IS NULL OR category IN (:categories))
-//        AND (:noteStatus IS NULL OR noteStatus = :noteStatus)
-//        ORDER BY isPinned DESC, dateCreated DESC
-//    """
-//    )
-//    fun getNotesWithQuery(
-//        searchQuery: String,
-//        isPinned: Boolean?,
-//        categories: List<String>?,
-//        noteStatus: NoteStatus?,
-//    ): Flow<List<Note>>
+    @Query("SELECT * FROM ${Note.TABLE_NAME} WHERE noteStatus = :noteStatus ORDER BY isPinned DESC, dateCreated DESC")
+    fun getAllNotesByStatus(noteStatus: NoteStatus): Flow<List<Note>>
 
     /**
-     * Get notes with a dynamic search query, isPinned, and category filter.
-     * This uses @RawQuery for a more flexible and potentially more performant query
-     * compared to a single complex query with multiple nullable parameters.
+     *
      * @return Flow of List of Notes that match the query
      */
-    @RawQuery(observedEntities = [Note::class])
-    fun getNotesWithQuery(query: SupportSQLiteQuery): Flow<List<Note>>
-
-    // Helper function to build the query and call the RawQuery method
+    @Query("""
+    SELECT * FROM ${Note.TABLE_NAME}
+    WHERE (:searchQuery IS NULL OR (title LIKE '%' || :searchQuery || '%' OR body LIKE '%' || :searchQuery || '%'))
+    AND (:isPinned IS NULL OR isPinned = :isPinned)
+    AND (:hasCategories = 0 OR category IN (:categories))
+    AND (:noteStatus IS NULL OR noteStatus = :noteStatus)
+    ORDER BY isPinned DESC, dateCreated DESC
+""")
     fun getNotesWithQuery(
-        searchQuery: String?,
-        isPinned: Boolean?,
-        categories: List<String>?,
-        noteStatus: NoteStatus?,
-    ): Flow<List<Note>> {
-        val queryString = StringBuilder("SELECT * FROM ${Note.TABLE_NAME} WHERE 1=1")
-        val args = mutableListOf<Any>()
-
-        if (!searchQuery.isNullOrBlank()) {
-            queryString.append(" AND (title LIKE ? OR body LIKE ?)")
-            args.add("%$searchQuery%")
-            args.add("%$searchQuery%")
-        }
-
-        isPinned?.let {
-            queryString.append(" AND isPinned = ?")
-            args.add(if (it) 1 else 0) // Room expects 1 or 0 for Booleans
-        }
-
-        if (!categories.isNullOrEmpty()) {
-            // Create a placeholder for each category in the list
-            queryString.append(" AND category IN (${categories.joinToString(",") { "?" }})")
-            args.addAll(categories)
-        }
-
-        noteStatus?.let {
-            queryString.append(" AND noteStatus = ?")
-            args.add(it.name)
-        }
-
-        queryString.append(" ORDER BY isPinned DESC, dateCreated DESC")
-
-        return getNotesWithQuery(SimpleSQLiteQuery(queryString.toString(), args.toTypedArray()))
-    }
+        searchQuery: String? = null,
+        isPinned: Boolean? = null,
+        categories: List<Long>? = null,
+        noteStatus: NoteStatus? = null,
+        // This parameter is used to conditionally enable/disable the category check
+        hasCategories: Boolean = !categories.isNullOrEmpty()
+    ): Flow<List<Note>>
 }

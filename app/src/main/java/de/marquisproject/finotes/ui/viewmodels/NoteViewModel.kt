@@ -66,12 +66,7 @@ class NoteViewModel @Inject constructor(
             } else {
                 Log.d("NoteViewModel", "Fetching note with ID: $id")
                 Log.d("NoteViewModel", "Fetching note with status: $status")
-
-                when (status) {
-                    NoteStatus.ARCHIVED -> noteRepository.fetchArchivedNoteById(id).filterNotNull().map { it.copy() }.first()
-                    NoteStatus.BINNED -> noteRepository.fetchBinNoteById(id).filterNotNull().map { it.copy() }.first()
-                    NoteStatus.ACTIVE -> noteRepository.fetchNoteById(id).filterNotNull().map { it.copy() }.first()
-                }
+                noteRepository.fetchNoteById(id).filterNotNull().map { it.copy() }.first()
             }
 
             _editableNote.update { fetchedNote }
@@ -148,7 +143,7 @@ class NoteViewModel @Inject constructor(
 
     fun unarchiveNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.unarchiveNote(note)
+            noteRepository.restoreNote(note)
         }
     }
 
@@ -166,7 +161,7 @@ class NoteViewModel @Inject constructor(
 
     fun deleteNoteFromBin(note: Note) {
         viewModelScope.launch {
-            noteRepository.deleteNoteFromBin(note)
+            noteRepository.permanentlyDeleteNote(note)
         }
     }
 }

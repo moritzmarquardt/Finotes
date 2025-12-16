@@ -17,6 +17,9 @@ abstract class NoteDatabase : RoomDatabase() {
 }
 
 
+/**
+ * this will only be included once and then immediately deprecated
+ */
 class ExternalDbMigrations(private val context: Context) {
     val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -48,6 +51,9 @@ class ExternalDbMigrations(private val context: Context) {
             } catch (e: Exception) {
                 Log.e("ExternalDbMigrations", "Error attaching old databases", e)
             }
+            Log.d("ExternalDbMigrations", "Attached old databases")
+
+
 
             //LOGIC FOR MIGRATION TODO()
 
