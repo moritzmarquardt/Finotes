@@ -77,10 +77,10 @@ fun HomeScreenPreview() {
                 content = {
                     items(
                         items = dummyNoteList,
-                        key = { note -> note.id }
+                        key = { note -> requireNotNull(note.id) }
                     ) { note ->
                         var searchQuery = ""
-                        if (note.id.toInt() !=1) { searchQuery = "note"}
+                        if (requireNotNull(note.id).toInt() !=1) { searchQuery = "note"}
                         NoteCard(
                             note = note,
                             searchQuery = searchQuery,

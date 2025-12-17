@@ -34,16 +34,16 @@ class NoteViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // Holds the ID passed from navigation. -2L initially, -1L for a new note.
-    private val _currentNoteId: MutableStateFlow<Long> = MutableStateFlow(
-        savedStateHandle.get<Long>("noteId") ?: -2L
+    // Holds the ID passed from navigation. null for new note
+    private val _currentNoteId: MutableStateFlow<Long?> = MutableStateFlow(
+        savedStateHandle.get<Long>("noteId")
     )
     private val _currentNoteStatus: MutableStateFlow<NoteStatus> = MutableStateFlow(
         savedStateHandle.get<NoteStatus>("noteStatus") ?: NoteStatus.ACTIVE
     )
     private val _noteIsLoaded = MutableStateFlow(false)
 
-    private val _editableNote = MutableStateFlow(Note(id = -2L))
+    private val _editableNote = MutableStateFlow(Note())
     private val _editableBodyTextFieldValue = MutableStateFlow(TextFieldValue())
 
     val currentBodyTextFieldValue: StateFlow<TextFieldValue> = _editableBodyTextFieldValue.asStateFlow()
@@ -53,20 +53,20 @@ class NoteViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val id = _currentNoteId
-                .filter { it != -2L } // Wait for a valid ID
+                .filter { it != null } // Wait for a valid ID
                 .take(1) // Only want the first valid ID
                 .first() // Use first() to suspend until value is emitted
             val status = _currentNoteStatus
                 .take(1) // Only want the first valid status
                 .first() // Use first() to suspend until value is emitted
 
-            val fetchedNote = if (id == -1L) {
-                Log.d("NoteViewModel", "Creating new empty note.")
-                Note()
-            } else {
+            val fetchedNote = id?.let { id ->
                 Log.d("NoteViewModel", "Fetching note with ID: $id")
                 Log.d("NoteViewModel", "Fetching note with status: $status")
                 noteRepository.fetchNoteById(id).filterNotNull().map { it.copy() }.first()
+            } ?: run {
+                Log.d("NoteViewModel", "Creating new empty note.")
+                Note()
             }
 
             _editableNote.update { fetchedNote }
@@ -85,10 +85,10 @@ class NoteViewModel @Inject constructor(
                 .debounce(500L) // Wait 500ms after the last change
                 .distinctUntilChanged() // Only emit if the value has changed
                 .filter { noteToSave ->
-                    val isExistingNote = noteToSave.id >= 0L
-                    val isNewNoteWithContent = noteToSave.id < 0L && (noteToSave.title.isNotBlank() || noteToSave.body.isNotBlank())
+                    val isExistingNote = noteToSave.id != null
+                    val isNewNoteWithContent = noteToSave.id == null && (noteToSave.title.isNotBlank() || noteToSave.body.isNotBlank())
                     isExistingNote || isNewNoteWithContent
-                }
+                }  // Only emit if it's a new note with content or an existing note
                 .collect { noteToSave ->
                     Log.d("NoteViewModel", "Debounced save triggered for note ID: ${noteToSave.id} and body: ${noteToSave.body}")
                     insertNewOrUpdateNote(noteToSave)
@@ -98,7 +98,7 @@ class NoteViewModel @Inject constructor(
 
     // Pure interactions with the database
     private suspend fun saveNoteToDatabase(note: Note) {
-        if (note.id == -1L) {
+        if (note.id == null) {
             // New note: insert and update the ID
             Log.d("NoteViewModel", "Inserting new note into database.")
             val newId = noteRepository.insertNote(note)

@@ -2,17 +2,16 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "ccf4580cd3292622557c023a57efba5c",
+    "identityHash": "4677081d382463a982ba49ea7a28cf77",
     "entities": [
       {
         "tableName": "notes_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `body` TEXT NOT NULL, `category` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, `noteStatus` TEXT NOT NULL, `needsSync` INTEGER NOT NULL, `remoteId` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` TEXT NOT NULL, `body` TEXT NOT NULL, `category` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, `noteStatus` TEXT NOT NULL, `needsSync` INTEGER NOT NULL, `remoteId` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "title",
@@ -89,7 +88,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ccf4580cd3292622557c023a57efba5c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4677081d382463a982ba49ea7a28cf77')"
     ]
   }
 }

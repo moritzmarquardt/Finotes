@@ -12,7 +12,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.runtime.collectAsState
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity() {
 @Serializable object BinRoute
 @Serializable
 data class NoteRoute(
-    val noteId: Long = -1L, // Default value for new note
+    val noteId: Long? = null, // Default value for new note
     val noteStatus: NoteStatus,
 )
 @Serializable object ExportImportRoute

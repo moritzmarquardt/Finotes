@@ -50,10 +50,6 @@ class BinViewModel @Inject constructor(
     // Functions to update the state of the UI and perform repository operations which in turn interact with the database
     // These functions are called from the UI layer
 
-    fun setQuery(query: String) {
-        _searchQuery.update { query }
-    }
-
     fun longClickSelect(note: Note) {
         /*if (!_inSelectionMode.value) {
             _uiState.value = _uiState.value.copy(inSelectionMode = true)

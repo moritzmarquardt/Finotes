@@ -136,7 +136,7 @@ fun BinScreen(
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id, noteStatus = note.noteStatus))} )
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },
             onLongClick = { note ->
                 viewModel.longClickSelect(note = note)

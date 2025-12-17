@@ -106,7 +106,7 @@ fun HomeScreen(
         floatingActionButton = {
             AddNoteFAB(
                 onClick = {
-                    navController.navigate(NoteRoute(noteId = -1L, noteStatus = NoteStatus.ACTIVE)) // Navigate to new note with id -1
+                    navController.navigate(NoteRoute(noteId = null, noteStatus = NoteStatus.ACTIVE)) // Navigate to new note with id -1
                 }
             ) },
         snackbarHost = { SnackbarHost(snackbarHostState) } // Provide the SnackbarHost
@@ -131,7 +131,7 @@ fun HomeScreen(
             selectedNotes = selectedNotes.toList(),
             searchQuery = searchQuery,
             onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id, noteStatus = note.noteStatus))} )
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },
             onLongClick = { note ->
                 viewModel.longClickSelect(note = note)

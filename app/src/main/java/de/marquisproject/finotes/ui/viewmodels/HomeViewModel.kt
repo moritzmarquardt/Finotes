@@ -77,11 +77,6 @@ class HomeViewModel @Inject constructor(
         _selectedNotes.update { emptySet() }
     }
 
-    fun selectAllNotes() {
-        val allDisplayNotes: Set<Note> = _pinnedNotesDisplay.value.toSet() + _normalNotesDisplay.value.toSet()
-        _selectedNotes.update { allDisplayNotes }
-    }
-
     /**
      * Toggles the selection of all pinned notes. SO if all are selected, they are deselected.
      * If none are selected, they are all selected.
@@ -107,11 +102,6 @@ class HomeViewModel @Inject constructor(
         } else {
             _selectedNotes.update { _normalNotesDisplay.value.toSet() }
         }
-    }
-
-    fun allNotesSelected(): Boolean {
-        val allDisplayNotes: Set<Note> = _pinnedNotesDisplay.value.toSet() + _normalNotesDisplay.value.toSet()
-        return _selectedNotes.value == allDisplayNotes
     }
 
     /**
@@ -200,7 +190,9 @@ class HomeViewModel @Inject constructor(
                 is LastAction.Archive -> {
                     val archivedNoteIds = action.noteIds
                     archivedNoteIds.forEach { id ->
-                        noteRepository.restoreNoteById(id)
+                        id?.let { noteId ->
+                            noteRepository.restoreNoteById(noteId)
+                        }
                     }
                     _snackbarEventChannel.send(
                         SnackbarEvent.ShowSnackbar(
@@ -212,7 +204,9 @@ class HomeViewModel @Inject constructor(
                 is LastAction.Bin -> {
                     val binnedNoteIds = action.noteIds
                     binnedNoteIds.forEach { id ->
-                        noteRepository.restoreNoteById(id)
+                        id?.let { noteId ->
+                            noteRepository.restoreNoteById(noteId)
+                        }
                     }
                     _snackbarEventChannel.send(
                         SnackbarEvent.ShowSnackbar(
@@ -247,8 +241,8 @@ class HomeViewModel @Inject constructor(
          * Represents an action to archive notes.
          * @property noteIds The IDs of the notes to archive.
          */
-        data class Archive(val noteIds: List<Long>) : LastAction()
-        data class Bin(val noteIds: List<Long>) : LastAction()
+        data class Archive(val noteIds: List<Long?>) : LastAction()
+        data class Bin(val noteIds: List<Long?>) : LastAction()
         // Add other actions if needed
     }
 

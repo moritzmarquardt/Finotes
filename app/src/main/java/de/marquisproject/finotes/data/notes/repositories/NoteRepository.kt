@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.data.notes.repositories
 
+import android.util.Log
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
@@ -9,7 +10,7 @@ class NoteRepository (
     private val noteDb: NoteDatabase
 ) {
     suspend fun insertNote(note: Note) : Long {
-        return noteDb.dao.insertNote(note.prepareForUpdate().copy(id = 0))
+        return noteDb.dao.insertNote(note.prepareForUpdate().copy(id = null))
     }
 
     /**
@@ -44,25 +45,14 @@ class NoteRepository (
         noteDb.dao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.ACTIVE))
     }
 
-    suspend fun restoreNoteById(id: Long) {
-        val note = noteDb.dao.getNoteById(id).first()
-        restoreNote(note)
-    }
-
     /**
      * Permanently deletes the note from the database.
      * @param note The note to delete.
      */
     suspend fun permanentlyDeleteNote(note: Note) {
-        // TODO() delete from server
+        // TODO() delete from server. For example add status TOPERMDEL to note and then the note is only removed when it has been synced to the server.
         noteDb.dao.deleteNote(note)
     }
-
-    /**
-     * Fetches all notes from the database.
-     * @return A flow of a list of notes.
-     */
-    fun fetchAllNotes() = noteDb.dao.getAllNotes()
 
     /**
      * Fetches a note by its id from the database.
@@ -72,12 +62,19 @@ class NoteRepository (
     fun fetchNoteById(noteId: Long) = noteDb.dao.getNoteById(noteId)
 
     /**
+     * Restore a note by its id.
+     * @param id The id of the note to restore.
+     */
+    suspend fun restoreNoteById(id: Long) {
+        val note = noteDb.dao.getNoteById(id).first()
+        restoreNote(note)
+    }
+
+    /**
      * Fetches all notes from the database with the given status.
      * @param noteStatus The status of the notes to fetch.
      */
     fun fetchAllNotesByStatus(noteStatus: NoteStatus) = noteDb.dao.getAllNotesByStatus(noteStatus)
-
-
 
     /**
      * Fetches notes from the database with the given query.
