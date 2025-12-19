@@ -66,4 +66,18 @@ data class Note(
             needsSync = true
         )
     }
+
+    /**
+     * @return: true if the note has an id, false otherwise.
+     */
+    fun isExistingNote() : Boolean{
+        return this.id != null
+    }
+
+    /**
+     * @return: true if the note is new (null id) and has content, false otherwise.
+     */
+    fun isUnsavedNoteWithContent() : Boolean {
+        return !this.isExistingNote() && (this.title.isNotBlank() || this.body.isNotBlank())
+    }
 }

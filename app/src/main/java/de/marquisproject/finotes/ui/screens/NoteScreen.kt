@@ -76,7 +76,7 @@ fun NoteScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // TODO() before navigating back, make sure that the note is saved
+                        viewModel.saveCurrentNote()  // make sure to save the note before navigating
                         navController.popBackStack()
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Localized description")
