@@ -6,7 +6,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import de.marquisproject.finotes.data.notes.sources.ExternalDbMigrations
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
 import javax.inject.Singleton
 
@@ -17,13 +16,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideNoteDatabase(app: Application): NoteDatabase {
-        val externalMigrations = ExternalDbMigrations(app)
         return Room.databaseBuilder(
             app.applicationContext,
             NoteDatabase::class.java,
             "note.db"
         )
-            .addMigrations(externalMigrations.MIGRATION_1_2)
+            .addMigrations(NoteDatabase.MIGRATION_1_2(app))
             .build()
     }
 }
