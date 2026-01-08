@@ -29,50 +29,50 @@ abstract class NoteDatabase : RoomDatabase() {
                 Log.d("NoteMigration", "Creating temporary table `notes_table_new` with Room schema")
                 db.execSQL(
                     """
-        CREATE TABLE IF NOT EXISTS `notes_table_new` (
-            `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-            `title` TEXT NOT NULL,
-            `body` TEXT NOT NULL,
-            `category` INTEGER NOT NULL,
-            `isPinned` INTEGER NOT NULL,
-            `dateCreated` INTEGER NOT NULL,
-            `lastModified` INTEGER NOT NULL,
-            `noteStatus` TEXT NOT NULL,
-            `needsSync` INTEGER NOT NULL,
-            `remoteId` INTEGER
-        )
-        """.trimIndent()
-                )
+                        CREATE TABLE IF NOT EXISTS `notes_table_new` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+                            `title` TEXT NOT NULL,
+                            `body` TEXT NOT NULL,
+                            `category` INTEGER NOT NULL,
+                            `isPinned` INTEGER NOT NULL,
+                            `dateCreated` INTEGER NOT NULL,
+                            `lastModified` INTEGER NOT NULL,
+                            `noteStatus` TEXT NOT NULL,
+                            `needsSync` INTEGER NOT NULL,
+                            `remoteId` INTEGER
+                        )
+                        """.trimIndent()
+                ) // this table is now consistent with the Note Scheme Version 2
 
                 Log.d("NoteMigration", "Copying existing app data from `notes_table` if present")
                 db.execSQL(
                     """
-        INSERT INTO `notes_table_new`(
-            `id`, `title`, `body`, `category`, `isPinned`,
-            `dateCreated`, `lastModified`, `noteStatus`, `needsSync`, `remoteId`
-        )
-        SELECT
-            `id`,
-            COALESCE(`title`, ''),
-            COALESCE(`body`, ''),
-            0,
-            COALESCE(`isPinned`, 0),
-            COALESCE(`dateCreated`, strftime('%s','now')*1000),
-            COALESCE(`dateCreated`, strftime('%s','now')*1000),
-            COALESCE(`noteStatus`, 'ACTIVE'),
-            0,
-            NULL
-        FROM `notes_table`
-        """.trimIndent()
-                )
+                        INSERT INTO `notes_table_new`(
+                            `id`, `title`, `body`, `category`, `isPinned`,
+                            `dateCreated`, `lastModified`, `noteStatus`, `needsSync`, `remoteId`
+                        )
+                        SELECT
+                            `id`,
+                            COALESCE(`title`, ''),
+                            COALESCE(`body`, ''),
+                            0,
+                            COALESCE(`isPinned`, 0),
+                            COALESCE(`dateCreated`, strftime('%s','now')*1000),
+                            COALESCE(`dateCreated`, strftime('%s','now')*1000),
+                            COALESCE(`noteStatus`, 'ACTIVE'),
+                            1,
+                            NULL
+                        FROM `notes_table`
+                        """.trimIndent()
+                ) // Insert the data from the old table into the new table with the new schema
 
-                Log.d("NoteMigration", "Replacing old `notes_table` with new schema")
+                Log.d("NoteMigration", "Replacing old `notes_table` with new table with new schema")
                 db.execSQL("DROP TABLE IF EXISTS `notes_table`")
                 db.execSQL("ALTER TABLE `notes_table_new` RENAME TO `notes_table`")
 
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_notes_table_noteStatus` ON `notes_table` (`noteStatus`)"
-                )
+                ) // create the expected index
 
                 Log.d("NoteMigration", "Importing external databases into `notes_table`")
                 ExternalDbMigrations.copyDataFromOldDb(
@@ -85,6 +85,14 @@ abstract class NoteDatabase : RoomDatabase() {
                     NoteStatus.ARCHIVED,
                     db
                 )
+                Log.d("NoteMigration", "Successfully migrated data from external databases")
+
+                // Delete the old databases
+                File(context.getDatabasePath("bin.db").absolutePath).delete()
+                File(context.getDatabasePath("archive.db").absolutePath).delete()
+                Log.d("NoteMigration", "Successfully deleted old databases")
+
+                Log.d("NoteMigration", "Migration complete")
             }
         }
     }
@@ -110,14 +118,15 @@ object ExternalDbMigrations {
         }
         Log.d("NoteMigration", "Successfully opened old database: $dbPath")
 
-        val cursor = oldDb.rawQuery("SELECT title, body, dateCreated FROM notes_table", null)
+        val cursor = oldDb.rawQuery("SELECT title, body, isPinned, dateCreated FROM notes_table", null)
         cursor.use { c ->
             if (c.moveToFirst()) {
                 val titleIndex = c.getColumnIndex("title")
                 val bodyIndex = c.getColumnIndex("body")
                 val dateCreatedIndex = c.getColumnIndex("dateCreated")
+                val isPinnedIndex = c.getColumnIndex("isPinned")
 
-                if (titleIndex == -1 || bodyIndex == -1 || dateCreatedIndex == -1) {
+                if (titleIndex == -1 || bodyIndex == -1 || dateCreatedIndex == -1 || isPinnedIndex == -1) {
                     Log.e("NoteMigration", "Column not found in old db: $dbPath")
                     return@use
                 }
@@ -131,7 +140,7 @@ object ExternalDbMigrations {
                             put("title", c.getString(titleIndex))
                             put("body", c.getString(bodyIndex))
                             put("category", 0)
-                            put("isPinned", 0)
+                            put("isPinned", c.getInt(isPinnedIndex))
                             put("dateCreated", createdAt)
                             put("lastModified", createdAt)
                             put("noteStatus", status.name)
