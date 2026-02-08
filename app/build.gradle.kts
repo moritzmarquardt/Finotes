@@ -38,6 +38,13 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Ensure the androidTest source set has access to the Room schema JSONs
+    sourceSets {
+        getByName("androidTest") {
+            assets.srcDirs(files("$projectDir/schemas"))
+        }
+    }
 }
 
 ksp {
@@ -94,4 +101,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    androidTestImplementation(libs.androidx.runner)
+    androidTestImplementation(libs.androidx.rules)
+    androidTestImplementation(libs.androidx.junit.v115)
+    // Room testing helper
+    androidTestImplementation(libs.androidx.room.testing)
 }
