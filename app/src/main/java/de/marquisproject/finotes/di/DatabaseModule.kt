@@ -6,6 +6,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import de.marquisproject.finotes.data.notes.sources.NoteDAO
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
 import javax.inject.Singleton
 
@@ -23,5 +24,11 @@ object DatabaseModule {
         )
             .addMigrations(NoteDatabase.MIGRATION_1_2(app))
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNoteDao(db: NoteDatabase): NoteDAO {
+        return db.dao
     }
 }

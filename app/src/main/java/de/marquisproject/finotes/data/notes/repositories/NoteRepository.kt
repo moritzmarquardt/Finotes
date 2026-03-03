@@ -1,16 +1,16 @@
 package de.marquisproject.finotes.data.notes.repositories
 
-import android.util.Log
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.model.NoteStatus
-import de.marquisproject.finotes.data.notes.sources.NoteDatabase
+import de.marquisproject.finotes.data.notes.sources.NoteDAO
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
-class NoteRepository (
-    private val noteDb: NoteDatabase
+class NoteRepository(
+    private val noteDao: NoteDAO
 ) {
-    suspend fun insertNote(note: Note) : Long {
-        return noteDb.dao.insertNote(note.prepareForUpdate().copy(id = null))
+    suspend fun insertNote(note: Note): Long {
+        return noteDao.insertNote(note.prepareForUpdate().copy(id = null))
     }
 
     /**
@@ -18,7 +18,7 @@ class NoteRepository (
      * @param note The note to update.
      */
     suspend fun updateNote(note: Note) {
-        noteDb.dao.updateNote(note.prepareForUpdate())
+        noteDao.updateNote(note.prepareForUpdate())
     }
 
     /**
@@ -26,7 +26,7 @@ class NoteRepository (
      * @param note The note to bin.
      */
     suspend fun binNote(note: Note) {
-        noteDb.dao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.BINNED))
+        noteDao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.BINNED))
     }
 
     /**
@@ -34,7 +34,7 @@ class NoteRepository (
      * @param note The note to archive.
      */
     suspend fun archiveNote(note: Note) {
-        noteDb.dao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.ARCHIVED))
+        noteDao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.ARCHIVED))
     }
 
     /**
@@ -42,7 +42,7 @@ class NoteRepository (
      * @param note The note to restore.
      */
     suspend fun restoreNote (note: Note) {
-        noteDb.dao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.ACTIVE))
+        noteDao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.ACTIVE))
     }
 
     /**
@@ -51,7 +51,7 @@ class NoteRepository (
      */
     suspend fun permanentlyDeleteNote(note: Note) {
         // TODO() delete from server. For example add status TOPERMDEL to note and then the note is only removed when it has been synced to the server.
-        noteDb.dao.deleteNote(note)
+        noteDao.deleteNote(note)
     }
 
     /**
@@ -59,14 +59,14 @@ class NoteRepository (
      * @param noteId The id of the note to fetch.
      * @return A flow of the note.
      */
-    fun fetchNoteById(noteId: Long) = noteDb.dao.getNoteById(noteId)
+    fun fetchNoteById(noteId: Long): Flow<Note> = noteDao.getNoteById(noteId)
 
     /**
      * Restore a note by its id.
      * @param id The id of the note to restore.
      */
     suspend fun restoreNoteById(id: Long) {
-        val note = noteDb.dao.getNoteById(id).first()
+        val note = noteDao.getNoteById(id).first()
         restoreNote(note)
     }
 
@@ -74,7 +74,8 @@ class NoteRepository (
      * Fetches all notes from the database with the given status.
      * @param noteStatus The status of the notes to fetch.
      */
-    fun fetchAllNotesByStatus(noteStatus: NoteStatus) = noteDb.dao.getAllNotesByStatus(noteStatus)
+    fun fetchAllNotesByStatus(noteStatus: NoteStatus): Flow<List<Note>> =
+        noteDao.getAllNotesByStatus(noteStatus)
 
     /**
      * Fetches notes from the database with the given query.
@@ -89,11 +90,10 @@ class NoteRepository (
         isPinned: Boolean?,
         categories: List<Long>?,
         noteStatus: NoteStatus?,
-    ) = noteDb.dao.getNotesWithQuery(
+    ): Flow<List<Note>> = noteDao.getNotesWithQuery(
         searchQuery = searchQuery,
         isPinned = isPinned,
         categories = categories,
         noteStatus = noteStatus,
     )
-
 }
