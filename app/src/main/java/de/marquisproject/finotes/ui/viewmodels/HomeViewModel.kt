@@ -34,9 +34,6 @@ class HomeViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     private val _snackbarEventChannel = Channel<SnackbarEvent>()
     private var lastAction: LastAction? = null
-    private val _pinnedNotesDisplay: StateFlow<List<Note>> = getNotesDisplayFlow(isPinned = true)
-    private val _normalNotesDisplay: StateFlow<List<Note>> = getNotesDisplayFlow(isPinned = false)
-
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -44,10 +41,9 @@ class HomeViewModel @Inject constructor(
     val selectedNotes: StateFlow<Set<Note>> = _selectedNotes.asStateFlow()
     val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
     val snackbarEventFlow = _snackbarEventChannel.receiveAsFlow()
-    val pinnedNotesDisplay: StateFlow<List<Note>> = _pinnedNotesDisplay
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    val normalNotesDisplay: StateFlow<List<Note>> = _normalNotesDisplay
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
+    val pinnedNotesDisplay: StateFlow<List<Note>> = getNotesDisplayFlow(isPinned = true)
+    val normalNotesDisplay: StateFlow<List<Note>> = getNotesDisplayFlow(isPinned = false)
 
     // Functions to update the state of the UI and perform repository operations which in turn interact with the database
     // These functions are called from the UI layer
@@ -83,24 +79,24 @@ class HomeViewModel @Inject constructor(
      * @param add If true, adds all pinned notes to the selection. If false, removes all pinned notes from the selection.
      */
     fun toggleSelectAllPinnedNotes(add: Boolean = false) {
-        if (_selectedNotes.value.containsAll(_pinnedNotesDisplay.value)) {
-            _selectedNotes.update { _selectedNotes.value - _pinnedNotesDisplay.value.toSet() }
+        if (_selectedNotes.value.containsAll(pinnedNotesDisplay.value)) {
+            _selectedNotes.update { _selectedNotes.value - pinnedNotesDisplay.value.toSet() }
             return
         } else if (add) {
-            _selectedNotes.update { it + _pinnedNotesDisplay.value.toSet()}
+            _selectedNotes.update { it + pinnedNotesDisplay.value.toSet()}
         } else {
-            _selectedNotes.update { _pinnedNotesDisplay.value.toSet() }
+            _selectedNotes.update { pinnedNotesDisplay.value.toSet() }
         }
     }
 
     fun toggleSelectAllNonPinnedNotes(add: Boolean = false) {
-        if (_selectedNotes.value.containsAll(_normalNotesDisplay.value)) {
-            _selectedNotes.update { _selectedNotes.value - _normalNotesDisplay.value.toSet() }
+        if (_selectedNotes.value.containsAll(normalNotesDisplay.value)) {
+            _selectedNotes.update { _selectedNotes.value - normalNotesDisplay.value.toSet() }
             return
         } else if (add) {
-            _selectedNotes.update { it + _normalNotesDisplay.value.toSet() }
+            _selectedNotes.update { it + normalNotesDisplay.value.toSet() }
         } else {
-            _selectedNotes.update { _normalNotesDisplay.value.toSet() }
+            _selectedNotes.update { normalNotesDisplay.value.toSet() }
         }
     }
 
@@ -110,9 +106,9 @@ class HomeViewModel @Inject constructor(
      */
     fun allPinnedNotesSelected(exclusive: Boolean = false): Boolean {
         return if (exclusive) {
-            _selectedNotes.value == _pinnedNotesDisplay.value
+            _selectedNotes.value == pinnedNotesDisplay.value.toSet()
         } else {
-            _selectedNotes.value.containsAll(_pinnedNotesDisplay.value) && _pinnedNotesDisplay.value.isNotEmpty()
+            _selectedNotes.value.containsAll(pinnedNotesDisplay.value) && pinnedNotesDisplay.value.isNotEmpty()
         }
     }
 
@@ -122,9 +118,9 @@ class HomeViewModel @Inject constructor(
      */
     fun allNonPinnedNotesSelected(exclusive: Boolean = false): Boolean {
         return if (exclusive) {
-            _selectedNotes.value == _normalNotesDisplay.value
+            _selectedNotes.value == normalNotesDisplay.value.toSet()
         } else {
-            _selectedNotes.value.containsAll(_normalNotesDisplay.value) && _normalNotesDisplay.value.isNotEmpty()
+            _selectedNotes.value.containsAll(normalNotesDisplay.value) && normalNotesDisplay.value.isNotEmpty()
         }
     }
 
