@@ -74,18 +74,14 @@ class ArchiveViewModel @Inject constructor(
 
     fun unarchiveSelectedNotes() {
         viewModelScope.launch {
-            _selectedNotes.value.forEach { note ->
-                noteRepository.restoreNote(note)
-            }
+            noteRepository.restoreNotes(_selectedNotes.value)
             clearSelection()
         }
     }
 
     fun binSelectedNotes() {
         viewModelScope.launch {
-            _selectedNotes.value.forEach { note ->
-                noteRepository.binNote(note)
-            }
+            noteRepository.binNotes(_selectedNotes.value)
             clearSelection()
         }
     }

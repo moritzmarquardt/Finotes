@@ -128,9 +128,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val notesToArchive = _selectedNotes.value.toList()
             val archivedNoteIds = notesToArchive.map { it.id }  // All ids of the notes to archive
-            notesToArchive.forEach { note ->
-                noteRepository.archiveNote(note) //TODO() make this a batch operation
-            }
+            noteRepository.archiveNotes(notesToArchive)
             lastAction = LastAction.Archive(archivedNoteIds)
             _snackbarEventChannel.send(
                 SnackbarEvent.ShowSnackbar(
@@ -146,9 +144,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val notesToBin = _selectedNotes.value.toList()
             val binnedNoteIds = notesToBin.map { it.id }  // All ids of the notes to bin
-            notesToBin.forEach { note ->
-                noteRepository.binNote(note)
-            }
+            noteRepository.binNotes(notesToBin)
             lastAction = LastAction.Bin(binnedNoteIds)
             _snackbarEventChannel.send(
                 SnackbarEvent.ShowSnackbar(
@@ -163,9 +159,7 @@ class HomeViewModel @Inject constructor(
     fun pinSelectedNotes() {
         viewModelScope.launch {
             val notesToPin: List<Note> = _selectedNotes.value.toList()
-            notesToPin.forEach { note ->
-                noteRepository.updateNote(note.copy(isPinned = true))
-            }
+            noteRepository.updateNotes(notesToPin.map { it.copy(isPinned = true) })
             clearSelection()
         }
     }
@@ -173,9 +167,7 @@ class HomeViewModel @Inject constructor(
     fun unpinSelectedNotes() {
         viewModelScope.launch {
             val notesToUnpin: List<Note> = _selectedNotes.value.toList()
-            notesToUnpin.forEach { note ->
-                noteRepository.updateNote(note.copy(isPinned = false))
-            }
+            noteRepository.updateNotes(notesToUnpin.map { it.copy(isPinned = false) })
             clearSelection()
         }
     }
@@ -237,6 +229,9 @@ class HomeViewModel @Inject constructor(
          * Represents an action to archive notes.
          * @property noteIds The IDs of the notes to archive.
          */
+        //TODO actually store a list of notes not ids to be coherent with the rest of the app
+        // where i always store notes and not ids. this will make it possible to use batch operations
+        // and simplyfy the repository and all the logic in the viewmodel
         data class Archive(val noteIds: List<Long?>) : LastAction()
         data class Bin(val noteIds: List<Long?>) : LastAction()
         // Add other actions if needed

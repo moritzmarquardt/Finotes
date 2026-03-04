@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,7 +44,8 @@ class NoteViewModel @Inject constructor(
             val passedNoteId = savedStateHandle.get<Long>("noteId")
             val note = if (passedNoteId != null) {
                 Log.d("NoteViewModel", "Fetching note with ID: $passedNoteId")
-                noteRepository.fetchNoteById(passedNoteId).filterNotNull().first()
+                noteRepository.fetchNoteById(passedNoteId).firstOrNull() ?: Note()
+                //TODO make this timeout safe
             } else {
                 Log.d("NoteViewModel", "Creating new empty note.")
                 Note()
@@ -90,7 +92,7 @@ class NoteViewModel @Inject constructor(
             } else {
                 // Existing note: update
                 Log.d("NoteViewModel", "Updating existing note with ID: ${updatedNote.id}")
-                noteRepository.updateNote(updatedNote)
+                noteRepository.updateNotes(listOf(updatedNote))
             }
         }
     }
@@ -98,7 +100,7 @@ class NoteViewModel @Inject constructor(
     fun saveCurrentNote() {
         viewModelScope.launch {
             Log.d("NoteViewModel", "Updating current note with ID: ${_currentNote.value.id}")
-            noteRepository.updateNote(_currentNote.value)
+            noteRepository.updateNotes(listOf(_currentNote.value))
         }
     }
 
@@ -120,31 +122,31 @@ class NoteViewModel @Inject constructor(
     // --- Actions that affect note status and often navigate away ---
     fun archiveNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.archiveNote(note)
+            noteRepository.archiveNotes(listOf(note))
         }
     }
 
     fun unarchiveNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.restoreNote(note)
+            noteRepository.restoreNotes(listOf(note))
         }
     }
 
     fun binNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.binNote(note)
+            noteRepository.binNotes(listOf(note))
         }
     }
 
     fun restoreNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.restoreNote(note)
+            noteRepository.restoreNotes(listOf(note))
         }
     }
 
     fun deleteNoteFromBin(note: Note) {
         viewModelScope.launch {
-            noteRepository.permanentlyDeleteNote(note)
+            noteRepository.permanentlyDeleteNotes(listOf(note))
         }
     }
 }

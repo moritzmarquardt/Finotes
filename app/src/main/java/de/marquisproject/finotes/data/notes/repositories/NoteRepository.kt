@@ -14,44 +14,28 @@ class NoteRepository(
     }
 
     /**
-     * Updates the note in the database and marks it as needing to be synced to the server.
-     * @param note The note to update.
+     * Updates multiple notes in the database and marks them as needing to be synced.
+     * @param notes The list of notes to update.
      */
-    suspend fun updateNote(note: Note) {
-        noteDao.updateNote(note.prepareForUpdate())
+    suspend fun updateNotes(notes: List<Note>) {
+        noteDao.updateNotes(notes.map { it.prepareForUpdate() })
     }
 
-    /**
-     * Change Note status to binned in the database and marks it as needing to be synced to the server.
-     * @param note The note to bin.
-     */
-    suspend fun binNote(note: Note) {
-        noteDao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.BINNED))
+    suspend fun binNotes(notes: List<Note>) {
+        updateNotes(notes.map { it.prepareForUpdate().copy(noteStatus = NoteStatus.BINNED) })
     }
 
-    /**
-     * Change Note status to archived in the database and marks it as needing to be synced to the server.
-     * @param note The note to archive.
-     */
-    suspend fun archiveNote(note: Note) {
-        noteDao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.ARCHIVED))
+    suspend fun archiveNotes(notes: List<Note>) {
+        updateNotes(notes.map { it.prepareForUpdate().copy(noteStatus = NoteStatus.ARCHIVED) })
     }
 
-    /**
-     * Change Note status to active in the database and marks it as needing to be synced to the server.
-     * @param note The note to restore.
-     */
-    suspend fun restoreNote (note: Note) {
-        noteDao.updateNote(note.prepareForUpdate().copy(noteStatus = NoteStatus.ACTIVE))
+    suspend fun restoreNotes(notes: List<Note>) {
+        updateNotes(notes.map { it.prepareForUpdate().copy(noteStatus = NoteStatus.ACTIVE) })
     }
 
-    /**
-     * Permanently deletes the note from the database.
-     * @param note The note to delete.
-     */
-    suspend fun permanentlyDeleteNote(note: Note) {
-        // TODO() delete from server. For example add status TOPERMDEL to note and then the note is only removed when it has been synced to the server.
-        noteDao.deleteNote(note)
+    suspend fun permanentlyDeleteNotes(notes: List<Note>) {
+        //TODO Delete note from server
+        noteDao.deleteNotes(notes)
     }
 
     /**
@@ -67,7 +51,7 @@ class NoteRepository(
      */
     suspend fun restoreNoteById(id: Long) {
         val note = noteDao.getNoteById(id).first()
-        restoreNote(note)
+        restoreNotes(listOf(note))
     }
 
     /**
