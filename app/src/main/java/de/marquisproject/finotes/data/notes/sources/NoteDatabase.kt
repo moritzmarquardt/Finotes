@@ -75,22 +75,19 @@ abstract class NoteDatabase : RoomDatabase() {
                 ) // create the expected index
 
                 Log.d("NoteMigration", "Importing external databases into `notes_table`")
-                ExternalDbMigrations.copyDataFromOldDb(
-                    context.getDatabasePath("bin.db").absolutePath,
-                    NoteStatus.BINNED,
-                    db
-                )
-                ExternalDbMigrations.copyDataFromOldDb(
-                    context.getDatabasePath("archive.db").absolutePath,
-                    NoteStatus.ARCHIVED,
-                    db
-                )
-                Log.d("NoteMigration", "Successfully migrated data from external databases")
+                // Migrate bin.db
+                val binPath = context.getDatabasePath("bin.db").absolutePath
+                if (ExternalDbMigrations.copyDataFromOldDb(binPath, NoteStatus.BINNED, db)) {
+                    context.deleteDatabase("bin.db")
+                    Log.d("NoteMigration", "Successfully migrated and deleted bin.db")
+                }
 
-                // Delete the old databases
-                context.deleteDatabase("bin.db")
-                context.deleteDatabase("archive.db")
-                Log.d("NoteMigration", "Successfully deleted old databases")
+                // Migrate archive.db
+                val archivePath = context.getDatabasePath("archive.db").absolutePath
+                if (ExternalDbMigrations.copyDataFromOldDb(archivePath, NoteStatus.ARCHIVED, db)) {
+                    context.deleteDatabase("archive.db")
+                    Log.d("NoteMigration", "Successfully migrated and deleted archive.db")
+                }
 
                 Log.d("NoteMigration", "Migration complete")
             }
@@ -104,36 +101,31 @@ abstract class NoteDatabase : RoomDatabase() {
  */
 object ExternalDbMigrations {
     fun copyDataFromOldDb(dbPath: String, status: NoteStatus, newDb: SupportSQLiteDatabase) {
+    fun copyDataFromOldDb(dbPath: String, status: NoteStatus, newDb: SupportSQLiteDatabase): Boolean {
         val dbFile = File(dbPath)
         if (!dbFile.exists()) {
             Log.w("NoteMigration", "Old database file does not exist, skipping: $dbPath")
-            return
+            return true
         }
 
-        val oldDb = try {
-            SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
-        } catch (e: Exception) {
-            Log.e("NoteMigration", "Error opening old database: $dbPath", e)
-            return
-        }
-        Log.d("NoteMigration", "Successfully opened old database: $dbPath")
+        var oldDb: SQLiteDatabase? = null
+        try {
+            oldDb = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+            Log.d("NoteMigration", "Successfully opened old database: $dbPath")
 
-        val cursor = oldDb.rawQuery("SELECT title, body, isPinned, dateCreated FROM notes_table", null)
-        cursor.use { c ->
-            if (c.moveToFirst()) {
-                val titleIndex = c.getColumnIndex("title")
-                val bodyIndex = c.getColumnIndex("body")
-                val dateCreatedIndex = c.getColumnIndex("dateCreated")
-                val isPinnedIndex = c.getColumnIndex("isPinned")
+            val cursor = oldDb.rawQuery("SELECT title, body, isPinned, dateCreated FROM notes_table", null)
+            cursor.use { c ->
+                if (c.moveToFirst()) {
+                    val titleIndex = c.getColumnIndex("title")
+                    val bodyIndex = c.getColumnIndex("body")
+                    val dateCreatedIndex = c.getColumnIndex("dateCreated")
+                    val isPinnedIndex = c.getColumnIndex("isPinned")
 
-                if (titleIndex == -1 || bodyIndex == -1 || dateCreatedIndex == -1 || isPinnedIndex == -1) {
-                    Log.e("NoteMigration", "Column not found in old db: $dbPath")
-                    return@use
-                }
-                Log.d("NoteMigration", "Note found with title: ${c.getString(titleIndex)} and body: ${c.getString(bodyIndex)}")
+                    if (titleIndex == -1 || bodyIndex == -1 || dateCreatedIndex == -1 || isPinnedIndex == -1) {
+                        Log.e("NoteMigration", "Column not found in old db: $dbPath")
+                        return false
+                    }
 
-                newDb.beginTransaction()
-                try {
                     do {
                         val createdAt = c.getLong(dateCreatedIndex)
                         val values = ContentValues().apply {
@@ -149,13 +141,15 @@ object ExternalDbMigrations {
                         }
                         newDb.insert("notes_table", OnConflictStrategy.REPLACE, values)
                     } while (c.moveToNext())
-                    newDb.setTransactionSuccessful()
-                } finally {
-                    newDb.endTransaction()
                 }
             }
+            Log.d("NoteMigration", "Successfully migrated data from $dbPath")
+            return true
+        } catch (e: Exception) {
+            Log.e("NoteMigration", "Error opening old database: $dbPath", e)
+            return false
+        } finally {
+            oldDb?.close()
         }
-        oldDb.close()
-        Log.d("NoteMigration", "Successfully migrated data from $dbPath")
     }
 }
