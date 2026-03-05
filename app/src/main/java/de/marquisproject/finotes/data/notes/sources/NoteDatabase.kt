@@ -88,8 +88,8 @@ abstract class NoteDatabase : RoomDatabase() {
                 Log.d("NoteMigration", "Successfully migrated data from external databases")
 
                 // Delete the old databases
-                File(context.getDatabasePath("bin.db").absolutePath).delete()
-                File(context.getDatabasePath("archive.db").absolutePath).delete()
+                context.deleteDatabase("bin.db")
+                context.deleteDatabase("archive.db")
                 Log.d("NoteMigration", "Successfully deleted old databases")
 
                 Log.d("NoteMigration", "Migration complete")
