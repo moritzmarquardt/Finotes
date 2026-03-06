@@ -36,8 +36,7 @@ class NoteMigration1to2(private val context: Context) : Migration(1, 2) {
         //        connection.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8d96cdaa9fa441776a52b4207e25f63d')")
 
         Log.d("NoteMigration", "Copying existing app data from `notes_table` if present")
-        //TODO is the COALESCE(`dateCreated`, strftime('%s','now')*1000), duplicate bad??
-        //TODO check if stfrtime can lead to crash if it does not recognise it in the old database?
+        // COALESCE ensures NOT NULL constraints are met. the two redundant lines are used to set both the date created and last modified column.
         db.execSQL(
             """
                 INSERT INTO `notes_table_new`(
