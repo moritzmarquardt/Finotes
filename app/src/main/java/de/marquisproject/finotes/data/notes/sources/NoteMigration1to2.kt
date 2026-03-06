@@ -28,12 +28,7 @@ class NoteMigration1to2(private val context: Context) : Migration(1, 2) {
                     `remoteId` INTEGER
                 )
                 """.trimIndent()
-        ) // this table is now consistent with the Note Scheme Version 2
-        // TODO() Verify Schema Strings: Go to your build/generated/source/kapt/ (or KSP) folder and find the generated code for your NoteDatabase_Impl.
-        //  Look for the createAllTables method. Copy-paste the CREATE TABLE string exactly from there into your migration. Room is extremely sensitive to formatting. (gemini)
-        // connection.execSQL("CREATE TABLE IF NOT EXISTS `notes_table` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `body` TEXT NOT NULL, `dateCreated` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `noteStatus` TEXT NOT NULL, `color` INTEGER NOT NULL)")
-        //        connection.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)")
-        //        connection.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8d96cdaa9fa441776a52b4207e25f63d')")
+        ) // Matches app/schemas/.../NoteDatabase/2.json `createSql` (table name adapted to notes_table_new for swap).
 
         Log.d("NoteMigration", "Copying existing app data from `notes_table` if present")
         // COALESCE ensures NOT NULL constraints are met. the two redundant lines are used to set both the date created and last modified column.
