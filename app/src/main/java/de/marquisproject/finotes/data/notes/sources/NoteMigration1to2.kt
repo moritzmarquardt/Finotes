@@ -67,26 +67,18 @@ class NoteMigration1to2(private val context: Context) : Migration(1, 2) {
         ) // create the expected index
 
         Log.d("NoteMigration", "Importing external databases into `notes_table`")
-        // Migrate bin.db
+        // We copy the data here, but we DON'T delete the files.
+        // Deletion is handled in NoteDatabase.Callback to ensure the transaction is committed.
         val binPath = context.getDatabasePath("bin.db").absolutePath
-        if (copyDataFromOldDb(binPath, NoteStatus.BINNED, db)) {
-            context.deleteDatabase("bin.db")
-            Log.d("NoteMigration", "Successfully migrated and deleted bin.db")
-        }
+        copyDataFromOldDb(binPath, NoteStatus.BINNED, db)
 
-        // Migrate archive.db
         val archivePath = context.getDatabasePath("archive.db").absolutePath
-        if (copyDataFromOldDb(archivePath, NoteStatus.ARCHIVED, db)) {
-            context.deleteDatabase("archive.db")
-            Log.d("NoteMigration", "Successfully migrated and deleted archive.db")
-        }
+        copyDataFromOldDb(archivePath, NoteStatus.ARCHIVED, db)
 
         Log.d("NoteMigration", "Migration complete")
     }
 
     private fun copyDataFromOldDb(dbPath: String, status: NoteStatus, newDb: SupportSQLiteDatabase): Boolean {
-        //TODO muss mehr robust werden. damit auch sachen schiefgehen könne und zb nur partly abgeschlossen wird anstatt gar nicht.
-        //TODO Ausserdem prompte zu export machen bevor es ausgeführt wird.
         val dbFile = File(dbPath)
         if (!dbFile.exists()) {
             Log.w("NoteMigration", "Old database file does not exist, skipping: $dbPath")
