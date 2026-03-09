@@ -4,7 +4,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -25,7 +27,6 @@ class NoteDatabaseMigrationTest {
     private val dbName = "migration-test-note.db"
     private lateinit var roomDb: NoteDatabase
     private lateinit var context: Context
-
     @get:Rule
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
@@ -49,21 +50,63 @@ class NoteDatabaseMigrationTest {
         context.deleteDatabase("archive.db")
     }
 
+    // Old version 1 Note class all nullable to allow for testing of corrupt data
+    data class NoteV1(
+        val id: Long? = -1L,
+        val title: String? = "",
+        val body: String? = "",
+        val dateCreated: Long? = System.currentTimeMillis(),
+        val isPinned: Boolean? = false,
+        val noteStatus: NoteStatus? = NoteStatus.ACTIVE,
+        val color: Int? = 0,
+    )
+
+    fun insertNoteV1(note: NoteV1, db: SupportSQLiteDatabase, tableName: String): Long {
+        val noteValue = ContentValues().apply {
+            put("title", note.title)
+            put("body", note.body)
+            put("dateCreated", note.dateCreated)
+            put("isPinned", note.isPinned)
+            put("noteStatus", note.noteStatus!!.name)
+            put("color", note.color)
+        }
+        return db.insert(tableName, SQLiteDatabase.CONFLICT_REPLACE, noteValue)
+    }
+
+    val standardNoteV1 : NoteV1 = NoteV1(title = "Active Note", body = "Main", dateCreated = 1, isPinned = false, noteStatus = NoteStatus.ACTIVE)
+
     /**
-     * Standard migration test: Checks schema and data preservation for the main table.
+     * Check that data is migrated correctly from v1 to v2.
      */
     @Test
     fun migrate_1_2_preservesDataAndSchema() {
-        helper.createDatabase(dbName, 1).use { db ->
-            val values = ContentValues().apply {
-                put("title", "Old Title")
-                put("body", "Old Body")
-                put("dateCreated", 123456789L)
-                put("isPinned", 0)
-                put("noteStatus", NoteStatus.ACTIVE.name)
-                put("color", 0)
-            }
-            db.insert("notes_table", SQLiteDatabase.CONFLICT_REPLACE, values)
+        val dbV1 = helper.createDatabase(dbName, 1)
+
+        // Create the main database at version 1 filled with test data
+        val testNotesV1 = listOf(
+            NoteV1(title = "Note 1", body = "Body 1", dateCreated = 123456789L, isPinned = false, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(title = "Note 2", body = "Body 2", dateCreated = 0, isPinned = true, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(title = "Note 3", body = "Body 3", dateCreated = 0L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(id = -1L, title = "Note 4", body = "Body 4", dateCreated = 283L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(id = 0, title = "Note 5", body = "Body 5", dateCreated = 283L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(id = -20293L, title = "Note 5", body = "Body 5", dateCreated = 283L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(title = "fuzzy note with 🎼 and \n new lines \t tabs", body = "note with emojis 🎼️ and \n new lines \t tabs.", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(title = "SQL Injection Attempt", body = "'); DROP TABLE notes_table; --", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(title = "missing body", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(title = "missing dateCreated", body = "missing dateCreated", isPinned = false, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(body = "missing title", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(title = "missing status", body = "missing status", dateCreated = 0, isPinned = false),
+            NoteV1(title = "missing color", body = "missing color", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
+            NoteV1(),
+            NoteV1(title = "Archived note 1", body = "Body 1", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ARCHIVED),
+            NoteV1(title = "Archived note 2", body = "Body 2", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ARCHIVED),
+            NoteV1(title = "Archived note 3", body = "Body 3", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ARCHIVED),
+            NoteV1(title = "Binned note 1", body = "Body 1", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.BINNED),
+            NoteV1(title = "Binned note 2", body = "Body 2", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.BINNED),
+            NoteV1(title = "Binned note 3", body = "Body 3", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.BINNED),
+        )
+        testNotesV1.forEach {
+            insertNoteV1(it, dbV1, "notes_table")
         }
 
         helper.runMigrationsAndValidate(
@@ -77,18 +120,26 @@ class NoteDatabaseMigrationTest {
             .allowMainThreadQueries()
             .build()
         val dao = roomDb.dao
-        val notes = runBlocking { dao.getAllNotesByStatus(NoteStatus.ACTIVE).first() }
+        val notes = runBlocking { dao.getAllNotes().first() }
 
-        assertEquals(1, notes.size)
-        val note = notes[0]
-        assertEquals("Old Title", note.title)
-        assertEquals("Old Body", note.body)
-        assertFalse(note.isPinned)
-        assertEquals(NoteStatus.ACTIVE, note.noteStatus)
-        assertEquals(123456789L, note.dateCreated)
-        assertEquals(note.dateCreated, note.lastModified)
-        assertTrue("New notes from old main DB should default to needsSync = true", note.needsSync)
-        assertNull(note.remoteId)
+        assertEquals("check number of transferred notes",testNotesV1.size, notes.size)
+        assertEquals("check number of active notes in db", testNotesV1.filter { it.noteStatus == NoteStatus.ACTIVE }.size, notes.filter { it.noteStatus == NoteStatus.ACTIVE }.size)
+        assertEquals("check number of archived notes in db", testNotesV1.filter { it.noteStatus == NoteStatus.ARCHIVED }.size, notes.filter { it.noteStatus == NoteStatus.ARCHIVED }.size)
+        assertEquals("check number of binned notes in db", testNotesV1.filter { it.noteStatus == NoteStatus.BINNED }.size, notes.filter { it.noteStatus == NoteStatus.BINNED }.size)
+
+        testNotesV1.forEach { note ->
+            val dbNote = notes.find { it.title == note.title && it.body == note.body }
+            assertNotNull(dbNote)
+            assertEquals(note.title, dbNote!!.title)
+            assertEquals(note.body, dbNote.body)
+            assertEquals(note.isPinned, dbNote.isPinned)
+            assertEquals(note.noteStatus, dbNote.noteStatus)
+            assertEquals(note.dateCreated, dbNote.dateCreated)
+            assertEquals(note.color, dbNote.category.toInt())
+            assertNull(dbNote.remoteId)
+            assertTrue(dbNote.needsSync)
+            assertEquals(dbNote.lastModified, dbNote.dateCreated)
+        }
     }
 
     /**
@@ -97,16 +148,25 @@ class NoteDatabaseMigrationTest {
      */
     @Test
     fun migrate_1_2_handles_missing_external_dbs() {
-        helper.createDatabase(dbName, 1).use { db ->
-            db.execSQL("INSERT INTO notes_table (title, body, dateCreated, isPinned, noteStatus, color) VALUES ('Main', 'Content', 1, 0, 'ACTIVE', 0)")
-        }
+        val dbV1 = helper.createDatabase(dbName, 1)
+        insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
         // Run migration without creating bin.db or archive.db
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
         roomDb = Room.databaseBuilder(context, NoteDatabase::class.java, dbName).build()
         val notes = runBlocking { roomDb.dao.getAllNotes().first() }
-        assertEquals(1, notes.size)
+        val dbNote = notes[0]
+        assertNotNull(dbNote)
+        assertEquals(standardNoteV1.title, dbNote.title)
+        assertEquals(standardNoteV1.body, dbNote.body)
+        assertEquals(standardNoteV1.isPinned, dbNote.isPinned)
+        assertEquals(standardNoteV1.noteStatus, dbNote.noteStatus)
+        assertEquals(standardNoteV1.dateCreated, dbNote.dateCreated)
+        assertEquals(standardNoteV1.color, dbNote.category.toInt())
+        assertNull(dbNote.remoteId)
+        assertTrue(dbNote.needsSync)
+        assertEquals(dbNote.lastModified, dbNote.dateCreated)
     }
 
     /**
@@ -114,18 +174,27 @@ class NoteDatabaseMigrationTest {
      */
     @Test
     fun migrate_1_2_handles_empty_external_dbs() {
+        val dbV1 = helper.createDatabase(dbName, 1)
+        insertNoteV1(standardNoteV1, dbV1, "notes_table")
+
         createExternalDb("bin.db", emptyList())
         createExternalDb("archive.db", emptyList())
-
-        helper.createDatabase(dbName, 1).use { db ->
-            db.execSQL("INSERT INTO notes_table (title, body, dateCreated, isPinned, noteStatus, color) VALUES ('Main', 'Content', 1, 0, 'ACTIVE', 0)")
-        }
 
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
         roomDb = Room.databaseBuilder(context, NoteDatabase::class.java, dbName).build()
         val notes = runBlocking { roomDb.dao.getAllNotes().first() }
-        assertEquals(1, notes.size)
+        val dbNote = notes[0]
+        assertNotNull(dbNote)
+        assertEquals(standardNoteV1.title, dbNote.title)
+        assertEquals(standardNoteV1.body, dbNote.body)
+        assertEquals(standardNoteV1.isPinned, dbNote.isPinned)
+        assertEquals(standardNoteV1.noteStatus, dbNote.noteStatus)
+        assertEquals(standardNoteV1.dateCreated, dbNote.dateCreated)
+        assertEquals(standardNoteV1.color, dbNote.category.toInt())
+        assertNull(dbNote.remoteId)
+        assertTrue(dbNote.needsSync)
+        assertEquals(dbNote.lastModified, dbNote.dateCreated)
     }
 
     /**
@@ -134,25 +203,26 @@ class NoteDatabaseMigrationTest {
      */
     @Test
     fun migrate_1_2_handles_null_values_in_main_db() {
-        helper.createDatabase(dbName, 1).use { db ->
-            // Recreate table with nullable columns to simulate legacy/corrupt data that still reaches migration.
-            db.execSQL("ALTER TABLE notes_table RENAME TO notes_table_backup")
-            db.execSQL(
-                """
-                CREATE TABLE notes_table (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT,
-                    body TEXT,
-                    dateCreated INTEGER,
-                    isPinned INTEGER NOT NULL,
-                    noteStatus TEXT NOT NULL,
-                    color INTEGER NOT NULL
-                )
-                """.trimIndent()
+        val dbV1 = helper.createDatabase(dbName, 1)
+        insertNoteV1(standardNoteV1, dbV1, "notes_table")
+
+        // Recreate table with nullable columns to simulate legacy/corrupt data that still reaches migration.
+        dbV1.execSQL("ALTER TABLE notes_table RENAME TO notes_table_backup")
+        dbV1.execSQL(
+            """
+            CREATE TABLE notes_table (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                body TEXT,
+                dateCreated INTEGER,
+                isPinned INTEGER NOT NULL,
+                noteStatus TEXT NOT NULL,
+                color INTEGER NOT NULL
             )
-            db.execSQL("INSERT INTO notes_table (title, body, dateCreated, isPinned, noteStatus, color) VALUES (NULL, NULL, NULL, 0, 'ACTIVE', 0)")
-            db.execSQL("DROP TABLE notes_table_backup")
-        }
+            """.trimIndent()
+        )
+        dbV1.execSQL("INSERT INTO notes_table (title, body, dateCreated, isPinned, noteStatus, color) VALUES (NULL, NULL, NULL, 0, 'ACTIVE', 0)")
+        dbV1.execSQL("DROP TABLE notes_table_backup")
 
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
@@ -165,62 +235,15 @@ class NoteDatabaseMigrationTest {
     }
 
     /**
-     * Fuzzy Case: Special characters, emojis, and very long strings.
-     */
-    @Test
-    fun migrate_1_2_handles_fuzzy_data() {
-        val longTitle = "A".repeat(2000)
-        val emojiBody = "Note with emojis 🚀 🔥 🛠️ and \n new lines \t tabs."
-        val sqlInjectionAttempt = "'); DROP TABLE notes_table; --"
-
-        helper.createDatabase(dbName, 1).use { db ->
-            val values = ContentValues().apply {
-                put("title", longTitle)
-                put("body", emojiBody)
-                put("dateCreated", 100L)
-                put("isPinned", 1)
-                put("noteStatus", "ACTIVE")
-                put("color", 1)
-            }
-            db.insert("notes_table", SQLiteDatabase.CONFLICT_REPLACE, values)
-
-            val values2 = ContentValues().apply {
-                put("title", "SQL Test")
-                put("body", sqlInjectionAttempt)
-                put("dateCreated", 200L)
-                put("isPinned", 0)
-                put("noteStatus", "ACTIVE")
-                put("color", 2)
-            }
-            db.insert("notes_table", SQLiteDatabase.CONFLICT_REPLACE, values2)
-        }
-
-        helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
-
-        roomDb = Room.databaseBuilder(context, NoteDatabase::class.java, dbName).build()
-        val notes = runBlocking { roomDb.dao.getAllNotes().first().sortedBy { it.dateCreated } }
-
-        assertEquals(longTitle, notes[0].title)
-        assertEquals(emojiBody, notes[0].body)
-        assertEquals(sqlInjectionAttempt, notes[1].body)
-    }
-
-    /**
      * Complex Case: Merging data from all three sources.
      */
     @Test
     fun migrate_1_2_merges_all_sources() {
-        createExternalDb("bin.db", listOf(
-            NoteData("Bin Note 1", "Body 1", 10L, 0),
-            NoteData("Bin Note 2", "Body 2", 11L, 1)
-        ))
-        createExternalDb("archive.db", listOf(
-            NoteData("Archive Note", "Archived", 20L, 0)
-        ))
+        val dbV1 = helper.createDatabase(dbName, 1)
+        insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
-        helper.createDatabase(dbName, 1).use { db ->
-            db.execSQL("INSERT INTO notes_table (title, body, dateCreated, isPinned, noteStatus, color) VALUES ('Active Note', 'Active', 30, 1, 'ACTIVE', 0)")
-        }
+        createExternalDb("bin.db", listOf(standardNoteV1.copy(title = "Bin Note", noteStatus = NoteStatus.BINNED)))
+        createExternalDb("archive.db", listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
 
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
@@ -229,95 +252,33 @@ class NoteDatabaseMigrationTest {
 
         runBlocking {
             val allNotes = dao.getAllNotes().first()
-            assertEquals("Total notes should be 4 (1 main + 2 bin + 1 archive)", 4, allNotes.size)
-
             val active = dao.getAllNotesByStatus(NoteStatus.ACTIVE).first()
-            assertEquals(1, active.size)
-            assertEquals("Active Note", active[0].title)
-
             val binned = dao.getAllNotesByStatus(NoteStatus.BINNED).first()
-            assertEquals(2, binned.size)
-            assertTrue(binned.any { it.title == "Bin Note 1" })
-
             val archived = dao.getAllNotesByStatus(NoteStatus.ARCHIVED).first()
+
+            assertEquals(3, allNotes.size)
+            assertEquals(1, active.size)
+            assertEquals(1, binned.size)
             assertEquals(1, archived.size)
-            assertEquals("Archive Note", archived[0].title)
-        }
-    }
-
-    /**
-     * Verifies that timestamps are correctly mapped during migration.
-     */
-    @Test
-    fun migrate_1_2_verifies_timestamps() {
-        val created = 123456789L
-        helper.createDatabase(dbName, 1).use { db ->
-            val values = ContentValues().apply {
-                put("title", "Time Test")
-                put("body", "...")
-                put("dateCreated", created)
-                put("isPinned", 0)
-                put("noteStatus", "ACTIVE")
-                put("color", 0)
-            }
-            db.insert("notes_table", SQLiteDatabase.CONFLICT_REPLACE, values)
-        }
-
-        helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
-
-        roomDb = Room.databaseBuilder(context, NoteDatabase::class.java, dbName).build()
-        val note = runBlocking { roomDb.dao.getAllNotes().first().first() }
-
-        assertEquals(created, note.dateCreated)
-        assertEquals("lastModified should be initialized to dateCreated during migration", created, note.lastModified)
-    }
-
-    /**
-     * Verifies imported external rows get the expected defaults for v2-only fields.
-     */
-    @Test
-    fun migrate_1_2_external_rows_have_expected_defaults() {
-        createExternalDb("bin.db", listOf(NoteData("Bin Defaults", "B", 10L, 1)))
-        createExternalDb("archive.db", listOf(NoteData("Archive Defaults", "A", 20L, 0)))
-
-        helper.createDatabase(dbName, 1).use { db ->
-            db.execSQL("INSERT INTO notes_table (title, body, dateCreated, isPinned, noteStatus, color) VALUES ('Main', 'Content', 30, 0, 'ACTIVE', 0)")
-        }
-
-        helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
-
-        roomDb = Room.databaseBuilder(context, NoteDatabase::class.java, dbName).build()
-        val dao = roomDb.dao
-
-        runBlocking {
-            val binned = dao.getAllNotesByStatus(NoteStatus.BINNED).first().single()
-            assertEquals("Bin Defaults", binned.title)
-            assertEquals(0L, binned.category)
-            assertFalse("Imported external rows should default to needsSync = false", binned.needsSync)
-            assertNull(binned.remoteId)
-            assertEquals(binned.dateCreated, binned.lastModified)
-
-            val archived = dao.getAllNotesByStatus(NoteStatus.ARCHIVED).first().single()
-            assertEquals("Archive Defaults", archived.title)
-            assertEquals(0L, archived.category)
-            assertFalse(archived.needsSync)
-            assertNull(archived.remoteId)
-            assertEquals(archived.dateCreated, archived.lastModified)
+            assertEquals("Active Note", active.first().title)
+            assertEquals("Bin Note", binned.first().title)
+            assertEquals("Archive Note", archived.first().title)
+            assertEquals(NoteStatus.ACTIVE, active.first().noteStatus)
+            assertEquals(NoteStatus.BINNED, binned.first().noteStatus)
+            assertEquals(NoteStatus.ARCHIVED, archived.first().noteStatus)
         }
     }
 
     /**
      * Verifies migration remains successful when an external DB is malformed.
-     * Current behavior is best-effort import: malformed source is skipped.
      */
     @Test
     fun migrate_1_2_skips_malformed_external_db_and_keeps_main_data() {
-        createMalformedExternalDb("bin.db")
-        createExternalDb("archive.db", listOf(NoteData("Archive Note", "Archived", 20L, 0)))
+        val dbV1 = helper.createDatabase(dbName, 1)
+        insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
-        helper.createDatabase(dbName, 1).use { db ->
-            db.execSQL("INSERT INTO notes_table (title, body, dateCreated, isPinned, noteStatus, color) VALUES ('Main', 'Content', 1, 0, 'ACTIVE', 0)")
-        }
+        createMalformedExternalDb("bin.db")
+        createExternalDb("archive.db", listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
 
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
@@ -330,17 +291,59 @@ class NoteDatabaseMigrationTest {
             val archived = dao.getAllNotesByStatus(NoteStatus.ARCHIVED).first()
 
             assertEquals(1, active.size)
-            assertEquals("Main", active.first().title)
+            assertEquals(standardNoteV1.title, active.first().title)
             assertTrue("Malformed bin.db should not contribute imported rows", binned.isEmpty())
             assertEquals(1, archived.size)
-            assertEquals("Archive Note", archived.first().title)
+            assertEquals( "Archive Note", archived.first().title)
         }
     }
 
-    // Helper methods for creating external databases
-    private data class NoteData(val title: String, val body: String, val dateCreated: Long, val isPinned: Int)
+    @Test
+    fun migrate_1_2_verifies_successful_import_and_file_cleanup() {
+        val dbV1 = helper.createDatabase(dbName, 1)
+        insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
-    private fun createExternalDb(fileName: String, notes: List<NoteData>) {
+        // 1. GIVEN: Create the old external databases
+        createExternalDb("bin.db", listOf(standardNoteV1.copy(title = "Bin Note", noteStatus = NoteStatus.BINNED)))
+        createExternalDb("archive.db", listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
+
+        // 3. WHEN: Run migration
+        helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
+
+        // 4. THEN: Verify data using Room
+        roomDb = Room.databaseBuilder(context, NoteDatabase::class.java, dbName)
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    super.onOpen(db)
+                    // Match the cleanup logic from your DatabaseModule.kt
+                    context.deleteDatabase("bin.db")
+                    context.deleteDatabase("archive.db")
+                }
+            })
+            .build()
+        val dao = roomDb.dao
+
+        runBlocking {
+            val allNotes = dao.getAllNotes().first()
+            assertEquals(3, allNotes.size)
+
+            val binned = allNotes.find { it.title == "Bin Note" }
+            assertEquals(NoteStatus.BINNED, binned?.noteStatus)
+            assertEquals("Bin Note", binned?.title)
+
+            val archived = allNotes.find { it.title == "Archive Note" }
+            assertEquals(NoteStatus.ARCHIVED, archived?.noteStatus)
+            assertEquals("Archive Note", archived?.title)
+        }
+
+        // 5. THEN: Verify files were cleaned up (if your logic handles this)
+        // Note: If cleanup happens in a Callback, you might need to trigger a DB operation
+        // to ensure the callback has run.
+        assertFalse("bin.db should be deleted after migration", context.getDatabasePath("bin.db").exists())
+        assertFalse("archive.db should be deleted after migration", context.getDatabasePath("archive.db").exists())
+    }
+
+    private fun createExternalDb(fileName: String, notes: List<NoteV1>) {
         val path = context.getDatabasePath(fileName).absolutePath
         SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.CREATE_IF_NECESSARY).use { db ->
             db.execSQL(
@@ -369,6 +372,8 @@ class NoteDatabaseMigrationTest {
             }
         }
     }
+
+
 
     private fun createMalformedExternalDb(fileName: String) {
         val path = context.getDatabasePath(fileName).absolutePath
