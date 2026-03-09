@@ -22,7 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class NoteDatabaseMigrationTest {
+class NoteDatabaseMigration_1_2_Test {
 
     private val dbName = "migration-test-note.db"
     private lateinit var roomDb: NoteDatabase
