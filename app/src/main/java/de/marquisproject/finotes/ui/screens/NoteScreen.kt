@@ -1,7 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
 import android.util.Log
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,7 +44,7 @@ import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.ui.viewmodels.NoteViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreen(
     navController: NavController,
@@ -55,6 +54,7 @@ fun NoteScreen(
     val currentNote by viewModel.currentNote.collectAsState()
     val currentBodyTextFieldValue by viewModel.currentBodyTextFieldValue.collectAsState()
     val noteIsLoaded by viewModel.noteIsLoaded.collectAsState()
+    val hasAutoFocusedNewNote = remember { mutableStateOf(false) }
     Log.d("NoteScreen", "Current note: $currentNote")
     Log.d("NoteScreen", "Current note ID: ${currentNote.id} and body: ${currentNote.body}")
     val bodyFocusRequester = remember { FocusRequester() }
@@ -62,9 +62,11 @@ fun NoteScreen(
     Log.d("NoteScreen", "Body text state: $currentBodyTextFieldValue with text ${currentBodyTextFieldValue.text}")
 
 
-    LaunchedEffect(key1 = "focusNewNote") {
-        if (currentNote.id == null) {
+    LaunchedEffect(noteIsLoaded, currentNote.id) {
+        val shouldAutoFocusNewNote = noteIsLoaded && currentNote.id == null
+        if (shouldAutoFocusNewNote && !hasAutoFocusedNewNote.value) {
             bodyFocusRequester.requestFocus()
+            hasAutoFocusedNewNote.value = true
         }
     }
 
