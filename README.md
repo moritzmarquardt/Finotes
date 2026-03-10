@@ -7,15 +7,14 @@ This is a project for friends and family.
 
 ## Features
 
-- **Privacy**: The app does not communicate with the internet. All data is stored locally on your phone and can be backed up.
-- **Export and Import**: Export notes to a file and import them back.
-- **Create Notes**: Easily create and edit notes with auto-saving functionality.
-- **Search**: Quickly find notes using the search functionality.
-- **Pin Notes**: Pin important notes to keep them at the top.
-- **Archive**: Archive notes to keep them out of the way but still accessible.
-- **Bin**: Move notes to the bin and restore or permanently delete them.
-- **Dark Mode**: Use the app in dark mode for a better reading experience.
-
+- **Private by design**: No internet access, no cloud sync, no tracking. Your notes stay on your device.
+- **Export & import**: Backup notes to a file or move them between devices.
+- **Auto-save**: Notes save instantly as you type.
+- **Search**: Find notes quickly with full-text search.
+- **Pin notes**: Keep important notes at the top.
+- **Archive**: Hide notes you don’t need right now.
+- **Bin**: Delete notes with a safety net—restore or empty the bin anytime.
+- **Dark mode**: Easy on the eyes, day or night.
 
 ## Screenshots
 
@@ -26,29 +25,21 @@ This is a project for friends and family.
     <img src="screenshots/ExportScreen.png" style="width:24%" alt="Export Screen">
 </div>
 
+## Technical Details
 
-## Contributing and Development
+Built with modern Android development tools:
+- **Jetpack Compose**: Declarative UI for a smooth, responsive interface.
+- **Kotlin**: Clean, concise code with full null safety.
+- **MVVM architecture**: Separates UI from business logic for easier maintenance.
+- **Room**: Robust local database with migrations and validation.
+- **Hilt**: Dependency injection for cleaner, testable code.
 
-Contributions or feature requests are welcome:)
+## Contributions
 
-This project was developed following the most recent Android development best practices and guidelines.
-These include:
-- Using Jetpack Compose for UI development.
-- Using Kotlin for the entire codebase.
-- Following the MVVM architecture pattern. 
-  - Keep the UI logic separate from the underlying logic.
-  - Use a ViewModel class to manage the UI-related data.
-- Using Room for local data storage.
-  - Use a note model class to represent the data in the database.
-  - Use a DAO interface to define the database operations.
-  - Use a database class to define the database instance.
-  - Use a repository class to manage the data operations of several data sources of notes.
-  - Instantiate the database and repository in the MainActivity and pass them to the ViewModel which is then passed to the Screens.
-- Using dependency injection (HILT) for managing dependencies which is the recommended way to manage dependencies in Android.
-
+Contributions are welcome! Open an issue or submit a pull request. Report any bugs, suggest features and create pull requests to help improve Finotes.
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License. Use, modify, and share freely.
 
 ---
