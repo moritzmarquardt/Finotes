@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
-import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import de.marquisproject.finotes.utils.handleListLogic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,8 +20,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,140 +31,122 @@ class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
-    // Holds the ID passed from navigation. -2L initially, -1L for a new note.
-    private val _currentNoteId: MutableStateFlow<Long> = MutableStateFlow(
-        savedStateHandle.get<Long>("noteId") ?: -2L
-    )
-    private val _currentNoteStatus: MutableStateFlow<NoteStatus> = MutableStateFlow(
-        savedStateHandle.get<NoteStatus>("noteStatus") ?: NoteStatus.ACTIVE
-    )
     private val _noteIsLoaded = MutableStateFlow(false)
+    private val _currentNote = MutableStateFlow(Note())
+    private val _currentBodyTextFieldValue = MutableStateFlow(TextFieldValue())
 
-    private val _editableNote = MutableStateFlow(Note(id = -2L))
-    private val _editableBodyTextFieldValue = MutableStateFlow(TextFieldValue())
-
-    val currentBodyTextFieldValue: StateFlow<TextFieldValue> = _editableBodyTextFieldValue.asStateFlow()
-    val currentNote: StateFlow<Note> = _editableNote.asStateFlow()
+    val currentBodyTextFieldValue: StateFlow<TextFieldValue> = _currentBodyTextFieldValue.asStateFlow()
+    val currentNote: StateFlow<Note> = _currentNote.asStateFlow()
     val noteIsLoaded: StateFlow<Boolean> = _noteIsLoaded.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val id = _currentNoteId
-                .filter { it != -2L } // Wait for a valid ID
-                .take(1) // Only want the first valid ID
-                .first() // Use first() to suspend until value is emitted
-            val status = _currentNoteStatus
-                .take(1) // Only want the first valid status
-                .first() // Use first() to suspend until value is emitted
-
-            val fetchedNote = if (id == -1L) {
+            val passedNoteId = savedStateHandle.get<Long>("noteId")
+            val note = if (passedNoteId != null) {
+                Log.d("NoteViewModel", "Fetching note with ID: $passedNoteId")
+                noteRepository.fetchNoteById(passedNoteId).firstOrNull() ?: Note()
+                //TODO make this timeout safe
+            } else {
                 Log.d("NoteViewModel", "Creating new empty note.")
                 Note()
-            } else {
-                Log.d("NoteViewModel", "Fetching note with ID: $id")
-                Log.d("NoteViewModel", "Fetching note with status: $status")
-
-                when (status) {
-                    NoteStatus.ARCHIVED -> noteRepository.fetchArchivedNoteById(id).filterNotNull().map { it.copy() }.first()
-                    NoteStatus.BINNED -> noteRepository.fetchBinNoteById(id).filterNotNull().map { it.copy() }.first()
-                    NoteStatus.ACTIVE -> noteRepository.fetchNoteById(id).filterNotNull().map { it.copy() }.first()
-                }
             }
 
-            _editableNote.update { fetchedNote }
-            _editableBodyTextFieldValue.value = TextFieldValue(
-                text = fetchedNote.body,
-                selection = TextRange(fetchedNote.body.length)
+            _currentNote.update { note }
+            _currentBodyTextFieldValue.value = TextFieldValue(
+                text = note.body,
+                selection = TextRange(note.body.length)
             )
             _noteIsLoaded.value = true
 
-            Log.d("NoteViewModel", "Note loaded: ${fetchedNote.id}")
+            Log.d("NoteViewModel", "Note loaded: ${note.id}")
         }
 
-        // Debounce mechanism for saving the _editableNote
+        // Debounce mechanism for saving the _currentNote
         viewModelScope.launch {
-            _editableNote
+            _currentNote
                 .debounce(500L) // Wait 500ms after the last change
-                .distinctUntilChanged() // Only emit if the value has changed
+                .distinctUntilChanged() // Only emit if the value has changed (uses structural equality of the data class
                 .filter { noteToSave ->
-                    val isExistingNote = noteToSave.id >= 0L
-                    val isNewNoteWithContent = noteToSave.id < 0L && (noteToSave.title.isNotBlank() || noteToSave.body.isNotBlank())
-                    isExistingNote || isNewNoteWithContent
-                }
+                    noteToSave.isExistingNote() || noteToSave.isUnsavedNoteWithContent()
+                }  // Only emit if statement inside filter is true
                 .collect { noteToSave ->
-                    Log.d("NoteViewModel", "Debounced save triggered for note ID: ${noteToSave.id} and body: ${noteToSave.body}")
-                    insertNewOrUpdateNote(noteToSave)
+                    try {
+                        Log.d("NoteViewModel", "Debounced save triggered for note ID: ${noteToSave.id} and body: ${noteToSave.body}")
+                        insertNewOrUpdateNote(noteToSave)
+                    } catch (e: Exception) {
+                        Log.e("NoteViewModel", "Failed auto-saving note", e)
+                    }
                 }
-        }
-    }
-
-    // Pure interactions with the database
-    private suspend fun saveNoteToDatabase(note: Note) {
-        if (note.id == -1L) {
-            // New note: insert and update the ID
-            Log.d("NoteViewModel", "Inserting new note into database.")
-            val newId = noteRepository.insertNote(note)
-            _editableNote.update { it.copy(id = newId) } // Update the editable note with the new ID
-            _currentNoteId.value = newId // Also update the currentNoteId to reflect the new ID
-            Log.d("NoteViewModel", "New note inserted with ID: $newId")
-        } else {
-            // Existing note: update
-            Log.d("NoteViewModel", "Updating existing note with ID: ${note.id}")
-            noteRepository.updateNote(note)
         }
     }
 
     // This function is now responsible for both inserting new notes and updating existing ones.
     private fun insertNewOrUpdateNote(updatedNote: Note) {
         viewModelScope.launch {
-            saveNoteToDatabase(updatedNote)
+            if (updatedNote.id == null) {
+                // New note: insert and update the ID
+                Log.d("NoteViewModel", "Inserting new note into database.")
+                val newId = noteRepository.insertNote(updatedNote)
+                _currentNote.update { it.copy(id = newId) } // Update the editable note with the new ID
+                Log.d("NoteViewModel", "New note inserted with ID: $newId")
+            } else {
+                // Existing note: update
+                Log.d("NoteViewModel", "Updating existing note with ID: ${updatedNote.id}")
+                noteRepository.updateNotes(listOf(updatedNote))
+            }
         }
     }
 
-    // UI-facing update functions that directly modify _editableNote
+    fun saveCurrentNote() {
+        viewModelScope.launch {
+            Log.d("NoteViewModel", "Updating current note with ID: ${_currentNote.value.id}")
+            noteRepository.updateNotes(listOf(_currentNote.value))
+        }
+    }
+
+    // UI-facing update functions that directly modify _currentNote
     fun updateCurrentNoteTitle(title: String) {
-        _editableNote.update { it.copy(title = title) }
+        _currentNote.update { it.copy(title = title) }
     }
 
     fun updateCurrentNoteBody(newTextFieldValue: TextFieldValue) {
-        val processedTextFieldValue = handleListLogic(_editableBodyTextFieldValue.value, newTextFieldValue)
-        _editableBodyTextFieldValue.update { processedTextFieldValue }
-        _editableNote.update { it.copy(body = processedTextFieldValue.text) }
+        val processedTextFieldValue = handleListLogic(_currentBodyTextFieldValue.value, newTextFieldValue)
+        _currentBodyTextFieldValue.update { processedTextFieldValue }
+        _currentNote.update { it.copy(body = processedTextFieldValue.text) }
     }
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
-        _editableNote.update { it.copy(isPinned = isPinned) }
+        _currentNote.update { it.copy(isPinned = isPinned) }
     }
 
     // --- Actions that affect note status and often navigate away ---
     fun archiveNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.archiveNote(note)
+            noteRepository.archiveNotes(listOf(note))
         }
     }
 
     fun unarchiveNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.unarchiveNote(note)
+            noteRepository.restoreNotes(listOf(note))
         }
     }
 
     fun binNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.binNote(note)
+            noteRepository.binNotes(listOf(note))
         }
     }
 
     fun restoreNote(note: Note) {
         viewModelScope.launch {
-            noteRepository.restoreNote(note)
+            noteRepository.restoreNotes(listOf(note))
         }
     }
 
     fun deleteNoteFromBin(note: Note) {
         viewModelScope.launch {
-            noteRepository.deleteNoteFromBin(note)
+            noteRepository.permanentlyDeleteNotes(listOf(note))
         }
     }
 }

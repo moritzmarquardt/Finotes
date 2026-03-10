@@ -5,9 +5,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
-import de.marquisproject.finotes.data.notes.sources.ArchiveDatabase
-import de.marquisproject.finotes.data.notes.sources.BinDatabase
-import de.marquisproject.finotes.data.notes.sources.NoteDatabase
+import de.marquisproject.finotes.data.notes.sources.NoteDAO
 import javax.inject.Singleton
 
 @Module
@@ -17,10 +15,8 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideNoteRepository(
-        noteDb: NoteDatabase,
-        archiveDb: ArchiveDatabase,
-        binDb: BinDatabase
+        noteDao: NoteDAO,
     ): NoteRepository {
-        return NoteRepository(noteDb, archiveDb, binDb)
+        return NoteRepository(noteDao)
     }
 }

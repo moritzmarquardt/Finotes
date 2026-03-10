@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
+import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +31,12 @@ class BinViewModel @Inject constructor(
 
     private val _notesList = _searchQuery
         .flatMapLatest { searchQuery ->
-            if (searchQuery.isBlank()) {
-                noteRepository.fetchAllDeletedNotes()
-            } else {
-                noteRepository.fetchAllDeletedNotes() // TODO: Implement search functionality for deleted notes
-            }
+            noteRepository.fetchNotesWithQuery(
+                searchQuery = searchQuery.takeIf { it.isNotBlank() },
+                noteStatus = NoteStatus.BINNED,
+                isPinned = null,
+                categories = null
+            )
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
@@ -47,10 +49,6 @@ class BinViewModel @Inject constructor(
 
     // Functions to update the state of the UI and perform repository operations which in turn interact with the database
     // These functions are called from the UI layer
-
-    fun setQuery(query: String) {
-        _searchQuery.update { query }
-    }
 
     fun longClickSelect(note: Note) {
         /*if (!_inSelectionMode.value) {
@@ -79,18 +77,14 @@ class BinViewModel @Inject constructor(
 
     fun restoreSelectedNotes() {
         viewModelScope.launch {
-            _selectedNotes.value.forEach { note ->
-                noteRepository.restoreNote(note)
-            }
+            noteRepository.restoreNotes(_selectedNotes.value)
             clearSelection()
         }
     }
 
     fun permanentlyDeleteSelection() {
         viewModelScope.launch {
-            _selectedNotes.value.forEach { note ->
-                noteRepository.deleteNoteFromBin(note)
-            }
+            noteRepository.permanentlyDeleteNotes(_selectedNotes.value)
             clearSelection()
         }
     }

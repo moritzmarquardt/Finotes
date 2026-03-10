@@ -2,87 +2,82 @@ package de.marquisproject.finotes.data.notes.repositories
 
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.model.NoteStatus
-import de.marquisproject.finotes.data.notes.sources.ArchiveDatabase
-import de.marquisproject.finotes.data.notes.sources.BinDatabase
-import de.marquisproject.finotes.data.notes.sources.NoteDatabase
+import de.marquisproject.finotes.data.notes.sources.NoteDAO
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
-class NoteRepository (
-    private val noteDb: NoteDatabase,
-    private val archiveDb: ArchiveDatabase,
-    private val binDb: BinDatabase
+class NoteRepository(
+    private val noteDao: NoteDAO
 ) {
-    suspend fun updateNote(note: Note) {
-        noteDb.dao.updateNote(note)
+    suspend fun insertNote(note: Note): Long {
+        return noteDao.insertNote(note.prepareForUpdate().copy(id = null))
     }
 
-    suspend fun insertNote(note: Note) : Long {
-        return noteDb.dao.insertNote(note.copy(id = 0))
+    /**
+     * Updates multiple notes in the database and marks them as needing to be synced.
+     * @param notes The list of notes to update.
+     */
+    suspend fun updateNotes(notes: List<Note>) {
+        noteDao.updateNotes(notes.map { it.prepareForUpdate() })
     }
 
-    suspend fun binNote(note: Note) : Long {
-        val newIdBinned = binDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.BINNED))
-        if (note.noteStatus == NoteStatus.ACTIVE) {
-            noteDb.dao.deleteNote(note)
-        } else if (note.noteStatus == NoteStatus.ARCHIVED) {
-            archiveDb.dao.deleteNote(note)
-        }
-        return newIdBinned
+    suspend fun binNotes(notes: List<Note>) {
+        updateNotes(notes.map { it.prepareForUpdate().copy(noteStatus = NoteStatus.BINNED) })
     }
 
-    suspend fun restoreNote (note: Note) {
-        binDb.dao.deleteNote(note)
-        noteDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ACTIVE))
+    suspend fun archiveNotes(notes: List<Note>) {
+        updateNotes(notes.map { it.prepareForUpdate().copy(noteStatus = NoteStatus.ARCHIVED) })
     }
 
-    suspend fun deleteNoteFromBin(note: Note) {
-        binDb.dao.deleteNote(note)
+    suspend fun restoreNotes(notes: List<Note>) {
+        updateNotes(notes.map { it.prepareForUpdate().copy(noteStatus = NoteStatus.ACTIVE) })
     }
 
-    suspend fun archiveNote(note: Note) : Long {
-        val newIdArchived = archiveDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ARCHIVED))
-        noteDb.dao.deleteNote(note)
-        return newIdArchived
+    suspend fun permanentlyDeleteNotes(notes: List<Note>) {
+        //TODO Delete note from server
+        noteDao.deleteNotes(notes)
     }
 
-    suspend fun unarchiveNote(note: Note) {
-        noteDb.dao.insertNote(note.copy(id = 0, noteStatus = NoteStatus.ACTIVE))
-        archiveDb.dao.deleteNote(note)
+    /**
+     * Fetches a note by its id from the database.
+     * @param noteId The id of the note to fetch.
+     * @return A flow of the note.
+     */
+    fun fetchNoteById(noteId: Long): Flow<Note> = noteDao.getNoteById(noteId)
+
+    /**
+     * Restore a note by its id.
+     * @param id The id of the note to restore.
+     */
+    suspend fun restoreNoteById(id: Long) {
+        val note = noteDao.getNoteById(id).first()
+        restoreNotes(listOf(note))
     }
 
-    fun fetchAllNotes() = noteDb.dao.getAllNotes()
+    /**
+     * Fetches all notes from the database with the given status.
+     * @param noteStatus The status of the notes to fetch.
+     */
+    fun fetchAllNotesByStatus(noteStatus: NoteStatus): Flow<List<Note>> =
+        noteDao.getAllNotesByStatus(noteStatus)
 
-    fun fetchNoteById(noteId: Long) = noteDb.dao.getNoteById(noteId)
-
-    fun fetchArchivedNoteById(noteId: Long) = archiveDb.dao.getNoteById(noteId)
-
-    fun fetchBinNoteById(noteId: Long) = binDb.dao.getNoteById(noteId)
-
-    fun fetchNotesWithQuery(searchQuery: String) = noteDb.dao.getNotesWithQuery(searchQuery)
-
-    fun fetchAllArchivedNotes() = archiveDb.dao.getAllNotes()
-
-    fun fetchAllDeletedNotes() = binDb.dao.getAllNotes()
-
-    fun getNotesWithQueryAndPinnedStatusAndCategory (
-        searchQuery: String = "",
-        isPinned: Boolean? = null,
-        categoryQueryIds: List<Int> = emptyList(),
-        ignoreCategoryFilter: Boolean = categoryQueryIds.isEmpty()
-    ) = noteDb.dao.getNotesWithQueryAndPinnedStatusAndCategory(
-        searchQuery, isPinned, categoryQueryIds, ignoreCategoryFilter
+    /**
+     * Fetches notes from the database with the given query.
+     * @param searchQuery The query to search for.
+     * @param isPinned Whether to search for pinned notes.
+     * @param categories The categories to search for.
+     * @param noteStatus The status of the notes to search for.
+     * @return A flow of a list of notes.
+     */
+    fun fetchNotesWithQuery(
+        searchQuery: String?,
+        isPinned: Boolean?,
+        categories: List<Long>?,
+        noteStatus: NoteStatus?,
+    ): Flow<List<Note>> = noteDao.getNotesWithQuery(
+        searchQuery = searchQuery,
+        isPinned = isPinned,
+        categories = categories,
+        noteStatus = noteStatus,
     )
-
-
-
-    fun insertNotes(notes: List<Note>) {
-        // make all note ids 0 to insert them as new notes and avoid conflicts
-        val zeroIdNotes = notes.map { it.copy(id = 0) }
-        noteDb.dao.insertListOfNotes(zeroIdNotes)
-    }
-
-    fun insertNotesToArchive(archivedNotes: List<Note>) {
-        val zeroIdNotes = archivedNotes.map { it.copy(id = 0) }
-        archiveDb.dao.insertListOfNotes(zeroIdNotes)
-    }
-
 }

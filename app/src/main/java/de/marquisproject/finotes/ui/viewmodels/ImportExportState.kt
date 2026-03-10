@@ -20,11 +20,3 @@ data class ExportData(
     val notes: List<Note> = emptyList(),
     val archivedNotes: List<Note> = emptyList(),
 )
-
-data class ImportExportState(
-    val mode: ImportExportMode = ImportExportMode.EXPORT,
-    val exportSettings: ExportSettings = ExportSettings(),
-    val exportData: ExportData = ExportData(),
-    val importData: ExportData = ExportData(),
-    val exportJson: String = "",
-)

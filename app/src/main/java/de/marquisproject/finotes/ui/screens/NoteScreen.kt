@@ -39,7 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
@@ -57,7 +57,7 @@ fun NoteScreen(
     val noteIsLoaded by viewModel.noteIsLoaded.collectAsState()
     Log.d("NoteScreen", "Current note: $currentNote")
     Log.d("NoteScreen", "Current note ID: ${currentNote.id} and body: ${currentNote.body}")
-    val bodyFocusRequester = FocusRequester()
+    val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
     Log.d("NoteScreen", "Body text state: $currentBodyTextFieldValue with text ${currentBodyTextFieldValue.text}")
 
@@ -75,7 +75,10 @@ fun NoteScreen(
                     //Text(text = "Note View with id: ${uiState.currentNoteId}")
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        viewModel.saveCurrentNote()  // make sure to save the note before navigating
+                        navController.popBackStack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Localized description")
                     }
                 },

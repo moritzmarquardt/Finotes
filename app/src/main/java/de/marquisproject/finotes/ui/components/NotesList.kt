@@ -63,7 +63,7 @@ fun NotesList(
                     }
                     items(
                         items = section.notesList,
-                        key = { note -> note.id }
+                        key = { note -> requireNotNull(note.id) }
                     ) { note ->
                         NoteCard(
                             note = note,

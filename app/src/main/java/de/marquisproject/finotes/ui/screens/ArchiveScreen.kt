@@ -24,7 +24,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NotesList
@@ -115,7 +115,7 @@ fun ArchiveScreen(
             selectedNotes = selectedNotes,
             searchQuery = searchQuery,
             onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = note.id, noteStatus = note.noteStatus))} )
+                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },
             onLongClick = { note ->
                 viewModel.longClickSelect(note = note)
