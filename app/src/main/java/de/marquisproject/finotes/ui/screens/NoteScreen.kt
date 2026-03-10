@@ -63,7 +63,7 @@ fun NoteScreen(
 
 
     LaunchedEffect(key1 = "focusNewNote") {
-        if (currentNote.id == -1L) {
+        if (currentNote.id == null) {
             bodyFocusRequester.requestFocus()
         }
     }
