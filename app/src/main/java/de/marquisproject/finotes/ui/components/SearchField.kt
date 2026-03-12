@@ -1,8 +1,9 @@
 package de.marquisproject.finotes.ui.components
 
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -14,9 +15,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import de.marquisproject.finotes.ui.theme.FinotesTheme
 
@@ -26,16 +28,20 @@ fun SearchField (
     updateQuery: (String) -> Unit,
     placeholder: String = "Search Finotes",
 ) {
+    val focusManager = LocalFocusManager.current
+
     OutlinedTextField(
         modifier = Modifier
-            .fillMaxWidth()
-            .focusable()
-            .onFocusChanged { focusState ->
-                if (!focusState.isFocused) {
-                    updateQuery("")
-                }
-            },
+            .fillMaxWidth(),
         shape = RoundedCornerShape(50),
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                focusManager.clearFocus()
+            }
+        ),
         value = searchQuery,
         onValueChange = updateQuery,
         leadingIcon = {
