@@ -4,7 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -25,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -39,7 +43,7 @@ import de.marquisproject.finotes.utils.NoteSection
 import kotlinx.coroutines.flow.collectLatest
 
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -55,6 +59,7 @@ fun HomeScreen(
     // Create a SnackbarHostState to control the Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Clear selection when pressing back if there is any
     BackHandler(inSelectionMode) {
         viewModel.clearSelection()
     }
@@ -62,6 +67,16 @@ fun HomeScreen(
     // when a search query is set, clear the query when pressing back
     BackHandler(searchQuery.isNotEmpty()) {
         viewModel.setQuery("")
+    }
+
+    // Handle focus management when IME (keyboard) visibility changes
+    val focusManager = LocalFocusManager.current
+    val isImeVisible = WindowInsets.isImeVisible
+
+    LaunchedEffect(isImeVisible) {
+        if (!isImeVisible) {
+            focusManager.clearFocus()
+        }
     }
 
 
