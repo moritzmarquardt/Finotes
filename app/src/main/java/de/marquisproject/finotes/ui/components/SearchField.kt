@@ -36,8 +36,9 @@ fun SearchField (
     val focusManager = LocalFocusManager.current
     val isImeVisible = WindowInsets.isImeVisible
 
+    // Clear focus when the keyboard is dismissed
     LaunchedEffect(isImeVisible) {
-        if (!isImeVisible && searchQuery.isNotEmpty()) {
+        if (!isImeVisible) {
             focusManager.clearFocus()
         }
     }
