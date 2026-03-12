@@ -59,6 +59,12 @@ fun HomeScreen(
         viewModel.clearSelection()
     }
 
+    // when a search query is set, clear the query when pressing back
+    BackHandler(searchQuery.isNotEmpty()) {
+        viewModel.setQuery("")
+    }
+
+
     // Observe Snackbar events from the ViewModel
     LaunchedEffect(Unit) {
         viewModel.snackbarEventFlow.collectLatest { event ->
