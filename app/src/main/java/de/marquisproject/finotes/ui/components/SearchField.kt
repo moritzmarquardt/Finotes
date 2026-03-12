@@ -10,12 +10,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import de.marquisproject.finotes.ui.theme.FinotesTheme
 
 @Composable
 fun SearchField (
@@ -61,4 +64,32 @@ fun SearchField (
             unfocusedIndicatorColor = Color.Transparent,
         )
     )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun SearchFieldPreview() {
+    FinotesTheme {
+        Surface {
+            SearchField(
+                searchQuery = "",
+                updateQuery = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun SearchFieldWithTextPreview() {
+    FinotesTheme {
+        Surface {
+            SearchField(
+                searchQuery = "Sample Query",
+                updateQuery = {}
+            )
+        }
+    }
 }
