@@ -1,7 +1,6 @@
 package de.marquisproject.finotes.ui.viewmodels
 
 import android.util.Log
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -18,8 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,10 +49,7 @@ class NoteViewModel @Inject constructor(
             }
 
             _currentNote.update { note }
-            _currentBodyTextFieldValue.value = TextFieldValue(
-                text = note.body,
-                selection = TextRange(note.body.length)
-            )
+            _currentBodyTextFieldValue.value = TextFieldValue(text = note.body)
             _noteIsLoaded.value = true
 
             Log.d("NoteViewModel", "Note loaded: ${note.id}")

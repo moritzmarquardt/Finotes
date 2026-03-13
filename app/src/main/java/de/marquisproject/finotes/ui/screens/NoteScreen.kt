@@ -1,16 +1,13 @@
 package de.marquisproject.finotes.ui.screens
 
-import android.util.Log
-import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
@@ -22,6 +19,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -30,12 +29,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -54,28 +51,20 @@ fun NoteScreen(
     val currentNote by viewModel.currentNote.collectAsState()
     val currentBodyTextFieldValue by viewModel.currentBodyTextFieldValue.collectAsState()
     val noteIsLoaded by viewModel.noteIsLoaded.collectAsState()
-    val hasAutoFocusedNewNote = remember { mutableStateOf(false) }
-    Log.d("NoteScreen", "Current note: $currentNote")
-    Log.d("NoteScreen", "Current note ID: ${currentNote.id} and body: ${currentNote.body}")
     val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
-    Log.d("NoteScreen", "Body text state: $currentBodyTextFieldValue with text ${currentBodyTextFieldValue.text}")
 
 
     LaunchedEffect(noteIsLoaded, currentNote.id) {
-        val shouldAutoFocusNewNote = noteIsLoaded && currentNote.id == null
-        if (shouldAutoFocusNewNote && !hasAutoFocusedNewNote.value) {
+        if (noteIsLoaded && currentNote.id == null) {
             bodyFocusRequester.requestFocus()
-            hasAutoFocusedNewNote.value = true
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    //Text(text = "Note View with id: ${uiState.currentNoteId}")
-                },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = {
                         viewModel.saveCurrentNote()  // make sure to save the note before navigating
@@ -154,8 +143,7 @@ fun NoteScreen(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
-        },
-        modifier = Modifier.imePadding()
+        }
     ) { innerPadding ->
         when {
             openFinalDeleteAlert.value -> {
@@ -184,62 +172,59 @@ fun NoteScreen(
                 )
             }
         }
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
         ) {
-            BasicTextField(
-                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
-                value = currentNote.title,
-                onValueChange = { viewModel.updateCurrentNoteTitle(it) },
-                textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
-                modifier = Modifier
-                    .focusable()
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                keyboardActions = KeyboardActions(
-                    onDone = { bodyFocusRequester.requestFocus() },
-                    onNext = { bodyFocusRequester.requestFocus() },
-                ),
-                singleLine = true,
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.TopStart
-                    ) {
-                        if (currentNote.title.isEmpty()) {
-                            Text("Title", style = MaterialTheme.typography.titleLarge, color = Color.Gray)
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-            BasicTextField(
-                readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
-                value = currentBodyTextFieldValue,
-                onValueChange = { viewModel.updateCurrentNoteBody(it) },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
-                modifier = Modifier
-                    //.focusable()
-                    .fillMaxWidth()
-                    .focusRequester(bodyFocusRequester),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.TopStart
-                    ) {
-                        if (currentNote.body.isEmpty()) {
-                            Text("Body", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
-                        }
-                        innerTextField()
-                    }
-                }
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+                modifier = Modifier.imePadding()
+            ) {
+                TextField(
+                    readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
+                    value = currentNote.title,
+                    onValueChange = { viewModel.updateCurrentNoteTitle(it) },
+                    textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { bodyFocusRequester.requestFocus() },
+                    ),
+                    singleLine = true,
+                    placeholder = { Text("Title", color = Color.Gray, style = MaterialTheme.typography.titleLarge)},
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    )
+                )
+                TextField(
+                    readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
+                    value = currentBodyTextFieldValue,
+                    onValueChange = { viewModel.updateCurrentNoteBody(it) },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(bodyFocusRequester),
+                    placeholder = {
+                        Text("Body", color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    )
+                )
+            }
         }
     }
 }
