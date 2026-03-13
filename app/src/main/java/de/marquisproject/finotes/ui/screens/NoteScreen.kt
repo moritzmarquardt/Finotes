@@ -1,6 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
-import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,28 +51,20 @@ fun NoteScreen(
     val currentNote by viewModel.currentNote.collectAsState()
     val currentBodyTextFieldValue by viewModel.currentBodyTextFieldValue.collectAsState()
     val noteIsLoaded by viewModel.noteIsLoaded.collectAsState()
-    val hasAutoFocusedNewNote = remember { mutableStateOf(false) }
-    Log.d("NoteScreen", "Current note: $currentNote")
-    Log.d("NoteScreen", "Current note ID: ${currentNote.id} and body: ${currentNote.body}")
     val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
-    Log.d("NoteScreen", "Body text state: $currentBodyTextFieldValue with text ${currentBodyTextFieldValue.text}")
 
 
     LaunchedEffect(noteIsLoaded, currentNote.id) {
-        val shouldAutoFocusNewNote = noteIsLoaded && currentNote.id == null
-        if (shouldAutoFocusNewNote && !hasAutoFocusedNewNote.value) {
+        if (noteIsLoaded && currentNote.id == null) {
             bodyFocusRequester.requestFocus()
-            hasAutoFocusedNewNote.value = true
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    //Text(text = "Note View with id: ${uiState.currentNoteId}")
-                },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = {
                         viewModel.saveCurrentNote()  // make sure to save the note before navigating
@@ -151,8 +143,7 @@ fun NoteScreen(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
-        },
-        modifier = Modifier.imePadding()
+        }
     ) { innerPadding ->
         when {
             openFinalDeleteAlert.value -> {
@@ -185,7 +176,10 @@ fun NoteScreen(
             modifier = Modifier
                 .padding(innerPadding)
         ) {
-            Column {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+                modifier = Modifier.imePadding()
+            ) {
                 TextField(
                     readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
                     value = currentNote.title,
