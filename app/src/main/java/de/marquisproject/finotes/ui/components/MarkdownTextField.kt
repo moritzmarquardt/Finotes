@@ -36,22 +36,23 @@ fun MarkdownTextField(
     showToolbar: Boolean = true
 ) {
     val showToolbarState = remember { mutableStateOf(showToolbar) }
+    val currentValue = value
     
     Column(modifier = modifier) {
         if (showToolbarState.value) {
             MarkdownToolbar(
                 onBoldClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(value, "**"))
+                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "**"))
                 },
                 onItalicClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(value, "*"))
+                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "*"))
                 },
                 onStrikethroughClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(value, "~~"))
+                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "~~"))
                 },
                 onBulletListClick = {
-                    val cursorPosition = value.selection.start
-                    val text = value.text
+                    val cursorPosition = currentValue.selection.start
+                    val text = currentValue.text
                     val textBeforeCursor = text.substring(0, cursorPosition)
                     val currentLine = textBeforeCursor.substringAfterLast('\n')
                     
@@ -62,15 +63,15 @@ fun MarkdownTextField(
                         } else {
                             text.substring(0, cursorPosition) + "\n- " + text.substring(cursorPosition)
                         }
-                        onValueChange(value.copy(
+                        onValueChange(currentValue.copy(
                             text = newText,
-                            selection = TextRange(cursorPosition + 3)
+                            selection = androidx.compose.ui.text.TextRange(cursorPosition + 3)
                         ))
                     }
                 },
                 onNumberedListClick = {
-                    val cursorPosition = value.selection.start
-                    val text = value.text
+                    val cursorPosition = currentValue.selection.start
+                    val text = currentValue.text
                     val textBeforeCursor = text.substring(0, cursorPosition)
                     val currentLine = textBeforeCursor.substringAfterLast('\n')
                     
@@ -81,18 +82,18 @@ fun MarkdownTextField(
                         } else {
                             text.substring(0, cursorPosition) + "\n1. " + text.substring(cursorPosition)
                         }
-                        onValueChange(value.copy(
+                        onValueChange(currentValue.copy(
                             text = newText,
-                            selection = TextRange(cursorPosition + 4)
+                            selection = androidx.compose.ui.text.TextRange(cursorPosition + 4)
                         ))
                     }
                 },
                 onLinkClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(value, "[", "]()"))
+                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "[", "]()"))
                     // Move cursor to be between the brackets
-                    val newSelection = value.selection.start + 1
-                    onValueChange(value.copy(
-                        selection = TextRange(newSelection, newSelection)
+                    val newSelection = currentValue.selection.start + 1
+                    onValueChange(currentValue.copy(
+                        selection = androidx.compose.ui.text.TextRange(newSelection, newSelection)
                     ))
                 }
             )
@@ -136,7 +137,7 @@ fun MarkdownTextField(
                 onDone = { /* Handle done if needed */ }
             ),
             decorationBox = { innerTextField ->
-                if (value.text.isEmpty() && placeholder != null) {
+                if (currentValue.text.isEmpty() && placeholder != null) {
                     placeholder()
                 }
                 innerTextField()

@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -194,7 +195,7 @@ fun NoteScreen(
                         onNext = { bodyFocusRequester.requestFocus() },
                     ),
                     singleLine = true,
-                    placeholder = { Text("Title", color = Color.Gray, style = MaterialTheme.typography.titleLarge)},
+                    placeholder = { Text("Title", color = Color.Gray, style = MaterialTheme.typography.titleLarge) },
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
