@@ -72,6 +72,10 @@ class ArchiveViewModel @Inject constructor(
         _selectedNotes.update { emptyList() }
     }
 
+    fun selectAll() {
+        _selectedNotes.update { _notesList.value }
+    }
+
     fun unarchiveSelectedNotes() {
         viewModelScope.launch {
             noteRepository.restoreNotes(_selectedNotes.value)

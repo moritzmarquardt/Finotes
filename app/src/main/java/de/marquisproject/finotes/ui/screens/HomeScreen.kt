@@ -5,12 +5,14 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -30,13 +32,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.ui.components.NotesList
-import de.marquisproject.finotes.ui.components.SelectionBar
+import de.marquisproject.finotes.ui.components.SelectionGroup
 import de.marquisproject.finotes.ui.components.TopBarHome
 import de.marquisproject.finotes.ui.viewmodels.HomeViewModel
 import de.marquisproject.finotes.utils.NoteSection
@@ -102,36 +105,50 @@ fun HomeScreen(
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            if (inSelectionMode) {
-                var pinIcon = painterResource(id = R.drawable.outline_push_pin_24)
-                var pinAction = { viewModel.pinSelectedNotes() }
-                if (selectedNotes.all { it.isPinned }){
-                    pinIcon = painterResource(id = R.drawable.baseline_push_pin_24)
-                    pinAction = { viewModel.unpinSelectedNotes() }
-                }
-                SelectionBar(
-                    numSelected = selectedNotes.size,
-                    onSelectionClear = { viewModel.clearSelection() },
-                    actionButtons = listOf(
-                        pinIcon to pinAction,
-                        painterResource(id = R.drawable.outline_archive_24) to { viewModel.archiveSelectedNotes() },
-                        painterResource(id = R.drawable.outline_delete_24) to { viewModel.binSelectedNotes() }
-                    )
-                )
-            } else {
-                TopBarHome(
-                    navController = navController,
-                    updateQuery = { viewModel.setQuery(it) },
-                    searchQuery = searchQuery,
-                )
-            }
+            TopBarHome(
+                navController = navController,
+                updateQuery = { viewModel.setQuery(it) },
+                searchQuery = searchQuery,
+            )
         },
         floatingActionButton = {
-            AddNoteFAB(
-                onClick = {
-                    navController.navigate(NoteRoute(noteId = null, noteStatus = NoteStatus.ACTIVE)) // Navigate to new note with id -1
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (inSelectionMode) {
+                    // The new floating selection group
+                    var pinIcon = painterResource(id = R.drawable.outline_push_pin_24)
+                    var pinAction = { viewModel.pinSelectedNotes() }
+                    if (selectedNotes.all { it.isPinned }){
+                        pinIcon = painterResource(id = R.drawable.baseline_push_pin_24)
+                        pinAction = { viewModel.unpinSelectedNotes() }
+                    }
+
+                    SelectionGroup(
+                        numSelected = selectedNotes.size,
+                        onSelectionClear = { viewModel.clearSelection() },
+                        onSelectAll = { viewModel.selectAll() },
+                        actionButtons = listOf(
+                            pinIcon to pinAction,
+                            painterResource(id = R.drawable.outline_archive_24) to { viewModel.archiveSelectedNotes() },
+                            painterResource(id = R.drawable.outline_delete_24) to { viewModel.binSelectedNotes() }
+                        )
+                    )
+                } else {
+                    // The standard Add Note FAB
+                    AddNoteFAB(
+                        onClick = {
+                            navController.navigate(NoteRoute(noteId = null, noteStatus = NoteStatus.ACTIVE))
+                        }
+                    )
                 }
-            ) },
+
+
+
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End,
         snackbarHost = { SnackbarHost(snackbarHostState) } // Provide the SnackbarHost
     ) { innerPadding ->
         NotesList(

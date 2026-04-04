@@ -20,7 +20,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
@@ -34,7 +34,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NotesList
-import de.marquisproject.finotes.ui.components.SelectionBar
+import de.marquisproject.finotes.ui.components.SelectionGroup
 import de.marquisproject.finotes.ui.viewmodels.BinViewModel
 import de.marquisproject.finotes.utils.NoteSection
 import kotlin.collections.listOf
@@ -66,49 +66,40 @@ fun BinScreen(
     Scaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
+           TopAppBar(
+                title = {
+                    Text(text = "Bin")
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back press"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                )
+            )
+        },
+        floatingActionButton = {
             if (inSelectionMode) {
-                SelectionBar(
+                SelectionGroup(
                     numSelected = selectedNotes.size,
                     onSelectionClear = { viewModel.clearSelection() },
+                    onSelectAll = { viewModel.selectAll() },
                     actionButtons = listOf(
                         painterResource(id = R.drawable.baseline_restore_from_trash_24) to { viewModel.restoreSelectedNotes() },
                         painterResource(id = R.drawable.outline_delete_24) to { openFinalDeleteAlert.value = true }
                     )
                 )
-            } else {
-                TopAppBar(
-                    title = {
-                        Text(text = "Bin")
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back press"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.onBackground,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
-                    )
-                )
             }
+
         },
-        floatingActionButton = {
-            if (notesList.isNotEmpty()) {
-                ExtendedFloatingActionButton(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary,
-                    onClick = {
-                        viewModel.selectAllBinned()
-                    },
-                ) {
-                    Text("Select all")
-                }
-            }
-        }
+        floatingActionButtonPosition = FabPosition.End,
     ) { innerPadding ->
         if (notesList.isEmpty()) {
             Column(

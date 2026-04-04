@@ -75,6 +75,10 @@ class BinViewModel @Inject constructor(
         _selectedNotes.update { emptyList() }
     }
 
+    fun selectAll() {
+        _selectedNotes.update { _notesList.value }
+    }
+
     fun restoreSelectedNotes() {
         viewModelScope.launch {
             noteRepository.restoreNotes(_selectedNotes.value)
@@ -87,9 +91,5 @@ class BinViewModel @Inject constructor(
             noteRepository.permanentlyDeleteNotes(_selectedNotes.value)
             clearSelection()
         }
-    }
-
-    fun selectAllBinned() {
-        _selectedNotes.update { _notesList.value }
     }
 }

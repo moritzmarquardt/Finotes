@@ -74,6 +74,15 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
+     * Selects all notes. Pinned and non pinned.
+     */
+    fun selectAll() {
+        _selectedNotes.update {
+            (pinnedNotesDisplay.value + normalNotesDisplay.value).toSet()
+        }
+    }
+
+    /**
      * Toggles the selection of all pinned notes. SO if all are selected, they are deselected.
      * If none are selected, they are all selected.
      * @param add If true, adds all pinned notes to the selection. If false, removes all pinned notes from the selection.
