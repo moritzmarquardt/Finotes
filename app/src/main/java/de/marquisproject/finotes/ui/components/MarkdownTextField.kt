@@ -56,11 +56,11 @@ fun MarkdownTextField(
                     val currentLine = textBeforeCursor.substringAfterLast('\n')
                     
                     // If not already in a list, start a bullet list
-                    if (!currentLine.startsWith("-\s") && !currentLine.matches(Regex("^\\d+\\.\\s"))) {
+                    if (!currentLine.startsWith("-\s".toRegex()) && !currentLine.matches(Regex("^\\d+\\.\\s"))) {
                         val newText = if (currentLine.isBlank()) {
-                            text.insert(cursorPosition, "- ")
+                            text.substring(0, cursorPosition) + "- " + text.substring(cursorPosition)
                         } else {
-                            text.insert(cursorPosition, "\n- ")
+                            text.substring(0, cursorPosition) + "\n- " + text.substring(cursorPosition)
                         }
                         onValueChange(value.copy(
                             text = newText,
@@ -75,11 +75,11 @@ fun MarkdownTextField(
                     val currentLine = textBeforeCursor.substringAfterLast('\n')
                     
                     // If not already in a list, start a numbered list
-                    if (!currentLine.startsWith("-\s") && !currentLine.matches(Regex("^\\d+\\.\\s"))) {
+                    if (!currentLine.startsWith("-\s".toRegex()) && !currentLine.matches(Regex("^\\d+\\.\\s"))) {
                         val newText = if (currentLine.isBlank()) {
-                            text.insert(cursorPosition, "1. ")
+                            text.substring(0, cursorPosition) + "1. " + text.substring(cursorPosition)
                         } else {
-                            text.insert(cursorPosition, "\n1. ")
+                            text.substring(0, cursorPosition) + "\n1. " + text.substring(cursorPosition)
                         }
                         onValueChange(value.copy(
                             text = newText,

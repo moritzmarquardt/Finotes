@@ -16,7 +16,7 @@ object MarkdownUtils {
         
         return if (selection.start == selection.end) {
             // No selection, insert formatting at cursor
-            val newText = text.insert(selection.start, prefix + suffix)
+            val newText = text.substring(0, selection.start) + prefix + suffix + text.substring(selection.start)
             currentValue.copy(
                 text = newText,
                 selection = TextRange(selection.start + prefix.length)
@@ -45,9 +45,9 @@ object MarkdownUtils {
         
         return when {
             // Continue bullet list (- )
-            currentLine.startsWith("-\s") -> {
+            currentLine.startsWith("-\s".toRegex()) -> {
                 val indent = currentLine.takeWhile { it == ' ' }.length
-                val newText = text.insert(cursorPosition, "\n${' '.repeat(indent)}- ")
+                val newText = text.substring(0, cursorPosition) + "\n${' '.repeat(indent)}- " + text.substring(cursorPosition)
                 currentValue.copy(
                     text = newText,
                     selection = TextRange(cursorPosition + 3 + indent)
@@ -58,15 +58,15 @@ object MarkdownUtils {
                 val indent = currentLine.takeWhile { it == ' ' }.length
                 val currentNumber = currentLine.substring(indent).substringBefore('.').toIntOrNull() ?: 1
                 val newNumber = currentNumber + 1
-                val newText = text.insert(cursorPosition, "\n${' '.repeat(indent)}$newNumber. ")
+                val newText = text.substring(0, cursorPosition) + "\n${' '.repeat(indent)}$newNumber. " + text.substring(cursorPosition)
                 currentValue.copy(
                     text = newText,
                     selection = TextRange(cursorPosition + (newNumber.toString().length + 2 + indent))
                 )
             }
             // Start new bullet list if previous line was a bullet
-            textBeforeCursor.endsWith("\n-\s") -> {
-                val newText = text.insert(cursorPosition, "\n- ")
+            textBeforeCursor.endsWith("\n-\s".toRegex()) -> {
+                val newText = text.substring(0, cursorPosition) + "\n- " + text.substring(cursorPosition)
                 currentValue.copy(
                     text = newText,
                     selection = TextRange(cursorPosition + 3)
@@ -76,7 +76,7 @@ object MarkdownUtils {
             textBeforeCursor.matches(Regex(".*\\n\\d+\\.\\s$")) -> {
                 val lastNumber = textBeforeCursor.substringAfterLast('\n').substringBefore('.').toIntOrNull() ?: 1
                 val newNumber = lastNumber + 1
-                val newText = text.insert(cursorPosition, "\n$newNumber. ")
+                val newText = text.substring(0, cursorPosition) + "\n$newNumber. " + text.substring(cursorPosition)
                 currentValue.copy(
                     text = newText,
                     selection = TextRange(cursorPosition + (newNumber.toString().length + 2))
