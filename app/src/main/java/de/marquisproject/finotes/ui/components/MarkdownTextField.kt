@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
@@ -34,9 +35,10 @@ fun MarkdownTextField(
     focusRequester: FocusRequester = remember { FocusRequester() },
     showToolbar: Boolean = true
 ) {
+    val showToolbarState = remember { mutableStateOf(showToolbar) }
     
     Column(modifier = modifier) {
-        if (showToolbar.value) {
+        if (showToolbarState.value) {
             MarkdownToolbar(
                 onBoldClick = {
                     onValueChange(MarkdownUtils.applyFormatting(value, "**"))
@@ -107,7 +109,7 @@ fun MarkdownTextField(
                 .onFocusChanged { focusState ->
                     if (focusState.isFocused) {
                         // Show toolbar when field is focused
-                        showToolbar.value = true
+                        showToolbarState.value = true
                     }
                 }
                 .onKeyEvent { keyEvent ->
