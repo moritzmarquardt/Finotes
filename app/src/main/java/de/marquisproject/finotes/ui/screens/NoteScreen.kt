@@ -19,7 +19,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,6 +34,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import de.marquisproject.finotes.ui.components.MarkdownTextField
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
@@ -204,25 +204,15 @@ fun NoteScreen(
                         disabledContainerColor = Color.Transparent
                     )
                 )
-                TextField(
-                    readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
+                MarkdownTextField(
                     value = currentBodyTextFieldValue,
                     onValueChange = { viewModel.updateCurrentNoteBody(it) },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(bodyFocusRequester),
+                    focusRequester = bodyFocusRequester,
                     placeholder = {
                         Text("Body", color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
                     },
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
-import de.marquisproject.finotes.utils.handleListLogic
+
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -104,9 +104,8 @@ class NoteViewModel @Inject constructor(
     }
 
     fun updateCurrentNoteBody(newTextFieldValue: TextFieldValue) {
-        val processedTextFieldValue = handleListLogic(_currentBodyTextFieldValue.value, newTextFieldValue)
-        _currentBodyTextFieldValue.update { processedTextFieldValue }
-        _currentNote.update { it.copy(body = processedTextFieldValue.text) }
+        _currentBodyTextFieldValue.update { newTextFieldValue }
+        _currentNote.update { it.copy(body = newTextFieldValue.text) }
     }
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
