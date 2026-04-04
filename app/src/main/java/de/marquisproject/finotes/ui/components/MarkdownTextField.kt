@@ -1,28 +1,31 @@
 package de.marquisproject.finotes.ui.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import de.marquisproject.finotes.utils.MarkdownUtils
 
 @Composable
@@ -33,115 +36,102 @@ fun MarkdownTextField(
     placeholder: @Composable (() -> Unit)? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     focusRequester: FocusRequester = remember { FocusRequester() },
-    showToolbar: Boolean = true
+    readOnly: Boolean = false
 ) {
-    val showToolbarState = remember { mutableStateOf(showToolbar) }
-    val currentValue = value
-    
-    Column(modifier = modifier) {
-        if (showToolbarState.value) {
-            MarkdownToolbar(
-                onBoldClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "**"))
-                },
-                onItalicClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "*"))
-                },
-                onStrikethroughClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "~~"))
-                },
-                onBulletListClick = {
-                    val cursorPosition = currentValue.selection.start
-                    val text = currentValue.text
-                    val textBeforeCursor = text.substring(0, cursorPosition)
-                    val currentLine = textBeforeCursor.substringAfterLast('\n')
-                    
-                    // If not already in a list, start a bullet list
-                    if (!currentLine.startsWith("-\s".toRegex()) && !currentLine.matches(Regex("^\\d+\\.\\s"))) {
-                        val newText = if (currentLine.isBlank()) {
-                            text.substring(0, cursorPosition) + "- " + text.substring(cursorPosition)
-                        } else {
-                            text.substring(0, cursorPosition) + "\n- " + text.substring(cursorPosition)
-                        }
-                        onValueChange(currentValue.copy(
-                            text = newText,
-                            selection = androidx.compose.ui.text.TextRange(cursorPosition + 3)
-                        ))
-                    }
-                },
-                onNumberedListClick = {
-                    val cursorPosition = currentValue.selection.start
-                    val text = currentValue.text
-                    val textBeforeCursor = text.substring(0, cursorPosition)
-                    val currentLine = textBeforeCursor.substringAfterLast('\n')
-                    
-                    // If not already in a list, start a numbered list
-                    if (!currentLine.startsWith("-\s".toRegex()) && !currentLine.matches(Regex("^\\d+\\.\\s"))) {
-                        val newText = if (currentLine.isBlank()) {
-                            text.substring(0, cursorPosition) + "1. " + text.substring(cursorPosition)
-                        } else {
-                            text.substring(0, cursorPosition) + "\n1. " + text.substring(cursorPosition)
-                        }
-                        onValueChange(currentValue.copy(
-                            text = newText,
-                            selection = androidx.compose.ui.text.TextRange(cursorPosition + 4)
-                        ))
-                    }
-                },
-                onLinkClick = {
-                    onValueChange(MarkdownUtils.applyFormatting(currentValue, "[", "]()"))
-                    // Move cursor to be between the brackets
-                    val newSelection = currentValue.selection.start + 1
-                    onValueChange(currentValue.copy(
-                        selection = androidx.compose.ui.text.TextRange(newSelection, newSelection)
-                    ))
-                }
-            )
-        }
-        
-        BasicTextField(
-            value = value,
-            onValueChange = { newValue ->
+    val markerColor = (textStyle.color.takeIf { it != Color.Unspecified } 
+        ?: MaterialTheme.colorScheme.onBackground).copy(alpha = 0.35f)
+
+    TextField(
+        value = value,
+        onValueChange = { newValue ->
+            if (newValue.text.length > value.text.length && 
+                newValue.text.getOrNull(newValue.selection.start - 1) == '\n') {
+                onValueChange(MarkdownUtils.handleEnterKey(newValue))
+            } else {
                 onValueChange(newValue)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .onFocusChanged { focusState ->
-                    if (focusState.isFocused) {
-                        // Show toolbar when field is focused
-                        showToolbarState.value = true
-                    }
-                }
-                .onKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Enter) {
-                        val processedValue = MarkdownUtils.handleEnterKey(value)
-                        if (processedValue != value) {
-                            onValueChange(processedValue)
-                            return@onKeyEvent true
-                        }
-                    } else if (keyEvent.key == Key.Backspace) {
-                        val processedValue = MarkdownUtils.handleBackspace(value)
-                        if (processedValue != value) {
-                            onValueChange(processedValue)
-                            return@onKeyEvent true
-                        }
-                    }
-                    false
-                },
-            textStyle = textStyle,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Default
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { /* Handle done if needed */ }
-            ),
-            decorationBox = { innerTextField ->
-                if (currentValue.text.isEmpty() && placeholder != null) {
-                    placeholder()
-                }
-                innerTextField()
             }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester)
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.key == Key.Enter) {
+                    val processedValue = MarkdownUtils.handleEnterKey(value)
+                    if (processedValue != value) {
+                        onValueChange(processedValue)
+                        return@onKeyEvent true
+                    }
+                } else if (keyEvent.key == Key.Backspace) {
+                    val processedValue = MarkdownUtils.handleBackspace(value)
+                    if (processedValue != value) {
+                        onValueChange(processedValue)
+                        return@onKeyEvent true
+                    }
+                }
+                false
+            },
+        textStyle = textStyle,
+        visualTransformation = remember(markerColor) { MarkdownVisualTransformation(markerColor) },
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Default
+        ),
+        placeholder = placeholder,
+        readOnly = readOnly,
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
         )
+    )
+}
+
+/**
+ * VisualTransformation that applies WhatsApp-style formatting (bold, italic, strikethrough)
+ * while keeping the markdown symbols visible but faded.
+ */
+class MarkdownVisualTransformation(private val markerColor: Color) : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val annotatedString = buildAnnotatedString {
+            val rawText = text.text
+            append(rawText)
+
+            // Bold: *text* or **text**
+            Regex("(\\*{1,2})(.*?)\\1").findAll(rawText).forEach { match ->
+                val prefix = match.groups[1]!!
+                val content = match.groups[2]!!
+                
+                // Style the whole range as bold
+                addStyle(SpanStyle(fontWeight = FontWeight.Bold), match.range.first, match.range.last + 1)
+                
+                // Fade the markers
+                addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
+                addStyle(SpanStyle(color = markerColor), match.range.last - prefix.value.length + 1, match.range.last + 1)
+            }
+
+            // Italic: _text_
+            Regex("(_)(.*?)\\1").findAll(rawText).forEach { match ->
+                val prefix = match.groups[1]!!
+                
+                addStyle(SpanStyle(fontStyle = FontStyle.Italic), match.range.first, match.range.last + 1)
+                
+                addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
+                addStyle(SpanStyle(color = markerColor), match.range.last, match.range.last + 1)
+            }
+
+            // Strikethrough: ~text~ or ~~text~~
+            Regex("(~{1,2})(.*?)\\1").findAll(rawText).forEach { match ->
+                val prefix = match.groups[1]!!
+                
+                addStyle(SpanStyle(textDecoration = TextDecoration.LineThrough), match.range.first, match.range.last + 1)
+                
+                addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
+                addStyle(SpanStyle(color = markerColor), match.range.last - prefix.value.length + 1, match.range.last + 1)
+            }
+        }
+
+        return TransformedText(annotatedString, OffsetMapping.Identity)
     }
 }
