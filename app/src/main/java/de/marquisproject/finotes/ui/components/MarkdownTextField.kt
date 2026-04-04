@@ -90,7 +90,7 @@ fun MarkdownTextField(
 
 /**
  * VisualTransformation that applies WhatsApp-style formatting (bold, italic, strikethrough)
- * while keeping the markdown symbols visible but faded.
+ * while keeping the Markdown symbols visible but faded.
  */
 class MarkdownVisualTransformation(private val markerColor: Color) : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
@@ -101,8 +101,7 @@ class MarkdownVisualTransformation(private val markerColor: Color) : VisualTrans
             // Bold: *text* or **text**
             Regex("(\\*{1,2})(.*?)\\1").findAll(rawText).forEach { match ->
                 val prefix = match.groups[1]!!
-                val content = match.groups[2]!!
-                
+
                 // Style the whole range as bold
                 addStyle(SpanStyle(fontWeight = FontWeight.Bold), match.range.first, match.range.last + 1)
                 
