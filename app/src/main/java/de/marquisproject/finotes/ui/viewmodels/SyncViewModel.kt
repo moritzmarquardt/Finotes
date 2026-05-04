@@ -10,9 +10,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nextcloud.android.sso.AccountImporter
 import com.nextcloud.android.sso.AccountImporter.extractSingleSignOnAccountFromResponse
@@ -24,8 +22,10 @@ import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException
 import com.nextcloud.android.sso.helper.SingleAccountHelper
 import com.nextcloud.android.sso.model.SingleSignOnAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.marquisproject.finotes.data.ncapi.ApiProvider
 import de.marquisproject.finotes.data.ncapi.NotesRepository
-import de.marquisproject.finotes.data.notes.repositories.NoteRepository
+import de.marquisproject.finotes.data.ncapi.toNote
+import de.marquisproject.finotes.data.notes.model.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,37 +41,33 @@ class SyncViewModel @Inject constructor(
     private val repository = NotesRepository()
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
     val syncState: StateFlow<SyncState> = _syncState
-    var ssoAccount: SingleSignOnAccount? = null
+
+    private val _ssoAccount = MutableStateFlow<SingleSignOnAccount?>(null)
+    val ssoAccount: StateFlow<SingleSignOnAccount?> = _ssoAccount.asStateFlow()
+
+    private val _notes = MutableStateFlow<List<Note>>(emptyList())
+    val notes: StateFlow<List<Note>> = _notes.asStateFlow()
 
     init {
         try {
             val context = getApplication<Application>().applicationContext
-            ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(context)
-            Log.e("SyncScreen", "Current account: $ssoAccount")
-            Log.e("SyncScreen", "Current account name: ${ssoAccount?.name}")
-            Log.e("SyncScreen", "Current account type: ${ssoAccount?.type}")
-            Log.e("SyncScreen", "auth token: ${ssoAccount?.token}")
-
-            // val nextcloudAPI = NextcloudAPI(context, ssoAccount, GsonBuilder().create())
-            // TODO: Use nextcloudAPI
+            val account = SingleAccountHelper.getCurrentSingleSignOnAccount(context)
+            _ssoAccount.value = account
+            Log.d("SyncScreen", "Current account: $account")
         } catch (e: NoCurrentAccountSelectedException) {
-            Log.e("SyncScreen", "No current account selected", e)
+            Log.d("SyncScreen", "No current account selected", e)
         }  catch (e: NextcloudFilesAppAccountNotFoundException) {
-            Log.e("SyncScreen", "Nextcloud files app account not found", e)
+            Log.d("SyncScreen", "Nextcloud files app account not found", e)
         } catch (e: Exception) {
-            Log.e("SyncScreen", "Error getting current account", e)
+            Log.d("SyncScreen", "Error getting current account", e)
         }
     }
 
     fun setAccount(account: SingleSignOnAccount?) {
-        ssoAccount = account
+        _ssoAccount.value = account
     }
 
     fun onAuthenticationResult(result: ActivityResult) {
-        /**
-         * This launcher takes the result from the auth intent from the pick account launcher
-         * and commits the authorized account.
-         */
         val context = getApplication<Application>().applicationContext
         val ssoAccount: SingleSignOnAccount? = extractSingleSignOnAccountFromResponse(result.data, context)
         SingleAccountHelper.commitCurrentAccount(context, ssoAccount?.name)
@@ -79,19 +75,11 @@ class SyncViewModel @Inject constructor(
     }
 
     fun onAccountPickerResult(result: ActivityResult, authenticationLauncher: ActivityResultLauncher<Intent>) {
-        /**
-         * This activity launcher takes the selected account from the account picker
-         *         and launches a activity that targets the nextcloud files app and asks to
-         *         authenticate this account with a token. The result of this goes to the
-         *         authentication launcher.
-         */
         val context = getApplication<Application>().applicationContext
         if (result.resultCode == RESULT_OK) {
             val accountName: String? = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
             val account = AccountImporter.getAccountForName(context, accountName)
-            if (account == null) {
-                throw NextcloudFilesAppAccountPermissionNotGrantedException(context)
-            }
+                ?: throw NextcloudFilesAppAccountPermissionNotGrantedException(context)
             val authIntent = makeAuthIntent(account)
             try {
                 authenticationLauncher.launch(authIntent)
@@ -102,13 +90,8 @@ class SyncViewModel @Inject constructor(
     }
 
     fun makeAccountPickerIntent(): Intent {
-        /**
-         * The modern variation of newChooseAccountIntent changes the following arguments:
-         *                 - The modern version removes the alwaysPromptForAccount parameter
-         *                 - It uses the more general List<Account> interface instead of ArrayList<Account>
-         */
         val AUTH_TOKEN_SSO = "SSO"
-        val intent: Intent = AccountManager.newChooseAccountIntent(
+        return AccountManager.newChooseAccountIntent(
             null,
             null,
             FilesAppTypeRegistry.getInstance().accountTypes,
@@ -117,7 +100,6 @@ class SyncViewModel @Inject constructor(
             null,
             null
         )
-        return intent
     }
 
     fun makeAuthIntent(account: Account): Intent {
@@ -132,14 +114,31 @@ class SyncViewModel @Inject constructor(
         return authIntent
     }
 
-
+    fun fetchNotes() {
+        val account = _ssoAccount.value ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            _syncState.value = SyncState.Syncing("Fetching notes...")
+            try {
+                val notesAPI = ApiProvider.getNotesAPI(getApplication(), account)
+                val response = notesAPI?.getNotes()?.execute()
+                if (response?.isSuccessful == true) {
+                    val nextcloudNotes = response.body() ?: emptyList()
+                    _notes.value = nextcloudNotes.map { it.toNote() }
+                    _syncState.value = SyncState.Idle
+                } else {
+                    _syncState.value = SyncState.Error("Failed to fetch notes: ${response?.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("SyncViewModel", "Error fetching notes", e)
+                _syncState.value = SyncState.Error("Error: ${e.message}")
+            }
+        }
+    }
 }
 
-// Sealed class to represent different states of the sync process.
 sealed class SyncState {
     object Idle : SyncState()
     data class Syncing(val message: String) : SyncState()
     data class Success(val message: String) : SyncState()
     data class Error(val message: String) : SyncState()
 }
-
