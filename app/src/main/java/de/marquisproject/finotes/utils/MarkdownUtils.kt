@@ -22,7 +22,7 @@ object MarkdownUtils {
         if (bulletMatch != null) {
             val indent = bulletMatch.groups[1]?.value ?: ""
             val symbol = bulletMatch.groups[2]?.value ?: "-"
-            if (previousLine.trim().length <= 1) { // Just the bullet and maybe whitespace
+            if (previousLine.trim().length <= symbol.length) { // Just the bullet and maybe whitespace
                 val newText = text.substring(0, lineStart) + text.substring(selection.start)
                 return currentValue.copy(text = newText, selection = TextRange(lineStart), composition = null)
             }
