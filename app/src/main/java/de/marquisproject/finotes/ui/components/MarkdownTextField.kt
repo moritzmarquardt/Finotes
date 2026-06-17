@@ -100,19 +100,13 @@ fun MarkdownTextField(
  */
 class MarkdownVisualTransformation(private val markerColor: Color) : VisualTransformation {
     
-    companion object {
-        private val BOLD_REGEX = Regex("(\\*{1,2})(.*?)\\1")
-        private val ITALIC_REGEX = Regex("(_)(.*?)\\1")
-        private val STRIKETHROUGH_REGEX = Regex("(~{1,2})(.*?)\\1")
-    }
-
     override fun filter(text: AnnotatedString): TransformedText {
         val annotatedString = buildAnnotatedString {
             val rawText = text.text
             append(rawText)
 
             // Bold: *text* or **text**
-            BOLD_REGEX.findAll(rawText).forEach { match ->
+            MarkdownUtils.BOLD_REGEX.findAll(rawText).forEach { match ->
                 val prefix = match.groups[1]!!
                 addStyle(SpanStyle(fontWeight = FontWeight.Bold), match.range.first, match.range.last + 1)
                 addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
@@ -120,7 +114,7 @@ class MarkdownVisualTransformation(private val markerColor: Color) : VisualTrans
             }
 
             // Italic: _text_
-            ITALIC_REGEX.findAll(rawText).forEach { match ->
+            MarkdownUtils.ITALIC_REGEX.findAll(rawText).forEach { match ->
                 val prefix = match.groups[1]!!
                 addStyle(SpanStyle(fontStyle = FontStyle.Italic), match.range.first, match.range.last + 1)
                 addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
@@ -128,7 +122,7 @@ class MarkdownVisualTransformation(private val markerColor: Color) : VisualTrans
             }
 
             // Strikethrough: ~text~ or ~~text~~
-            STRIKETHROUGH_REGEX.findAll(rawText).forEach { match ->
+            MarkdownUtils.STRIKETHROUGH_REGEX.findAll(rawText).forEach { match ->
                 val prefix = match.groups[1]!!
                 addStyle(SpanStyle(textDecoration = TextDecoration.LineThrough), match.range.first, match.range.last + 1)
                 addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
