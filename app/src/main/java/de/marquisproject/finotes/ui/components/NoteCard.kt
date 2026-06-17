@@ -77,15 +77,16 @@ fun OutlinedNoteCard(
                     Text(
                         modifier = Modifier
                             .padding(end = 20.dp),
-                        text = highlightText(MarkdownUtils.renderMarkdown(note.title), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
+                        text = highlightText(AnnotatedString(note.title), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (note.body.isNotBlank()) {
+                    val previewBody = note.body.lineSequence().take(8).joinToString("\n")
                     Text(
-                        text = highlightText(MarkdownUtils.renderMarkdown(note.body), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
+                        text = highlightText(MarkdownUtils.renderMarkdown(previewBody), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 7,
                         overflow = TextOverflow.Ellipsis
