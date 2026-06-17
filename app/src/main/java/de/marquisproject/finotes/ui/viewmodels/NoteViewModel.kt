@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
@@ -58,7 +59,7 @@ class NoteViewModel @Inject constructor(
         // Debounce mechanism for saving the _currentNote
         viewModelScope.launch {
             _currentNote
-                .debounce(500L) // Wait 500ms after the last change
+                .debounce(500L.milliseconds) // Wait 500ms after the last change
                 .distinctUntilChanged() // Only emit if the value has changed (uses structural equality of the data class
                 .filter { noteToSave ->
                     noteToSave.isExistingNote() || noteToSave.isUnsavedNoteWithContent()
