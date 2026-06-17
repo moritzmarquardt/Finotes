@@ -21,12 +21,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.Note
+import de.marquisproject.finotes.utils.MarkdownUtils
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
@@ -78,7 +77,7 @@ fun OutlinedNoteCard(
                     Text(
                         modifier = Modifier
                             .padding(end = 20.dp),
-                        text = highlightText(note.title, searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
+                        text = highlightText(MarkdownUtils.renderMarkdown(note.title), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -86,7 +85,7 @@ fun OutlinedNoteCard(
                 }
                 if (note.body.isNotBlank()) {
                     Text(
-                        text = highlightText(note.body, searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
+                        text = highlightText(MarkdownUtils.renderMarkdown(note.body), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 7,
                         overflow = TextOverflow.Ellipsis
@@ -127,24 +126,22 @@ fun NoteCard(
 }
 
 
-fun highlightText(text: String, query: String?, highlightColor: Color): AnnotatedString {
-    if (query.isNullOrBlank()) return AnnotatedString(text)
+fun highlightText(text: AnnotatedString, query: String?, highlightColor: Color): AnnotatedString {
+    if (query.isNullOrBlank()) return text
 
-    val lowerCaseText = text.lowercase()
+    val builder = AnnotatedString.Builder(text)
+    val lowerCaseText = text.text.lowercase()
     val lowerCaseQuery = query.lowercase()
     var startIndex = lowerCaseText.indexOf(lowerCaseQuery)
-    if (startIndex == -1) return AnnotatedString(text)
 
-    return buildAnnotatedString {
-        var currentIndex = 0
-        while (startIndex != -1) {
-            append(text.substring(currentIndex, startIndex))
-            withStyle(style = SpanStyle(background = highlightColor)) {
-                append(text.substring(startIndex, startIndex + query.length))
-            }
-            currentIndex = startIndex + query.length
-            startIndex = lowerCaseText.indexOf(lowerCaseQuery, currentIndex)
-        }
-        append(text.substring(currentIndex))
+    while (startIndex != -1) {
+        builder.addStyle(
+            style = SpanStyle(background = highlightColor),
+            start = startIndex,
+            end = startIndex + query.length
+        )
+        startIndex = lowerCaseText.indexOf(lowerCaseQuery, startIndex + query.length)
     }
+
+    return builder.toAnnotatedString()
 }

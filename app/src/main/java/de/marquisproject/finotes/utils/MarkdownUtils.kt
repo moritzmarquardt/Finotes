@@ -1,9 +1,19 @@
 package de.marquisproject.finotes.utils
 
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextDecoration
 
 object MarkdownUtils {
+
+    val BOLD_REGEX = Regex("(\\*{1,2})(.*?)\\1")
+    val ITALIC_REGEX = Regex("(_)(.*?)\\1")
+    val STRIKETHROUGH_REGEX = Regex("(~{1,2})(.*?)\\1")
 
     private val BULLET_PREFIX_REGEX = Regex("^(\\s*)([-*])\\s")
 
@@ -82,5 +92,62 @@ object MarkdownUtils {
         }
         
         return newValue
+    }
+
+    /**
+     * Renders markdown text into an AnnotatedString, applying styles and removing markers.
+     */
+    fun renderMarkdown(text: String): AnnotatedString {
+        val markers = mutableListOf<IntRange>()
+        val styles = mutableListOf<Pair<IntRange, SpanStyle>>()
+
+        BOLD_REGEX.findAll(text).forEach { match ->
+            val prefix = match.groups[1]!!
+            markers.add(prefix.range)
+            markers.add(IntRange(match.range.last - prefix.value.length + 1, match.range.last))
+            styles.add(match.range to SpanStyle(fontWeight = FontWeight.Bold))
+        }
+
+        ITALIC_REGEX.findAll(text).forEach { match ->
+            val prefix = match.groups[1]!!
+            markers.add(prefix.range)
+            markers.add(IntRange(match.range.last, match.range.last))
+            styles.add(match.range to SpanStyle(fontStyle = FontStyle.Italic))
+        }
+
+        STRIKETHROUGH_REGEX.findAll(text).forEach { match ->
+            val prefix = match.groups[1]!!
+            markers.add(prefix.range)
+            markers.add(IntRange(match.range.last - prefix.value.length + 1, match.range.last))
+            styles.add(match.range to SpanStyle(textDecoration = TextDecoration.LineThrough))
+        }
+
+        val skip = BooleanArray(text.length)
+        markers.forEach { range ->
+            for (i in range) {
+                if (i in skip.indices) skip[i] = true
+            }
+        }
+
+        return buildAnnotatedString {
+            val offsetMap = IntArray(text.length + 1)
+            var removedCount = 0
+            for (i in text.indices) {
+                if (skip[i]) {
+                    removedCount++
+                } else {
+                    append(text[i])
+                }
+                offsetMap[i + 1] = i + 1 - removedCount
+            }
+
+            styles.forEach { (range, style) ->
+                val start = offsetMap[range.first]
+                val end = offsetMap[range.last + 1]
+                if (start < end) {
+                    addStyle(style, start, end)
+                }
+            }
+        }
     }
 }
