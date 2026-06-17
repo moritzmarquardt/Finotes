@@ -13,10 +13,8 @@ class MarkdownUtilsTest {
         // Note: handleEnterKey is called AFTER the newline is inserted by the IME
         // So the input text already contains the newline character
         val text = "- item\n"  // Newline already inserted
-        val selection = TextRange(8) // Cursor AFTER the newline (position 8)
+        val selection = TextRange(7) // Cursor AFTER the newline (position 7)
         val input = TextFieldValue(text, selection)
-        assertEquals("- item\n", input.text)
-        assertEquals(TextRange(7), input.selection)
 
         val result = MarkdownUtils.handleEnterKey(input)
 
@@ -27,7 +25,7 @@ class MarkdownUtilsTest {
     @Test
     fun `handleEnterKey continues unordered list with asterisk`() {
         val text = "* item\n"
-        val selection = TextRange(8) // Cursor after the newline
+        val selection = TextRange(7) // Cursor after the newline
         val input = TextFieldValue(text, selection)
 
         val result = MarkdownUtils.handleEnterKey(input)
@@ -196,11 +194,10 @@ class MarkdownUtilsTest {
 
     @Test
     fun `handleBackspace removes bullet when cursor at start of list item`() {
-        val text = "- item"
-        val selection = TextRange(2) // Cursor right after "- "
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("- item", TextRange(2))
+        val newValue = TextFieldValue("-item", TextRange(1))
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
         assertEquals("item", result.text)
         assertEquals(TextRange(0), result.selection)
@@ -208,47 +205,43 @@ class MarkdownUtilsTest {
 
     @Test
     fun `handleBackspace does nothing when not in list`() {
-        val text = "Regular text"
-        val selection = TextRange(8)
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("Regular text", TextRange(8))
+        val newValue = TextFieldValue("Regulartext", TextRange(7))
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
-        assertEquals(text, result.text)
-        assertEquals(selection, result.selection)
+        assertEquals(newValue.text, result.text)
+        assertEquals(newValue.selection, result.selection)
     }
 
     @Test
     fun `handleBackspace does nothing at start of text`() {
-        val text = "- item"
-        val selection = TextRange(0)
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("- item", TextRange(0))
+        val newValue = TextFieldValue("- item", TextRange(0)) // No change possible
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
-        assertEquals(text, result.text)
-        assertEquals(selection, result.selection)
+        assertEquals(oldValue.text, result.text)
+        assertEquals(oldValue.selection, result.selection)
     }
 
     @Test
     fun `handleBackspace does nothing with selection`() {
-        val text = "- item"
-        val selection = TextRange(2, 5) // Selection from "- " to "ite"
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("- item", TextRange(2, 5))
+        val newValue = TextFieldValue("- ", TextRange(2)) // Deletion of "item"
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
-        // Should not handle when selection is not collapsed
-        assertEquals(text, result.text)
+        // Should not handle when selection is not collapsed in oldValue
+        assertEquals(newValue.text, result.text)
     }
 
     @Test
     fun `handleBackspace removes indented bullet`() {
-        val text = "  - item"
-        val selection = TextRange(4) // Cursor right after "  - "
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("  - item", TextRange(4))
+        val newValue = TextFieldValue("  -item", TextRange(3))
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
         assertEquals("item", result.text)
         assertEquals(TextRange(0), result.selection)
@@ -256,11 +249,10 @@ class MarkdownUtilsTest {
 
     @Test
     fun `handleBackspace removes asterisk bullet`() {
-        val text = "* item"
-        val selection = TextRange(2)
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("* item", TextRange(2))
+        val newValue = TextFieldValue("*item", TextRange(1))
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
         assertEquals("item", result.text)
         assertEquals(TextRange(0), result.selection)
@@ -268,26 +260,24 @@ class MarkdownUtilsTest {
 
     @Test
     fun `handleBackspace with partial bullet match at cursor`() {
-        val text = "-item"  // No space, so not a valid list
-        val selection = TextRange(1)
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("-item", TextRange(1))
+        val newValue = TextFieldValue("item", TextRange(0))
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
-        // Should not match because there's no space after the bullet
-        assertEquals("-item", result.text)
+        // Should not match because there's no space after the bullet in oldValue
+        assertEquals("item", result.text)
     }
 
     @Test
     fun `handleBackspace with bullet in middle of line`() {
-        val text = "text - item"
-        val selection = TextRange(7) // After "text - "
-        val input = TextFieldValue(text, selection)
+        val oldValue = TextFieldValue("text - item", TextRange(7))
+        val newValue = TextFieldValue("text -item", TextRange(6))
 
-        val result = MarkdownUtils.handleBackspace(input)
+        val result = MarkdownUtils.handleBackspace(oldValue, newValue)
 
         // Should not match because bullet is not at start of line
-        assertEquals("text - item", result.text)
+        assertEquals("text -item", result.text)
     }
 
     @Test
@@ -302,16 +292,16 @@ class MarkdownUtilsTest {
 
         // Type second item (simulating user typing "second")
         value = value.copy(text = "- first\n- second", selection = TextRange(16))
+        
         // User presses Enter - newline is added by IME
-        value = value.copy(text = "- first\n- second\n", selection = TextRange(17))
-
-        // Press Enter again
-        value = MarkdownUtils.handleEnterKey(value)
+        val newValue = value.copy(text = "- first\n- second\n", selection = TextRange(17))
+        value = MarkdownUtils.handleEnterKey(newValue)
         assertEquals("- first\n- second\n- ", value.text)
         assertEquals(TextRange(19), value.selection)
         
-        // Remove it with backspace
-        value = MarkdownUtils.handleBackspace(value)
+        // Remove it with backspace (user deletes the space of "- ")
+        val deletedSpaceValue = value.copy(text = "- first\n- second\n-", selection = TextRange(18))
+        value = MarkdownUtils.handleBackspace(value, deletedSpaceValue)
         assertEquals("- first\n- second\n", value.text)
         assertEquals(TextRange(17), value.selection)
     }
@@ -328,19 +318,17 @@ class MarkdownUtilsTest {
         value = value.copy(text = "- root\n  - ", selection = TextRange(11))
         // User types "child"
         value = value.copy(text = "- root\n  - child", selection = TextRange(16))
+        
         // User presses Enter - newline added by IME
-        value = value.copy(text = "- root\n  - child\n", selection = TextRange(17))
-
-        // Continue indented list
-        value = MarkdownUtils.handleEnterKey(value)
+        val newValue = value.copy(text = "- root\n  - child\n", selection = TextRange(17))
+        value = MarkdownUtils.handleEnterKey(newValue)
         assertEquals("- root\n  - child\n  - ", value.text)
-        // "  - " has 4 characters, so selection is 17 + 4 = 21
         assertEquals(TextRange(21), value.selection)
 
-        // Remove the empty indented item
-        value = MarkdownUtils.handleBackspace(value)
+        // Remove the empty indented item (user deletes space of "  - ")
+        val deletedSpaceValue = value.copy(text = "- root\n  - child\n  -", selection = TextRange(20))
+        value = MarkdownUtils.handleBackspace(value, deletedSpaceValue)
         assertEquals("- root\n  - child\n", value.text)
-        // After removing "  - " from position 17-21, cursor goes to 17
         assertEquals(TextRange(17), value.selection)
     }
 

@@ -38,31 +38,37 @@ fun MarkdownTextField(
     focusRequester: FocusRequester = remember { FocusRequester() },
     readOnly: Boolean = false
 ) {
-    val markerColor = (textStyle.color.takeIf { it != Color.Unspecified } 
-        ?: MaterialTheme.colorScheme.onBackground).copy(alpha = 0.35f)
+    val onBackground = MaterialTheme.colorScheme.onBackground
+    val markerColor = remember(textStyle.color, onBackground) {
+        (textStyle.color.takeIf { it != Color.Unspecified } 
+            ?: onBackground).copy(alpha = 0.35f)
+    }
 
     TextField(
         value = value,
         onValueChange = { newValue ->
-            if (newValue.text.length > value.text.length && 
-                newValue.text.getOrNull(newValue.selection.start - 1) == '\n') {
-                onValueChange(MarkdownUtils.handleEnterKey(newValue))
-            } else {
-                onValueChange(newValue)
+            when {
+                // Handle Enter key (newline added)
+                newValue.text.length > value.text.length && 
+                newValue.text.getOrNull(newValue.selection.start - 1) == '\n' -> {
+                    onValueChange(MarkdownUtils.handleEnterKey(newValue))
+                }
+                // Handle Backspace (text length decreased)
+                newValue.text.length < value.text.length -> {
+                    onValueChange(MarkdownUtils.handleBackspace(value, newValue))
+                }
+                else -> onValueChange(newValue)
             }
         },
         modifier = modifier
             .fillMaxWidth()
             .focusRequester(focusRequester)
             .onKeyEvent { keyEvent ->
+                // Hardware Enter key handling (before newline is added)
+                // Note: Backspace is handled in onValueChange rather than onKeyEvent
+                // because onValueChange is more reliable across different keyboard IMEs
                 if (keyEvent.key == Key.Enter) {
                     val processedValue = MarkdownUtils.handleEnterKey(value)
-                    if (processedValue != value) {
-                        onValueChange(processedValue)
-                        return@onKeyEvent true
-                    }
-                } else if (keyEvent.key == Key.Backspace) {
-                    val processedValue = MarkdownUtils.handleBackspace(value)
                     if (processedValue != value) {
                         onValueChange(processedValue)
                         return@onKeyEvent true
@@ -93,39 +99,38 @@ fun MarkdownTextField(
  * while keeping the Markdown symbols visible but faded.
  */
 class MarkdownVisualTransformation(private val markerColor: Color) : VisualTransformation {
+    
+    companion object {
+        private val BOLD_REGEX = Regex("(\\*{1,2})(.*?)\\1")
+        private val ITALIC_REGEX = Regex("(_)(.*?)\\1")
+        private val STRIKETHROUGH_REGEX = Regex("(~{1,2})(.*?)\\1")
+    }
+
     override fun filter(text: AnnotatedString): TransformedText {
         val annotatedString = buildAnnotatedString {
             val rawText = text.text
             append(rawText)
 
             // Bold: *text* or **text**
-            Regex("(\\*{1,2})(.*?)\\1").findAll(rawText).forEach { match ->
+            BOLD_REGEX.findAll(rawText).forEach { match ->
                 val prefix = match.groups[1]!!
-
-                // Style the whole range as bold
                 addStyle(SpanStyle(fontWeight = FontWeight.Bold), match.range.first, match.range.last + 1)
-                
-                // Fade the markers
                 addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
                 addStyle(SpanStyle(color = markerColor), match.range.last - prefix.value.length + 1, match.range.last + 1)
             }
 
             // Italic: _text_
-            Regex("(_)(.*?)\\1").findAll(rawText).forEach { match ->
+            ITALIC_REGEX.findAll(rawText).forEach { match ->
                 val prefix = match.groups[1]!!
-                
                 addStyle(SpanStyle(fontStyle = FontStyle.Italic), match.range.first, match.range.last + 1)
-                
                 addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
                 addStyle(SpanStyle(color = markerColor), match.range.last, match.range.last + 1)
             }
 
             // Strikethrough: ~text~ or ~~text~~
-            Regex("(~{1,2})(.*?)\\1").findAll(rawText).forEach { match ->
+            STRIKETHROUGH_REGEX.findAll(rawText).forEach { match ->
                 val prefix = match.groups[1]!!
-                
                 addStyle(SpanStyle(textDecoration = TextDecoration.LineThrough), match.range.first, match.range.last + 1)
-                
                 addStyle(SpanStyle(color = markerColor), prefix.range.first, prefix.range.last + 1)
                 addStyle(SpanStyle(color = markerColor), match.range.last - prefix.value.length + 1, match.range.last + 1)
             }
