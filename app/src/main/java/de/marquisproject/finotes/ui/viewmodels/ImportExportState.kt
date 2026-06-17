@@ -4,8 +4,7 @@ import de.marquisproject.finotes.data.notes.model.Note
 
 enum class ImportExportMode {
     EXPORT,
-    IMPORT,
-    SYNC
+    IMPORT
 }
 
 enum class ExportFileFormat {

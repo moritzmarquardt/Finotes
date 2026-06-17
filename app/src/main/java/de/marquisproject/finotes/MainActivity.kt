@@ -3,6 +3,7 @@ package de.marquisproject.finotes
 import de.marquisproject.finotes.ui.screens.HomeScreen
 import de.marquisproject.finotes.ui.screens.NoteScreen
 import de.marquisproject.finotes.ui.screens.ExportImportScreen
+import de.marquisproject.finotes.ui.screens.SyncScreen
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -80,6 +81,11 @@ class MainActivity : ComponentActivity() {
                             navControllerMain = navController,
                         )
                     }
+                    composable<SyncRoute> {
+                        SyncScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                        )
+                    }
                 }
             }
         }
@@ -96,6 +102,7 @@ data class NoteRoute(
     val noteStatus: NoteStatus,
 )
 @Serializable object ExportImportRoute
+@Serializable object SyncRoute
 @Serializable object SettingsRoute
 
 
