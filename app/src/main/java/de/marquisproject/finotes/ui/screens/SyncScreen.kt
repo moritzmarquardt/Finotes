@@ -25,7 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.nextcloud.android.sso.exceptions.AndroidGetAccountsPermissionNotGranted
 import de.marquisproject.finotes.ui.viewmodels.SyncViewModel
 
