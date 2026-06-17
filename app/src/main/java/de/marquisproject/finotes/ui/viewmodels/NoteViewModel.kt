@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
-import de.marquisproject.finotes.utils.handleListLogic
+
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
@@ -58,7 +59,7 @@ class NoteViewModel @Inject constructor(
         // Debounce mechanism for saving the _currentNote
         viewModelScope.launch {
             _currentNote
-                .debounce(500L) // Wait 500ms after the last change
+                .debounce(500L.milliseconds) // Wait 500ms after the last change
                 .distinctUntilChanged() // Only emit if the value has changed (uses structural equality of the data class
                 .filter { noteToSave ->
                     noteToSave.isExistingNote() || noteToSave.isUnsavedNoteWithContent()
@@ -104,9 +105,8 @@ class NoteViewModel @Inject constructor(
     }
 
     fun updateCurrentNoteBody(newTextFieldValue: TextFieldValue) {
-        val processedTextFieldValue = handleListLogic(_currentBodyTextFieldValue.value, newTextFieldValue)
-        _currentBodyTextFieldValue.update { processedTextFieldValue }
-        _currentNote.update { it.copy(body = processedTextFieldValue.text) }
+        _currentBodyTextFieldValue.update { newTextFieldValue }
+        _currentNote.update { it.copy(body = newTextFieldValue.text) }
     }
 
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {

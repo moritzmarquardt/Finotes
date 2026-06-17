@@ -31,10 +31,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import de.marquisproject.finotes.ui.components.MarkdownTextField
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
@@ -194,7 +194,7 @@ fun NoteScreen(
                         onNext = { bodyFocusRequester.requestFocus() },
                     ),
                     singleLine = true,
-                    placeholder = { Text("Title", color = Color.Gray, style = MaterialTheme.typography.titleLarge)},
+                    placeholder = { Text("Title", color = Color.Gray, style = MaterialTheme.typography.titleLarge) },
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
@@ -204,25 +204,16 @@ fun NoteScreen(
                         disabledContainerColor = Color.Transparent
                     )
                 )
-                TextField(
+                MarkdownTextField(
                     readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
                     value = currentBodyTextFieldValue,
                     onValueChange = { viewModel.updateCurrentNoteBody(it) },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(bodyFocusRequester),
+                    focusRequester = bodyFocusRequester,
                     placeholder = {
                         Text("Body", color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
                     },
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent
-                    )
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
