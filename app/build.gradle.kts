@@ -14,8 +14,8 @@ android {
         applicationId = "de.marquisproject.finotes"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "v1.1.0"
+        versionCode = 6
+        versionName = "v1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
