@@ -35,6 +35,7 @@ import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
+import de.marquisproject.finotes.ui.components.CategoryPicker
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.components.TopBarHome
@@ -54,6 +55,8 @@ fun HomeScreen(
     val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
     val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsStateWithLifecycle()
     val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsStateWithLifecycle()
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
 
     // Create a SnackbarHostState to control the Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
@@ -132,32 +135,40 @@ fun HomeScreen(
             ) },
         snackbarHost = { SnackbarHost(snackbarHostState) } // Provide the SnackbarHost
     ) { innerPadding ->
-        NotesList(
-            padding = innerPadding,
-            noteSections = listOf(
-                NoteSection(
-                    title = "Pinned Notes",
-                    notesList = pinnedNotesDisplay,
-                    onSelectSection = { viewModel.toggleSelectAllPinnedNotes(add = true) },
-                    isSectionSelected = viewModel.allPinnedNotesSelected(exclusive = false)
+        Column(modifier = Modifier.padding(innerPadding)) {
+            CategoryPicker(
+                categories = categories,
+                selectedCategories = selectedCategories,
+                onCategorySelected = { viewModel.toggleCategory(it) },
+                searchQuery = viewModel.searchQuery
+            )
+            NotesList(
+                categories = categories,
+                noteSections = listOf(
+                    NoteSection(
+                        title = "Pinned Notes",
+                        notesList = pinnedNotesDisplay,
+                        onSelectSection = { viewModel.toggleSelectAllPinnedNotes(add = true) },
+                        isSectionSelected = viewModel.allPinnedNotesSelected(exclusive = false)
+                    ),
+                    NoteSection(
+                        title = "Notes",
+                        notesList = normalNotesDisplay,
+                        onSelectSection = { viewModel.toggleSelectAllNonPinnedNotes(add = true) },
+                        isSectionSelected = viewModel.allNonPinnedNotesSelected(exclusive = false)
+                    )
                 ),
-                NoteSection(
-                    title = "Notes",
-                    notesList = normalNotesDisplay,
-                    onSelectSection = { viewModel.toggleSelectAllNonPinnedNotes(add = true) },
-                    isSectionSelected = viewModel.allNonPinnedNotesSelected(exclusive = false)
-                )
-            ),
-            inSelectionMode = inSelectionMode,
-            selectedNotes = selectedNotes.toList(),
-            searchQuery = viewModel.searchQuery,
-            onShortClick = { note ->
-                viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
-            },
-            onLongClick = { note ->
-                viewModel.longClickSelect(note = note)
-            }
-        )
+                inSelectionMode = inSelectionMode,
+                selectedNotes = selectedNotes.toList(),
+                searchQuery = viewModel.searchQuery,
+                onShortClick = { note ->
+                    viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
+                },
+                onLongClick = { note ->
+                    viewModel.longClickSelect(note = note)
+                }
+            )
+        }
         if (pinnedNotesDisplay.isEmpty() && normalNotesDisplay.isEmpty()) {
             Column(
                 modifier = Modifier

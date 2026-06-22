@@ -33,6 +33,7 @@ import de.marquisproject.finotes.utils.MarkdownUtils
 fun OutlinedNoteCard(
     note: Note,
     searchQuery: TextFieldState,
+    categoryColor: Color?,
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,
     selected: Boolean,
@@ -67,6 +68,13 @@ fun OutlinedNoteCard(
                 }
             ),
         colors = colors,
+        border = if (categoryColor != null) {
+            CardDefaults.outlinedCardBorder(enabled = true).copy(
+                brush = androidx.compose.ui.graphics.SolidColor(categoryColor)
+            )
+        } else {
+            CardDefaults.outlinedCardBorder(enabled = true)
+        }
     ) {
         Box(
             modifier = Modifier
@@ -114,12 +122,14 @@ fun OutlinedNoteCard(
 fun NoteCard(
     note: Note,
     searchQuery: TextFieldState = TextFieldState(),
+    categoryColor: Color? = null,
     selected: Boolean,
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,
 ) {
     OutlinedNoteCard(
         note = note,
+        categoryColor = categoryColor,
         searchQuery = searchQuery,
         onClick = onClick,
         onLongClick = onLongClick,

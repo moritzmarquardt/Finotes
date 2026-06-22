@@ -6,8 +6,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.marquisproject.finotes.data.notes.model.Category
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.model.NoteStatus
+import de.marquisproject.finotes.data.notes.repositories.CategoryRepository
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -26,11 +28,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val noteRepository: NoteRepository
+    private val noteRepository: NoteRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     val searchQuery = TextFieldState()
-    private val _selectedCategories = MutableStateFlow<List<Long>>(emptyList())
+    private val _selectedCategories = MutableStateFlow<Set<Long>>(emptySet())
     private val _selectedNotes = MutableStateFlow<Set<Note>>(emptySet())
     private val _inSelectionMode = _selectedNotes.map {
         it.isNotEmpty()
@@ -39,6 +42,9 @@ class HomeViewModel @Inject constructor(
     private var lastAction: LastAction? = null
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
+    val selectedCategories: StateFlow<Set<Long>> = _selectedCategories.asStateFlow()
+    val categories: StateFlow<List<Category>> = categoryRepository.getCategoriesSortedByRelevance()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val selectedNotes: StateFlow<Set<Note>> = _selectedNotes.asStateFlow()
     val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
     val snackbarEventFlow = _snackbarEventChannel.receiveAsFlow()
@@ -50,6 +56,19 @@ class HomeViewModel @Inject constructor(
     // These functions are called from the UI layer
     fun setQuery(query: String) {
         searchQuery.setTextAndPlaceCursorAtEnd(query)
+    }
+
+    fun toggleCategory(categoryId: Long) {
+        _selectedCategories.update { current ->
+            if (current.contains(categoryId)) {
+                current - categoryId
+            } else {
+                viewModelScope.launch {
+                    categoryRepository.logCategoryUsage(categoryId)
+                }
+                current + categoryId
+            }
+        }
     }
 
     fun longClickSelect(note: Note) {
@@ -245,12 +264,12 @@ class HomeViewModel @Inject constructor(
             snapshotFlow { searchQuery.text },
             _selectedCategories
         ) { query, categories ->
-            query.toString() to categories
+            query.toString() to categories.toList()
         }.flatMapLatest { (query, categories) ->
             noteRepository.fetchNotesWithQuery(
                 searchQuery = query,
                 isPinned = isPinned,
-                categories = categories,
+                categories = categories.takeIf { it.isNotEmpty() },
                 noteStatus = NoteStatus.ACTIVE
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

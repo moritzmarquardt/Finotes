@@ -9,19 +9,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.marquisproject.finotes.data.notes.model.Category
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.data.notes.model.Note
+import de.marquisproject.finotes.data.notes.repositories.CategoryRepository
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
-
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -32,6 +35,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @HiltViewModel
 class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
+    categoryRepository: CategoryRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _noteIsLoaded = MutableStateFlow(false)
@@ -41,6 +45,9 @@ class NoteViewModel @Inject constructor(
 
     val currentNote: StateFlow<Note> = _currentNote.asStateFlow()
     val noteIsLoaded: StateFlow<Boolean> = _noteIsLoaded.asStateFlow()
+
+    val categories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -127,6 +134,13 @@ class NoteViewModel @Inject constructor(
     // UI-facing update functions that directly modify _currentNote
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
         _currentNote.update { it.copy(isPinned = isPinned) }
+    }
+
+    fun updateCurrentNoteCategory(categoryId: Long) {
+        _currentNote.update {
+            val newCategoryId = if (it.category == categoryId) 0L else categoryId
+            it.copy(category = newCategoryId)
+        }
     }
 
     // --- Actions that affect note status and often navigate away ---

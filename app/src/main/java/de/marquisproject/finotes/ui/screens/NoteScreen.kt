@@ -11,23 +11,9 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -40,6 +26,10 @@ import androidx.navigation.NavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.ui.viewmodels.NoteViewModel
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.automirrored.filled.Label
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +40,7 @@ fun NoteScreen(
 
     val currentNote by viewModel.currentNote.collectAsStateWithLifecycle()
     val noteIsLoaded by viewModel.noteIsLoaded.collectAsStateWithLifecycle()
+    val categories by viewModel.categories.collectAsState()
     val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
 
@@ -74,6 +65,56 @@ fun NoteScreen(
                 },
                 actions = {
                     if (currentNote.noteStatus == NoteStatus.ACTIVE) {
+                        var showCategoryMenu by remember { mutableStateOf(false) }
+                        val currentCategory = categories.find { it.id == currentNote.category }
+
+                        Box {
+                            IconButton(onClick = { showCategoryMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Label,
+                                    contentDescription = "Select Category",
+                                    tint = currentCategory?.let { Color(it.color) } ?: LocalContentColor.current
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showCategoryMenu,
+                                onDismissRequest = { showCategoryMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("No Category") },
+                                    onClick = {
+                                        viewModel.updateCurrentNoteCategory(0L)
+                                        showCategoryMenu = false
+                                    },
+                                    leadingIcon = {
+                                        if (currentNote.category == 0L) Icon(Icons.Default.Check, null)
+                                    }
+                                )
+                                if (categories.isNotEmpty()) HorizontalDivider()
+                                categories.forEach { category ->
+                                    DropdownMenuItem(
+                                        text = { Text(category.name) },
+                                        leadingIcon = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .background(Color(category.color), CircleShape)
+                                            )
+                                        },
+                                        trailingIcon = {
+                                            if (currentNote.category == category.id) {
+                                                Icon(Icons.Default.Check, null)
+                                            }
+                                        },
+                                        onClick = {
+                                            viewModel.updateCurrentNoteCategory(category.id)
+                                            showCategoryMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                         IconButton(onClick = {
                             viewModel.updateCurrentNoteIsPinned(!currentNote.isPinned)
                         }) {
