@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.automirrored.filled.Label
+import de.marquisproject.finotes.ui.components.CategoryDropdown
+import androidx.compose.material.icons.automirrored.outlined.Label
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,55 +67,13 @@ fun NoteScreen(
                 },
                 actions = {
                     if (currentNote.noteStatus == NoteStatus.ACTIVE) {
-                        var showCategoryMenu by remember { mutableStateOf(false) }
                         val currentCategory = categories.find { it.id == currentNote.category }
-
-                        Box {
-                            IconButton(onClick = { showCategoryMenu = true }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Label,
-                                    contentDescription = "Select Category",
-                                    tint = currentCategory?.let { Color(it.color) } ?: LocalContentColor.current
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showCategoryMenu,
-                                onDismissRequest = { showCategoryMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("No Category") },
-                                    onClick = {
-                                        viewModel.updateCurrentNoteCategory(0L)
-                                        showCategoryMenu = false
-                                    },
-                                    leadingIcon = {
-                                        if (currentNote.category == 0L) Icon(Icons.Default.Check, null)
-                                    }
-                                )
-                                if (categories.isNotEmpty()) HorizontalDivider()
-                                categories.forEach { category ->
-                                    DropdownMenuItem(
-                                        text = { Text(category.name) },
-                                        leadingIcon = {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(16.dp)
-                                                    .background(Color(category.color), CircleShape)
-                                            )
-                                        },
-                                        trailingIcon = {
-                                            if (currentNote.category == category.id) {
-                                                Icon(Icons.Default.Check, null)
-                                            }
-                                        },
-                                        onClick = {
-                                            viewModel.updateCurrentNoteCategory(category.id)
-                                            showCategoryMenu = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                        CategoryDropdown(
+                            categories = categories,
+                            selectedCategoryId = currentNote.category,
+                            onCategorySelected = { viewModel.updateCurrentNoteCategory(it) },
+                            tint = currentCategory?.let { Color(it.color) } ?: LocalContentColor.current
+                        )
 
                         IconButton(onClick = {
                             viewModel.updateCurrentNoteIsPinned(!currentNote.isPinned)

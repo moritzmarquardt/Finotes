@@ -42,6 +42,23 @@ interface CategoryDAO {
         ORDER BY u.usageCount DESC, c.name ASC
     """)
     fun getCategoriesByRelevance(cutoff: Long): Flow<List<Category>>
+
+    /**
+     * Fetches only categories that are currently assigned to at least one active note,
+     * sorted by relevance.
+     */
+    @Query("""
+        SELECT c.* FROM categories c
+        INNER JOIN (SELECT DISTINCT category FROM notes_table WHERE noteStatus = 'ACTIVE') n ON c.id = n.category
+        LEFT JOIN (
+            SELECT categoryId, COUNT(*) as usageCount 
+            FROM category_usage_log 
+            WHERE timestamp > :cutoff 
+            GROUP BY categoryId
+        ) u ON c.id = u.categoryId
+        ORDER BY u.usageCount DESC, c.name ASC
+    """)
+    fun getUsedCategoriesByRelevance(cutoff: Long): Flow<List<Category>>
     
     /**
      * Optional: Cleanup old logs to keep the DB small.

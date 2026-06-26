@@ -19,6 +19,14 @@ class CategoryRepository @Inject constructor(
         return categoryDao.getCategoriesByRelevance(thirtyDaysAgo)
     }
 
+    /**
+     * Returns only used categories sorted by relevance.
+     */
+    fun getUsedCategoriesSortedByRelevance(): Flow<List<Category>> {
+        val thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
+        return categoryDao.getUsedCategoriesByRelevance(thirtyDaysAgo)
+    }
+
     fun getAllCategories(): Flow<List<Category>> = categoryDao.getAllCategories()
 
     suspend fun insertCategory(category: Category) = categoryDao.insertCategory(category)

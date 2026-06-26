@@ -35,16 +35,20 @@ class HomeViewModel @Inject constructor(
     val searchQuery = TextFieldState()
     private val _selectedCategories = MutableStateFlow<Set<Long>>(emptySet())
     private val _selectedNotes = MutableStateFlow<Set<Note>>(emptySet())
+    private val _categoryFilterVisible = MutableStateFlow(false)
     private val _inSelectionMode = _selectedNotes.map {
         it.isNotEmpty()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(WHILE_SUBSCRIBED_TIMEOUT), false)
     private val _snackbarEventChannel = Channel<SnackbarEvent>()
     private var lastAction: LastAction? = null
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
     val selectedCategories: StateFlow<Set<Long>> = _selectedCategories.asStateFlow()
-    val categories: StateFlow<List<Category>> = categoryRepository.getCategoriesSortedByRelevance()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val categoryFilterVisible: StateFlow<Boolean> = _categoryFilterVisible.asStateFlow()
+    val usedCategories: StateFlow<List<Category>> = categoryRepository.getUsedCategoriesSortedByRelevance()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(WHILE_SUBSCRIBED_TIMEOUT), emptyList())
+    val allCategories: StateFlow<List<Category>> = categoryRepository.getAllCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(WHILE_SUBSCRIBED_TIMEOUT), emptyList())
     val selectedNotes: StateFlow<Set<Note>> = _selectedNotes.asStateFlow()
     val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
     val snackbarEventFlow = _snackbarEventChannel.receiveAsFlow()
@@ -58,14 +62,21 @@ class HomeViewModel @Inject constructor(
         searchQuery.setTextAndPlaceCursorAtEnd(query)
     }
 
+    fun toggleCategoryFilter() {
+        _categoryFilterVisible.update { !it }
+    }
+
     fun toggleCategory(categoryId: Long) {
+        val isCurrentlySelected = _selectedCategories.value.contains(categoryId)
+        if (!isCurrentlySelected) {
+            viewModelScope.launch {
+                categoryRepository.logCategoryUsage(categoryId)
+            }
+        }
         _selectedCategories.update { current ->
-            if (current.contains(categoryId)) {
+            if (isCurrentlySelected) {
                 current - categoryId
             } else {
-                viewModelScope.launch {
-                    categoryRepository.logCategoryUsage(categoryId)
-                }
                 current + categoryId
             }
         }
@@ -147,12 +158,11 @@ class HomeViewModel @Inject constructor(
     fun archiveSelectedNotes() {
         viewModelScope.launch {
             val notesToArchive = _selectedNotes.value.toList()
-            val archivedNoteIds = notesToArchive.map { it.id }  // All ids of the notes to archive
             noteRepository.archiveNotes(notesToArchive)
-            lastAction = LastAction.Archive(archivedNoteIds)
+            lastAction = LastAction.Archive(notesToArchive)
             _snackbarEventChannel.send(
                 SnackbarEvent.ShowSnackbar(
-                    message = "${archivedNoteIds.size} note(s) archived",
+                    message = "${notesToArchive.size} note(s) archived",
                     actionLabel = "Undo"
                 )
             )
@@ -163,12 +173,11 @@ class HomeViewModel @Inject constructor(
     fun binSelectedNotes() {
         viewModelScope.launch {
             val notesToBin = _selectedNotes.value.toList()
-            val binnedNoteIds = notesToBin.map { it.id }  // All ids of the notes to bin
             noteRepository.binNotes(notesToBin)
-            lastAction = LastAction.Bin(binnedNoteIds)
+            lastAction = LastAction.Bin(notesToBin)
             _snackbarEventChannel.send(
                 SnackbarEvent.ShowSnackbar(
-                    message = "${binnedNoteIds.size} note(s) moved to bin",
+                    message = "${notesToBin.size} note(s) moved to bin",
                     actionLabel = "Undo"
                 )
             )
@@ -192,16 +201,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun updateSelectedNotesCategory(categoryId: Long) {
+        viewModelScope.launch {
+            val notesToUpdate = _selectedNotes.value.toList()
+            noteRepository.updateNotes(notesToUpdate.map { it.copy(category = categoryId) })
+            clearSelection()
+        }
+    }
+
     fun performUndo() {
         viewModelScope.launch {
             when (val action = lastAction) {
                 is LastAction.Archive -> {
-                    val archivedNoteIds = action.noteIds
-                    archivedNoteIds.forEach { id ->
-                        id?.let { noteId ->
-                            noteRepository.restoreNoteById(noteId)
-                        }
-                    }
+                    noteRepository.restoreNotes(action.notes)
                     _snackbarEventChannel.send(
                         SnackbarEvent.ShowSnackbar(
                             message = "Archived note(s) restored",
@@ -210,12 +222,7 @@ class HomeViewModel @Inject constructor(
                     )
                 }
                 is LastAction.Bin -> {
-                    val binnedNoteIds = action.noteIds
-                    binnedNoteIds.forEach { id ->
-                        id?.let { noteId ->
-                            noteRepository.restoreNoteById(noteId)
-                        }
-                    }
+                    noteRepository.restoreNotes(action.notes)
                     _snackbarEventChannel.send(
                         SnackbarEvent.ShowSnackbar(
                             message = "Note(s) restored from bin",
@@ -245,15 +252,8 @@ class HomeViewModel @Inject constructor(
 
     // Sealed class to represent the last action performed for undo
     private sealed class LastAction {
-        /**
-         * Represents an action to archive notes.
-         * @property noteIds The IDs of the notes to archive.
-         */
-        //TODO actually store a list of notes not ids to be coherent with the rest of the app
-        // where i always store notes and not ids. this will make it possible to use batch operations
-        // and simplify the repository and all the logic in the viewmodel
-        data class Archive(val noteIds: List<Long?>) : LastAction()
-        data class Bin(val noteIds: List<Long?>) : LastAction()
+        data class Archive(val notes: List<Note>) : LastAction()
+        data class Bin(val notes: List<Note>) : LastAction()
         // Add other actions if needed
     }
 
@@ -272,7 +272,10 @@ class HomeViewModel @Inject constructor(
                 categories = categories.takeIf { it.isNotEmpty() },
                 noteStatus = NoteStatus.ACTIVE
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(WHILE_SUBSCRIBED_TIMEOUT), emptyList())
     }
 
+    companion object {
+        private const val WHILE_SUBSCRIBED_TIMEOUT = 5000L
+    }
 }

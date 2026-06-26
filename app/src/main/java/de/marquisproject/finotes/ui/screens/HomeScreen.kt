@@ -1,7 +1,10 @@
 package de.marquisproject.finotes.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -35,6 +38,7 @@ import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
+import de.marquisproject.finotes.ui.components.CategoryDropdown
 import de.marquisproject.finotes.ui.components.CategoryPicker
 import de.marquisproject.finotes.ui.components.NotesList
 import de.marquisproject.finotes.ui.components.SelectionBar
@@ -55,8 +59,11 @@ fun HomeScreen(
     val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
     val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsStateWithLifecycle()
     val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsStateWithLifecycle()
-    val categories by viewModel.categories.collectAsStateWithLifecycle()
     val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val usedCategories by viewModel.usedCategories.collectAsStateWithLifecycle()
+    val allCategories by viewModel.allCategories.collectAsStateWithLifecycle()
+    val categoryFilterVisible by viewModel.categoryFilterVisible.collectAsStateWithLifecycle()
 
     // Create a SnackbarHostState to control the Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
@@ -111,6 +118,16 @@ fun HomeScreen(
                     pinIcon = painterResource(id = R.drawable.baseline_push_pin_24)
                     pinAction = { viewModel.unpinSelectedNotes() }
                 }
+                val commonCategoryId = remember(selectedNotes) {
+                    if (selectedNotes.isEmpty()) 0L
+                    else {
+                        val firstCategory = selectedNotes.first().category
+                        if (selectedNotes.all { it.category == firstCategory }) firstCategory
+                        else null
+                    }
+                }
+                val commonCategoryColor = allCategories.find { it.id == commonCategoryId }?.color
+
                 SelectionBar(
                     numSelected = selectedNotes.size,
                     onSelectionClear = { viewModel.clearSelection() },
@@ -118,12 +135,21 @@ fun HomeScreen(
                         pinIcon to pinAction,
                         painterResource(id = R.drawable.outline_archive_24) to { viewModel.archiveSelectedNotes() },
                         painterResource(id = R.drawable.outline_delete_24) to { viewModel.binSelectedNotes() }
-                    )
+                    ),
+                    actions = {
+                        CategoryDropdown(
+                            categories = allCategories,
+                            selectedCategoryId = commonCategoryId,
+                            onCategorySelected = { viewModel.updateSelectedNotesCategory(it) },
+                            tint = commonCategoryColor?.let { Color(it) } ?: MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 )
             } else {
                 TopBarHome(
                     navController = navController,
                     searchQuery = viewModel.searchQuery,
+                    onToggleCategoryFilter = { viewModel.toggleCategoryFilter() }
                 )
             }
         },
@@ -136,14 +162,20 @@ fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) } // Provide the SnackbarHost
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            CategoryPicker(
-                categories = categories,
-                selectedCategories = selectedCategories,
-                onCategorySelected = { viewModel.toggleCategory(it) },
-                searchQuery = viewModel.searchQuery
-            )
+            AnimatedVisibility(
+                visible = categoryFilterVisible,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                CategoryPicker(
+                    categories = usedCategories,
+                    selectedCategories = selectedCategories,
+                    onCategorySelected = { viewModel.toggleCategory(it) },
+                    searchQuery = viewModel.searchQuery
+                )
+            }
             NotesList(
-                categories = categories,
+                categories = usedCategories,
                 noteSections = listOf(
                     NoteSection(
                         title = "Pinned Notes",
