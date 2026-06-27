@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
@@ -68,7 +69,7 @@ fun HomeScreenPreview() {
             ),
         )
         Scaffold(
-            topBar = { TopBarHome(navController = rememberNavController(), updateQuery = {}, searchQuery = "note") },
+            topBar = { TopBarHome(navController = rememberNavController(), searchQuery = rememberTextFieldState("note")) },
             floatingActionButton = { AddNoteFAB(onClick = {}) },
         ) { innerPadding ->
             LazyVerticalStaggeredGrid(
@@ -220,8 +221,7 @@ fun PreviewTopBarHome () {
     FinotesTheme {
         TopBarHome(
             navController = rememberNavController(),
-            updateQuery = {},
-            searchQuery = "",
+            searchQuery = rememberTextFieldState(),
         )
     }
 }
@@ -442,8 +442,7 @@ fun PreviewTopBarHomeDark () {
     FinotesTheme {
         TopBarHome(
             navController = rememberNavController(),
-            updateQuery = {},
-            searchQuery = "",
+            searchQuery = rememberTextFieldState(),
         )
     }
 }

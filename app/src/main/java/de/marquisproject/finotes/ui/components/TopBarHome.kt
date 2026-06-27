@@ -1,6 +1,8 @@
 package de.marquisproject.finotes.ui.components
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -37,8 +39,7 @@ import de.marquisproject.finotes.ui.theme.FinotesTheme
 @Composable
 fun TopBarHome(
     navController: NavController,
-    updateQuery: (String) -> Unit,
-    searchQuery: String,
+    searchQuery: TextFieldState,
 ) {
     var expandedMenu by remember { mutableStateOf(false) }
 
@@ -48,8 +49,7 @@ fun TopBarHome(
         ),
         title = {
             SearchField(
-                searchQuery = searchQuery,
-                updateQuery = updateQuery,
+                state = searchQuery,
                 placeholder = "Search Finotes",
             )
         },
@@ -98,8 +98,7 @@ fun TopBarHomePreview() {
         Surface {
             TopBarHome(
                 navController = rememberNavController(),
-                updateQuery = {},
-                searchQuery = ""
+                searchQuery = rememberTextFieldState()
             )
         }
     }
@@ -113,8 +112,7 @@ fun TopBarHomeWithTextPreview() {
         Surface {
             TopBarHome(
                 navController = rememberNavController(),
-                updateQuery = {},
-                searchQuery = "Sample Query"
+                searchQuery = rememberTextFieldState()
             )
         }
     }

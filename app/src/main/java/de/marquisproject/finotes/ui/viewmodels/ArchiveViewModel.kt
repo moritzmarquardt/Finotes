@@ -1,5 +1,7 @@
 package de.marquisproject.finotes.ui.viewmodels
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,15 +26,15 @@ class ArchiveViewModel @Inject constructor(
     private val noteRepository: NoteRepository
 ) : ViewModel() {
     // private vals to hold the state of the UI internally (marked with _)
-    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = TextFieldState()
     private val _selectedNotes = MutableStateFlow<List<Note>>(emptyList())
     private val _inSelectionMode = _selectedNotes.map { it.isNotEmpty() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
-    private val _notesList = _searchQuery
+    private val _notesList = snapshotFlow { searchQuery.text }
         .flatMapLatest { searchQuery ->
             noteRepository.fetchNotesWithQuery(
-                searchQuery = searchQuery.takeIf { it.isNotBlank() },
+                searchQuery = searchQuery.toString().takeIf { it.isNotBlank() },
                 noteStatus = NoteStatus.ARCHIVED,
                 isPinned = null,
                 categories = null
@@ -42,7 +44,6 @@ class ArchiveViewModel @Inject constructor(
 
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     val notesList: StateFlow<List<Note>> = _notesList // already a StateFlow
     val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
     val selectedNotes: StateFlow<List<Note>> = _selectedNotes.asStateFlow()

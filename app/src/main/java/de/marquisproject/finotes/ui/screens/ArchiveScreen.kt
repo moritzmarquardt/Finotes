@@ -43,7 +43,6 @@ fun ArchiveScreen(
 
     val inSelectionMode by viewModel.inSelectionMode.collectAsStateWithLifecycle()
     val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val notesList by viewModel.notesList.collectAsStateWithLifecycle()
 
     BackHandler {
@@ -113,7 +112,7 @@ fun ArchiveScreen(
                 )
             ),
             selectedNotes = selectedNotes,
-            searchQuery = searchQuery,
+            searchQuery = viewModel.searchQuery.text.toString(),
             onShortClick = { note ->
                 viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },
