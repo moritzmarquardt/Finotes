@@ -2,7 +2,6 @@ package de.marquisproject.finotes.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +33,13 @@ fun MarkdownTextField(
     }
 
     val markdownOutputTransformation = remember(markerColor) {
+        // as long as marker color does not change, the output transformation is remembered
+        // through re-composition which is good for performance
         MarkdownUtils.getMarkdownOutputTransformation(markerColor)
+    }
+    val inputTransformation = remember {
+        // this will be remembered once because inside is just a lambda which does not change
+        MarkdownUtils.getListLogicInputTransformation()
     }
 
     TextField(
@@ -58,8 +63,6 @@ fun MarkdownTextField(
             disabledIndicatorColor = Color.Transparent,
             disabledContainerColor = Color.Transparent
         ),
-        inputTransformation = InputTransformation {
-            MarkdownUtils.handleListInput(this)
-        }
+        inputTransformation = inputTransformation
     )
 }

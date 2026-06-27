@@ -1,6 +1,7 @@
 package de.marquisproject.finotes.utils
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.delete
@@ -20,6 +21,7 @@ object MarkdownUtils {
     val STRIKETHROUGH_REGEX = Regex("(~{1,2})(.*?)\\1")
 
     private val BULLET_PREFIX_REGEX = Regex("^(\\s*)([-*])\\s")
+    private val JUST_SYMBOL_REGEX = Regex("^(\\s*)([-*])$")
 
     /**
      * Handles list formatting in a TextFieldBuffer for the new TextFieldState API.
@@ -29,6 +31,8 @@ object MarkdownUtils {
         val text = buffer.asCharSequence()
         val selection = buffer.selection
 
+        // return and exit if a selection is present. List logic should only be applied
+        // when a user types normally with no selection.
         if (!selection.collapsed) return
 
         val changes = buffer.changes
@@ -62,7 +66,7 @@ object MarkdownUtils {
             }
 
             // 2. Handle Backspace (Ported from handleBackspace)
-            // Triggers if a single character was deleted and we are now left with just a symbol
+            // Triggers if a single character was deleted, and we are now left with just a symbol
             if (changeRange.length == 0 && originalRange.length == 1) {
                 val lineStart = if (selection.start <= 0) 0 else {
                     text.lastIndexOf('\n', selection.start - 1).let { if (it == -1) 0 else it + 1 }
@@ -73,8 +77,12 @@ object MarkdownUtils {
                 // Safety check for indices against original text
                 if (lineStart >= originalText.length) return
                 
-                val wasBullet = BULLET_PREFIX_REGEX.find(originalText.substring(lineStart)) != null
-                val isJustSymbol = Regex("^(\\s*)([-*])$").matches(currentLine)
+                // Optimize wasBullet check to avoid large substring allocations
+                val lineEndInOriginal = originalText.indexOf('\n', lineStart).let {
+                    if (it == -1) originalText.length else it
+                }
+                val wasBullet = BULLET_PREFIX_REGEX.find(originalText.substring(lineStart, lineEndInOriginal)) != null
+                val isJustSymbol = JUST_SYMBOL_REGEX.matches(currentLine)
                 
                 if (wasBullet && isJustSymbol) {
                     buffer.delete(lineStart, selection.start)
@@ -84,7 +92,21 @@ object MarkdownUtils {
     }
 
     /**
+     * Returns an InputTransformation that handles Markdown list formatting.
+     *
+     * @return An InputTransformation that handles Markdown list formatting.
+     */
+    fun getListLogicInputTransformation(): InputTransformation {
+        return InputTransformation {
+            handleListInput(this)
+        }
+    }
+
+    /**
      * Applies Markdown styling to the visual output of a TextField.
+     *
+     * @param markerColor The color to use for the markers.
+     * @return An OutputTransformation that applies Markdown styling.
      */
     fun getMarkdownOutputTransformation(markerColor: Color): OutputTransformation {
         return OutputTransformation {
