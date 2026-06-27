@@ -1,7 +1,9 @@
 package de.marquisproject.finotes.ui.viewmodels
 
 import android.util.Log
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,9 +35,9 @@ class NoteViewModel @Inject constructor(
 ) : ViewModel() {
     private val _noteIsLoaded = MutableStateFlow(false)
     private val _currentNote = MutableStateFlow(Note())
-    private val _currentBodyTextFieldValue = MutableStateFlow(TextFieldValue())
+    val titleState = TextFieldState()
+    val bodyState = TextFieldState()
 
-    val currentBodyTextFieldValue: StateFlow<TextFieldValue> = _currentBodyTextFieldValue.asStateFlow()
     val currentNote: StateFlow<Note> = _currentNote.asStateFlow()
     val noteIsLoaded: StateFlow<Boolean> = _noteIsLoaded.asStateFlow()
 
@@ -53,10 +55,25 @@ class NoteViewModel @Inject constructor(
             }
 
             _currentNote.update { note }
-            _currentBodyTextFieldValue.value = TextFieldValue(text = note.body)
+            titleState.setTextAndPlaceCursorAtEnd(note.title)
+            bodyState.setTextAndPlaceCursorAtEnd(note.body)
             _noteIsLoaded.value = true
 
             Log.d("NoteViewModel", "Note loaded: ${note.id}")
+        }
+
+        // Update _currentNote when states change
+        viewModelScope.launch {
+            snapshotFlow { titleState.text }
+                .collect { newText ->
+                    _currentNote.update { it.copy(title = newText.toString()) }
+                }
+        }
+        viewModelScope.launch {
+            snapshotFlow { bodyState.text }
+                .collect { newText ->
+                    _currentNote.update { it.copy(body = newText.toString()) }
+                }
         }
 
         // Debounce mechanism for saving the _currentNote
@@ -103,15 +120,6 @@ class NoteViewModel @Inject constructor(
     }
 
     // UI-facing update functions that directly modify _currentNote
-    fun updateCurrentNoteTitle(title: String) {
-        _currentNote.update { it.copy(title = title) }
-    }
-
-    fun updateCurrentNoteBody(newTextFieldValue: TextFieldValue) {
-        _currentBodyTextFieldValue.update { newTextFieldValue }
-        _currentNote.update { it.copy(body = newTextFieldValue.text) }
-    }
-
     fun updateCurrentNoteIsPinned(isPinned: Boolean) {
         _currentNote.update { it.copy(isPinned = isPinned) }
     }
