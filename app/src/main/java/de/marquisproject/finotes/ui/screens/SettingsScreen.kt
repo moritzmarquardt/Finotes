@@ -23,10 +23,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import de.marquisproject.finotes.ui.theme.ThemeVariant
 import de.marquisproject.finotes.ui.theme.ThemeVariantMap
@@ -38,7 +39,7 @@ fun SettingsScreen(
     navController: NavController,
     viewModel: SettingsViewModel,
 ) {
-    val themeVariant = viewModel.themeVariant.collectAsState()
+    val themeVariant by viewModel.themeVariant.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -77,7 +78,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(8.dp)
                         .selectable(
-                            selected = themeVariant.value == themeV,
+                            selected = themeVariant == themeV,
                             onClick = {
                                 viewModel.saveThemeVariant(themeV)
                             }
@@ -93,7 +94,7 @@ fun SettingsScreen(
                             ?: (themeV.name.lowercase().replaceFirstChar { it.uppercase() } + "'s theme")
                         //val themename = themeV.name.lowercase().replaceFirstChar { it.uppercase() } + "'s theme"
                         RadioButton(
-                            selected = themeVariant.value == themeV,
+                            selected = themeVariant == themeV,
                             onClick = null
                         )
                         Text(

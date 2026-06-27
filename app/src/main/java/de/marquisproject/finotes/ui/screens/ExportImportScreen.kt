@@ -18,11 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,9 +40,9 @@ fun ExportImportScreen(
     val iEviewModel: ImportExportViewModel = hiltViewModel()
 
     val navControllerIE = rememberNavController()
-    val importExportMode by iEviewModel.importExportMode.collectAsState()
-    val loadedData = iEviewModel.loadedData.collectAsState()
-    val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
+    val importExportMode by iEviewModel.importExportMode.collectAsStateWithLifecycle()
+    val loadedData by iEviewModel.loadedData.collectAsStateWithLifecycle()
+    val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty()
 
 
     Scaffold(

@@ -30,7 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -41,6 +41,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.marquisproject.finotes.ui.components.NoteCard
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
@@ -57,13 +58,13 @@ fun ImportScreen(
         }
     }
 
-    val loadedData = iEviewModel.loadedData.collectAsState()
-    val importData = iEviewModel.importData.collectAsState()
-    val notesLoaded = loadedData.value.notes.isNotEmpty() || loadedData.value.archivedNotes.isNotEmpty()
-    val openInfoAlert = iEviewModel.showFileInfoAlert.collectAsState()
-    val showFinalImportAlert = iEviewModel.showFinalImportAlert.collectAsState()
-    val onlyNonDuplicatesInImportData = iEviewModel.onlyNonDuplicatesInImportData.collectAsState()
-    val showImportLoading = iEviewModel.showImportLoading.collectAsState()
+    val loadedData by iEviewModel.loadedData.collectAsStateWithLifecycle()
+    val importData by iEviewModel.importData.collectAsStateWithLifecycle()
+    val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty()
+    val openInfoAlert by iEviewModel.showFileInfoAlert.collectAsStateWithLifecycle()
+    val showFinalImportAlert by iEviewModel.showFinalImportAlert.collectAsStateWithLifecycle()
+    val onlyNonDuplicatesInImportData by iEviewModel.onlyNonDuplicatesInImportData.collectAsStateWithLifecycle()
+    val showImportLoading by iEviewModel.showImportLoading.collectAsStateWithLifecycle()
 
 
     iEviewModel.setMode(ImportExportMode.IMPORT)
@@ -106,7 +107,7 @@ fun ImportScreen(
                             ButtonFastSelection(
                                 onClick = { iEviewModel.selectOnlyNonDuplicates() },
                                 text = "Select non-duplicates",
-                                selected = onlyNonDuplicatesInImportData.value
+                                selected = onlyNonDuplicatesInImportData
                             )
                         }
                         item {
@@ -114,14 +115,14 @@ fun ImportScreen(
                                 onClick = { iEviewModel.deselectAllNotes() },
                                 text = "Unselect all",
                                 icon = Icons.Default.Clear,
-                                selected = importData.value.notes.isEmpty() && importData.value.archivedNotes.isEmpty()
+                                selected = importData.notes.isEmpty() && importData.archivedNotes.isEmpty()
                             )
                         }
                         item {
                             ButtonFastSelection(
                                 onClick = { iEviewModel.selectAllNotes() },
                                 text = "Select all",
-                                selected = (importData.value.notes == loadedData.value.notes && importData.value.archivedNotes == loadedData.value.archivedNotes)
+                                selected = (importData.notes == loadedData.notes && importData.archivedNotes == loadedData.archivedNotes)
                             )
                         }
                     }
@@ -149,10 +150,10 @@ fun ImportScreen(
                                 )
                             }
                             items(
-                                items = loadedData.value.notes,
+                                items = loadedData.notes,
                                 key = { note -> "note_${note.id}" }
                             ) { note ->
-                                val isSelected = importData.value.notes.contains(note)
+                                val isSelected = importData.notes.contains(note)
                                 NoteCard(
                                     note = note,
                                     selected = isSelected,
@@ -172,11 +173,11 @@ fun ImportScreen(
                                 )
                             }
                             items(
-                                items = loadedData.value.archivedNotes,
+                                items = loadedData.archivedNotes,
                                 key = { note -> "archived_${note.id}" }
                             ) { note ->
                                 val isSelected =
-                                    importData.value.archivedNotes.contains(note)
+                                    importData.archivedNotes.contains(note)
                                 NoteCard(
                                     note = note,
                                     selected = isSelected,
@@ -187,7 +188,7 @@ fun ImportScreen(
                             item(
                                 span = StaggeredGridItemSpan.FullLine
                             ) {
-                                // spacer at the bottom of heigth 200.dp
+                                // spacer at the bottom of height 200.dp
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -232,16 +233,16 @@ fun ImportScreen(
                         }
                         Button(
                             onClick = { iEviewModel.setShowFinalImportAlert(true) },
-                            enabled = importData.value.notes.isNotEmpty() || importData.value.archivedNotes.isNotEmpty(),
+                            enabled = importData.notes.isNotEmpty() || importData.archivedNotes.isNotEmpty(),
                         ) {
-                            Text("Import selected Notes (${importData.value.notes.size + importData.value.archivedNotes.size})")
+                            Text("Import selected Notes (${importData.notes.size + importData.archivedNotes.size})")
                         }
                     }
                 }
             }
         }
 
-        if (showImportLoading.value) {
+        if (showImportLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -253,7 +254,7 @@ fun ImportScreen(
         }
 
         when {
-            openInfoAlert.value -> {
+            openInfoAlert -> {
                 AlertDialog(
                     onDismissRequest = { iEviewModel.setShowFileInfoAlert(false) },
                     title = {
@@ -261,7 +262,7 @@ fun ImportScreen(
                     },
                     text = {
                         Column {
-                            Text("The file contains ${loadedData.value.notes.size} notes and ${loadedData.value.archivedNotes.size} archived notes")
+                            Text("The file contains ${loadedData.notes.size} notes and ${loadedData.archivedNotes.size} archived notes")
                             Text("Select the notes you want to import and click on the import button.")
                         }
                     },
@@ -276,7 +277,7 @@ fun ImportScreen(
             }
         }
         when {
-            showFinalImportAlert.value -> {
+            showFinalImportAlert -> {
                 AlertDialog(
                     onDismissRequest = { iEviewModel.setShowFinalImportAlert(false) },
                     title = {
@@ -284,7 +285,7 @@ fun ImportScreen(
                     },
                     text = {
                         Column {
-                            Text("This will add ${importData.value.notes.size} note(s) and ${importData.value.archivedNotes.size} archived note(s) to your database.")
+                            Text("This will add ${importData.notes.size} note(s) and ${importData.archivedNotes.size} archived note(s) to your database.")
                             Text(text = buildAnnotatedString {
                                 append("This action is ")
                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {

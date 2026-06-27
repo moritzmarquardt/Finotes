@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -25,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.components.NotesList
@@ -41,10 +41,10 @@ fun ArchiveScreen(
 
     val viewModel: ArchiveViewModel = hiltViewModel()
 
-    val inSelectionMode by viewModel.inSelectionMode.collectAsState()
-    val selectedNotes by viewModel.selectedNotes.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val notesList by viewModel.notesList.collectAsState()
+    val inSelectionMode by viewModel.inSelectionMode.collectAsStateWithLifecycle()
+    val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val notesList by viewModel.notesList.collectAsStateWithLifecycle()
 
     BackHandler {
         if (inSelectionMode) {
