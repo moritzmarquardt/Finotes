@@ -11,7 +11,13 @@ class MarkdownUtilsTest {
     private fun testInputTransformation(initialText: String, initialSelection: TextRange, newText: String, newSelection: TextRange): TextFieldState {
         val state = TextFieldState(initialText, initialSelection)
         state.edit {
-            replace(0, length, newText)
+            // Simulate realistic typing by only inserting the difference
+            if (newText.length > initialText.length) {
+                val addedText = newText.substring(initialSelection.start, initialSelection.start + (newText.length - initialText.length))
+                replace(initialSelection.start, initialSelection.end, addedText)
+            } else if (newText.length < initialText.length) {
+                replace(newSelection.start, initialSelection.start, "")
+            }
             selection = newSelection
             MarkdownUtils.handleListInput(this)
         }

@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.utils
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.delete
@@ -23,51 +24,61 @@ object MarkdownUtils {
     /**
      * Handles list formatting in a TextFieldBuffer for the new TextFieldState API.
      */
+    @OptIn(ExperimentalFoundationApi::class)
     fun handleListInput(buffer: TextFieldBuffer) {
         val text = buffer.asCharSequence()
         val selection = buffer.selection
 
         if (!selection.collapsed) return
 
-        // 1. Handle Newline (Enter key)
-        // We only trigger this if the text length increased and the last character added was a newline
-        if (buffer.length > buffer.originalText.length && selection.start > 0 && text[selection.start - 1] == '\n') {
-            val lineEnd = selection.start - 1
-            val lastNewLine = if (lineEnd == 0) -1 else text.lastIndexOf('\n', lineEnd - 1)
-            val lineStart = if (lastNewLine == -1) 0 else lastNewLine + 1
-            
-            val previousLine = text.substring(lineStart, lineEnd)
-            val bulletMatch = BULLET_PREFIX_REGEX.find(previousLine)
-            
-            if (bulletMatch != null) {
-                val indent = bulletMatch.groups[1]?.value ?: ""
-                val symbol = bulletMatch.groups[2]?.value ?: "-"
+        val changes = buffer.changes
+        // Only handle single-character changes to avoid interfering with pastes/multi-edits
+        if (changes.changeCount == 1) {
+            val changeRange = changes.getRange(0)
+            val originalRange = changes.getOriginalRange(0)
+
+            // 1. Handle Newline (Enter key)
+            if (changeRange.length == 1 && originalRange.length == 0 && (text.getOrNull(changeRange.start) == '\n')) {
+                val lineEnd = changeRange.start
+                val lastNewLine = if (lineEnd == 0) -1 else text.lastIndexOf('\n', lineEnd - 1)
+                val lineStart = if (lastNewLine == -1) 0 else lastNewLine + 1
                 
-                if (previousLine.trim() == symbol) {
-                    buffer.delete(lineStart, selection.start)
-                } else {
-                    buffer.insert(selection.start, "$indent$symbol ")
+                val previousLine = text.substring(lineStart, lineEnd)
+                val bulletMatch = BULLET_PREFIX_REGEX.find(previousLine)
+                
+                if (bulletMatch != null) {
+                    val indent = bulletMatch.groups[1]?.value ?: ""
+                    val symbol = bulletMatch.groups[2]?.value ?: "-"
+                    
+                    if (previousLine.trim() == symbol) {
+                        // User pressed enter on an empty bullet line: remove the bullet and end the list
+                        buffer.delete(lineStart, changeRange.end)
+                    } else {
+                        // Continue the list with the same indent and symbol
+                        buffer.insert(changeRange.end, "$indent$symbol ")
+                    }
                 }
+                return
             }
-            return // Enter handled, stop here
-        }
-        
-        // 2. Handle Backspace (Ported from handleBackspace)
-        if (buffer.length < buffer.originalText.length) {
-            val lineStart = if (selection.start <= 0) 0 else {
-                text.lastIndexOf('\n', selection.start - 1).let { if (it == -1) 0 else it + 1 }
-            }
-            val currentLine = text.substring(lineStart, selection.start)
-            val originalText = buffer.originalText
-            
-            // Safety check for indices
-            if (lineStart >= originalText.length) return
-            
-            val wasBullet = BULLET_PREFIX_REGEX.find(originalText.substring(lineStart)) != null
-            val isJustSymbol = Regex("^(\\s*)([-*])$").matches(currentLine)
-            
-            if (wasBullet && isJustSymbol) {
-                buffer.delete(lineStart, selection.start)
+
+            // 2. Handle Backspace (Ported from handleBackspace)
+            // Triggers if a single character was deleted and we are now left with just a symbol
+            if (changeRange.length == 0 && originalRange.length == 1) {
+                val lineStart = if (selection.start <= 0) 0 else {
+                    text.lastIndexOf('\n', selection.start - 1).let { if (it == -1) 0 else it + 1 }
+                }
+                val currentLine = text.substring(lineStart, selection.start)
+                val originalText = buffer.originalText
+                
+                // Safety check for indices against original text
+                if (lineStart >= originalText.length) return
+                
+                val wasBullet = BULLET_PREFIX_REGEX.find(originalText.substring(lineStart)) != null
+                val isJustSymbol = Regex("^(\\s*)([-*])$").matches(currentLine)
+                
+                if (wasBullet && isJustSymbol) {
+                    buffer.delete(lineStart, selection.start)
+                }
             }
         }
     }

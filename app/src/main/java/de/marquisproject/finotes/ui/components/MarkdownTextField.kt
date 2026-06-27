@@ -20,8 +20,8 @@ import de.marquisproject.finotes.utils.MarkdownUtils
 
 @Composable
 fun MarkdownTextField(
-    state: TextFieldState = rememberTextFieldState(),
     modifier: Modifier = Modifier,
+    state: TextFieldState = rememberTextFieldState(),
     placeholder: @Composable (() -> Unit)? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     focusRequester: FocusRequester = remember { FocusRequester() },
@@ -46,7 +46,7 @@ fun MarkdownTextField(
         outputTransformation = markdownOutputTransformation,
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Default,
-            autoCorrectEnabled = false
+            autoCorrectEnabled = true
         ),
         placeholder = placeholder,
         readOnly = readOnly,

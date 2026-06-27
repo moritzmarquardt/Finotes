@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -62,17 +63,21 @@ class NoteViewModel @Inject constructor(
             Log.d("NoteViewModel", "Note loaded: ${note.id}")
         }
 
-        // Update _currentNote when states change
+        // Update _currentNote when states change efficiently
         viewModelScope.launch {
             snapshotFlow { titleState.text }
+                .map { it.toString() }
+                .distinctUntilChanged()
                 .collect { newText ->
-                    _currentNote.update { it.copy(title = newText.toString()) }
+                    _currentNote.update { it.copy(title = newText) }
                 }
         }
         viewModelScope.launch {
             snapshotFlow { bodyState.text }
+                .map { it.toString() }
+                .distinctUntilChanged()
                 .collect { newText ->
-                    _currentNote.update { it.copy(body = newText.toString()) }
+                    _currentNote.update { it.copy(body = newText) }
                 }
         }
 
