@@ -129,6 +129,7 @@ class MarkdownUtilsTest {
             editBlock = { append("\n") }
         )
         assertEquals("- item\n\n", state.text.toString())
+        assertEquals(TextRange(8), state.selection)
     }
 
     @Test
@@ -163,6 +164,7 @@ class MarkdownUtilsTest {
             editBlock = { append("\n") }
         )
         assertEquals("-Text\n", state.text.toString())
+        assertEquals(TextRange(6), state.selection)
     }
 
     @Test
