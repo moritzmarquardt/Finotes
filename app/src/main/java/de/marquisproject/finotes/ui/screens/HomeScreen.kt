@@ -22,7 +22,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.R
@@ -50,11 +50,11 @@ fun HomeScreen(
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     
-    val inSelectionMode by viewModel.inSelectionMode.collectAsState()
-    val selectedNotes by viewModel.selectedNotes.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsState()
-    val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsState()
+    val inSelectionMode by viewModel.inSelectionMode.collectAsStateWithLifecycle()
+    val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsStateWithLifecycle()
+    val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsStateWithLifecycle()
 
     // Create a SnackbarHostState to control the Snackbar
     val snackbarHostState = remember { SnackbarHostState() }

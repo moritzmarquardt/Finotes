@@ -11,8 +11,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -35,9 +36,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val settingsViewModel: SettingsViewModel = hiltViewModel()
+            val themeVariant by settingsViewModel.themeVariant.collectAsStateWithLifecycle()
 
             FinotesTheme(
-                themeVariant = settingsViewModel.themeVariant.collectAsState().value
+                themeVariant = themeVariant
             ) {
                 NavHost(
                     navController = navController,

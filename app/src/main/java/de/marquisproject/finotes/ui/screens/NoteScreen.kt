@@ -25,7 +25,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import de.marquisproject.finotes.ui.components.MarkdownTextField
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
@@ -48,9 +48,9 @@ fun NoteScreen(
 ) {
     val viewModel: NoteViewModel = hiltViewModel()
 
-    val currentNote by viewModel.currentNote.collectAsState()
-    val currentBodyTextFieldValue by viewModel.currentBodyTextFieldValue.collectAsState()
-    val noteIsLoaded by viewModel.noteIsLoaded.collectAsState()
+    val currentNote by viewModel.currentNote.collectAsStateWithLifecycle()
+    val currentBodyTextFieldValue by viewModel.currentBodyTextFieldValue.collectAsStateWithLifecycle()
+    val noteIsLoaded by viewModel.noteIsLoaded.collectAsStateWithLifecycle()
     val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
 
