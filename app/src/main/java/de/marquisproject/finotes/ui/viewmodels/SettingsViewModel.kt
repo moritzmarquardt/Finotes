@@ -1,46 +1,31 @@
 package de.marquisproject.finotes.ui.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.marquisproject.finotes.data.notes.repositories.DataStoreInstance
+import de.marquisproject.finotes.data.settings.SettingsRepository
 import de.marquisproject.finotes.ui.theme.ThemeVariant
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    application: Application
-) : AndroidViewModel(application) {
-    private val _themeVariant = MutableStateFlow<ThemeVariant?>(null)
-    val themeVariant: StateFlow<ThemeVariant?> = _themeVariant
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
 
-    init {
-        getThemeVariant()
-    }
-
-    private fun getThemeVariant() {
-        viewModelScope.launch {
-            DataStoreInstance.getThemeVariant(
-                context = getApplication()
-            ).collect { theme ->
-                _themeVariant.update { theme }
-            }
-        }
-    }
+    val themeVariant: StateFlow<ThemeVariant?> = settingsRepository.themeVariant
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     fun saveThemeVariant(value: ThemeVariant) {
         viewModelScope.launch {
-            DataStoreInstance.saveThemeVariant(
-                context = getApplication(),
-                value = value
-            )
+            settingsRepository.saveThemeVariant(value)
         }
     }
-
-
 }
