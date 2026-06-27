@@ -5,7 +5,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 
@@ -39,7 +41,8 @@ class NoteViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val passedNoteId = savedStateHandle.get<Long>("noteId")
+            val noteRoute = savedStateHandle.toRoute<NoteRoute>()
+            val passedNoteId = noteRoute.noteId
             val note = if (passedNoteId != null) {
                 Log.d("NoteViewModel", "Fetching note with ID: $passedNoteId")
                 noteRepository.fetchNoteById(passedNoteId).firstOrNull() ?: Note()
