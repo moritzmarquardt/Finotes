@@ -8,12 +8,10 @@ import de.marquisproject.finotes.data.notes.model.Category
 import de.marquisproject.finotes.data.notes.repositories.CategoryRepository
 import de.marquisproject.finotes.ui.theme.ThemeVariant
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

@@ -60,7 +60,6 @@ fun HomeScreen(
     val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsStateWithLifecycle()
     val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsStateWithLifecycle()
     val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val usedCategories by viewModel.usedCategories.collectAsStateWithLifecycle()
     val allCategories by viewModel.allCategories.collectAsStateWithLifecycle()
     val categoryFilterVisible by viewModel.categoryFilterVisible.collectAsStateWithLifecycle()
@@ -171,7 +170,7 @@ fun HomeScreen(
                     categories = usedCategories,
                     selectedCategories = selectedCategories,
                     onCategorySelected = { viewModel.toggleCategory(it) },
-                    searchQuery = viewModel.searchQuery
+                    searchQuery = viewModel.searchQuery.text.toString()
                 )
             }
             NotesList(
