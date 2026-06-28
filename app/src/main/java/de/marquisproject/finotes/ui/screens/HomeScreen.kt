@@ -52,7 +52,6 @@ fun HomeScreen(
     
     val inSelectionMode by viewModel.inSelectionMode.collectAsStateWithLifecycle()
     val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val pinnedNotesDisplay by viewModel.pinnedNotesDisplay.collectAsStateWithLifecycle()
     val normalNotesDisplay by viewModel.normalNotesDisplay.collectAsStateWithLifecycle()
 
@@ -65,7 +64,7 @@ fun HomeScreen(
     }
 
     // when a search query is set, clear the query when pressing back
-    BackHandler(searchQuery.isNotEmpty()) {
+    BackHandler(viewModel.searchQuery.text.isNotEmpty()) {
         viewModel.setQuery("")
     }
 
@@ -121,8 +120,7 @@ fun HomeScreen(
             } else {
                 TopBarHome(
                     navController = navController,
-                    updateQuery = { viewModel.setQuery(it) },
-                    searchQuery = searchQuery,
+                    searchQuery = viewModel.searchQuery,
                 )
             }
         },
@@ -152,7 +150,7 @@ fun HomeScreen(
             ),
             inSelectionMode = inSelectionMode,
             selectedNotes = selectedNotes.toList(),
-            searchQuery = searchQuery,
+            searchQuery = viewModel.searchQuery,
             onShortClick = { note ->
                 viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },

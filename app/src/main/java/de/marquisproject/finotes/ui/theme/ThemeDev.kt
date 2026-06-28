@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
@@ -68,7 +70,7 @@ fun HomeScreenPreview() {
             ),
         )
         Scaffold(
-            topBar = { TopBarHome(navController = rememberNavController(), updateQuery = {}, searchQuery = "note") },
+            topBar = { TopBarHome(navController = rememberNavController(), searchQuery = rememberTextFieldState("note")) },
             floatingActionButton = { AddNoteFAB(onClick = {}) },
         ) { innerPadding ->
             LazyVerticalStaggeredGrid(
@@ -79,8 +81,8 @@ fun HomeScreenPreview() {
                         items = dummyNoteList,
                         key = { note -> requireNotNull(note.id) }
                     ) { note ->
-                        var searchQuery = ""
-                        if (requireNotNull(note.id).toInt() !=1) { searchQuery = "note"}
+                        var searchQuery = rememberTextFieldState()
+                        if (requireNotNull(note.id).toInt() !=1) { searchQuery = rememberTextFieldState("note") }
                         NoteCard(
                             note = note,
                             searchQuery = searchQuery,
@@ -220,8 +222,7 @@ fun PreviewTopBarHome () {
     FinotesTheme {
         TopBarHome(
             navController = rememberNavController(),
-            updateQuery = {},
-            searchQuery = "",
+            searchQuery = rememberTextFieldState(),
         )
     }
 }
@@ -297,7 +298,7 @@ fun PreviewNoteCardDark () {
                 ) {
                     NoteCard(
                         note = note,
-                        searchQuery = "Test",
+                        searchQuery = TextFieldState("Test"),
                         selected = false,
                         onClick = {},
                         onLongClick = {},
@@ -308,7 +309,7 @@ fun PreviewNoteCardDark () {
                 ) {
                     NoteCard(
                         note = note,
-                        searchQuery = "",
+                        searchQuery = TextFieldState(),
                         selected = true,
                         onClick = {},
                         onLongClick = {},
@@ -442,8 +443,7 @@ fun PreviewTopBarHomeDark () {
     FinotesTheme {
         TopBarHome(
             navController = rememberNavController(),
-            updateQuery = {},
-            searchQuery = "",
+            searchQuery = rememberTextFieldState(),
         )
     }
 }

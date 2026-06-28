@@ -1,5 +1,8 @@
 package de.marquisproject.finotes.ui.viewmodels
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +29,7 @@ class HomeViewModel @Inject constructor(
     private val noteRepository: NoteRepository
 ) : ViewModel() {
 
-    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = TextFieldState()
     private val _selectedCategories = MutableStateFlow<List<Long>>(emptyList())
     private val _selectedNotes = MutableStateFlow<Set<Note>>(emptySet())
     private val _inSelectionMode = _selectedNotes.map {
@@ -36,7 +39,6 @@ class HomeViewModel @Inject constructor(
     private var lastAction: LastAction? = null
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     val selectedNotes: StateFlow<Set<Note>> = _selectedNotes.asStateFlow()
     val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
     val snackbarEventFlow = _snackbarEventChannel.receiveAsFlow()
@@ -47,7 +49,7 @@ class HomeViewModel @Inject constructor(
     // Functions to update the state of the UI and perform repository operations which in turn interact with the database
     // These functions are called from the UI layer
     fun setQuery(query: String) {
-        _searchQuery.update { query }
+        searchQuery.setTextAndPlaceCursorAtEnd(query)
     }
 
     fun longClickSelect(note: Note) {
@@ -240,10 +242,10 @@ class HomeViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun getNotesDisplayFlow(isPinned: Boolean): StateFlow<List<Note>> {
         return combine(
-            _searchQuery,
+            snapshotFlow { searchQuery.text },
             _selectedCategories
         ) { query, categories ->
-            query to categories
+            query.toString() to categories
         }.flatMapLatest { (query, categories) ->
             noteRepository.fetchNotesWithQuery(
                 searchQuery = query,
