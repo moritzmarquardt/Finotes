@@ -37,11 +37,11 @@ import kotlinx.serialization.Serializable
 fun ExportImportScreen(
     navControllerMain: NavController,
 ) {
-    val iEviewModel: ImportExportViewModel = hiltViewModel()
+    val viewModel: ImportExportViewModel = hiltViewModel()
 
     val navControllerIE = rememberNavController()
-    val importExportMode by iEviewModel.importExportMode.collectAsStateWithLifecycle()
-    val loadedData by iEviewModel.loadedData.collectAsStateWithLifecycle()
+    val importExportMode by viewModel.importExportMode.collectAsStateWithLifecycle()
+    val loadedData by viewModel.loadedData.collectAsStateWithLifecycle()
     val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty()
 
 
@@ -66,7 +66,7 @@ fun ExportImportScreen(
                 actions = {
                     if (importExportMode == ImportExportMode.IMPORT && notesLoaded) {
                         IconButton(onClick = {
-                            iEviewModel.setShowFileInfoAlert(true)
+                            viewModel.setShowFileInfoAlert(true)
                         }) {
                             Icon(
                                 Icons.Default.Info,
@@ -93,7 +93,7 @@ fun ExportImportScreen(
                     label = { Text("Export") },
                     selected = importExportMode == ImportExportMode.EXPORT,
                     onClick = {
-                        iEviewModel.setMode(ImportExportMode.EXPORT)
+                        viewModel.setMode(ImportExportMode.EXPORT)
                         navControllerIE.navigate(ExportRoute)
                     },
                     colors = NavigationBarItemDefaults.colors(
@@ -109,7 +109,7 @@ fun ExportImportScreen(
                     label = { Text("Import") },
                     selected = importExportMode == ImportExportMode.IMPORT,
                     onClick = {
-                        iEviewModel.setMode(ImportExportMode.IMPORT)
+                        viewModel.setMode(ImportExportMode.IMPORT)
                         navControllerIE.navigate(ImportRoute)
                     },
                     colors = NavigationBarItemDefaults.colors(
@@ -132,12 +132,12 @@ fun ExportImportScreen(
         ) {
             composable<ExportRoute> {
                 ExportScreen(
-                    iEviewModel = iEviewModel,
+                    viewModel = viewModel,
                 )
             }
             composable<ImportRoute> {
                 ImportScreen(
-                    iEviewModel = iEviewModel,
+                    viewModel = viewModel,
                 )
             }
         }

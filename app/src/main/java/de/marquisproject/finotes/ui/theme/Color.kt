@@ -209,7 +209,7 @@ val MaterialColorPalette = ColourPalette(
     onSurfaceDark = standardMaterialDarkScheme.onSurface,
 )
 
-// create data struc that has for each variant the enum and the colour palette
+// create data structure that has for each variant the enum and the color palette
 val ThemeVariantMap: Map<ThemeVariant, ColourPalette> = mapOf(
     ThemeVariant.AU to AuColorPalette,
     ThemeVariant.MARQUI to MarquiColorPalette,

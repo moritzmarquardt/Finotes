@@ -48,26 +48,26 @@ import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
 
 @Composable
 fun ImportScreen(
-    iEviewModel: ImportExportViewModel
+    viewModel: ImportExportViewModel
 ) {
     val pickFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            iEviewModel.importNotesFromFile(it) // Call ViewModel method
+            viewModel.importNotesFromFile(it) // Call ViewModel method
         }
     }
 
-    val loadedData by iEviewModel.loadedData.collectAsStateWithLifecycle()
-    val importData by iEviewModel.importData.collectAsStateWithLifecycle()
+    val loadedData by viewModel.loadedData.collectAsStateWithLifecycle()
+    val importData by viewModel.importData.collectAsStateWithLifecycle()
     val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty()
-    val openInfoAlert by iEviewModel.showFileInfoAlert.collectAsStateWithLifecycle()
-    val showFinalImportAlert by iEviewModel.showFinalImportAlert.collectAsStateWithLifecycle()
-    val onlyNonDuplicatesInImportData by iEviewModel.onlyNonDuplicatesInImportData.collectAsStateWithLifecycle()
-    val showImportLoading by iEviewModel.showImportLoading.collectAsStateWithLifecycle()
+    val openInfoAlert by viewModel.showFileInfoAlert.collectAsStateWithLifecycle()
+    val showFinalImportAlert by viewModel.showFinalImportAlert.collectAsStateWithLifecycle()
+    val onlyNonDuplicatesInImportData by viewModel.onlyNonDuplicatesInImportData.collectAsStateWithLifecycle()
+    val showImportLoading by viewModel.showImportLoading.collectAsStateWithLifecycle()
 
 
-    iEviewModel.setMode(ImportExportMode.IMPORT)
+    viewModel.setMode(ImportExportMode.IMPORT)
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (!notesLoaded) {
@@ -105,14 +105,14 @@ fun ImportScreen(
                     content = {
                         item {
                             ButtonFastSelection(
-                                onClick = { iEviewModel.selectOnlyNonDuplicates() },
+                                onClick = { viewModel.selectOnlyNonDuplicates() },
                                 text = "Select non-duplicates",
                                 selected = onlyNonDuplicatesInImportData
                             )
                         }
                         item {
                             ButtonFastSelection(
-                                onClick = { iEviewModel.deselectAllNotes() },
+                                onClick = { viewModel.deselectAllNotes() },
                                 text = "Unselect all",
                                 icon = Icons.Default.Clear,
                                 selected = importData.notes.isEmpty() && importData.archivedNotes.isEmpty()
@@ -120,7 +120,7 @@ fun ImportScreen(
                         }
                         item {
                             ButtonFastSelection(
-                                onClick = { iEviewModel.selectAllNotes() },
+                                onClick = { viewModel.selectAllNotes() },
                                 text = "Select all",
                                 selected = (importData.notes == loadedData.notes && importData.archivedNotes == loadedData.archivedNotes)
                             )
@@ -157,8 +157,8 @@ fun ImportScreen(
                                 NoteCard(
                                     note = note,
                                     selected = isSelected,
-                                    onClick = { iEviewModel.longClickSelect(note) },
-                                    onLongClick = { iEviewModel.longClickSelect(note) },
+                                    onClick = { viewModel.longClickSelect(note) },
+                                    onLongClick = { viewModel.longClickSelect(note) },
                                 )
                             }
                             item(
@@ -181,8 +181,8 @@ fun ImportScreen(
                                 NoteCard(
                                     note = note,
                                     selected = isSelected,
-                                    onClick = { iEviewModel.longClickSelect(note) },
-                                    onLongClick = { iEviewModel.longClickSelect(note) },
+                                    onClick = { viewModel.longClickSelect(note) },
+                                    onLongClick = { viewModel.longClickSelect(note) },
                                 )
                             }
                             item(
@@ -222,7 +222,7 @@ fun ImportScreen(
                     ) {
                         Button(
                             onClick = {
-                                iEviewModel.clearImportData()
+                                viewModel.clearImportData()
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,
@@ -232,7 +232,7 @@ fun ImportScreen(
                             Text("Cancel")
                         }
                         Button(
-                            onClick = { iEviewModel.setShowFinalImportAlert(true) },
+                            onClick = { viewModel.setShowFinalImportAlert(true) },
                             enabled = importData.notes.isNotEmpty() || importData.archivedNotes.isNotEmpty(),
                         ) {
                             Text("Import selected Notes (${importData.notes.size + importData.archivedNotes.size})")
@@ -256,7 +256,7 @@ fun ImportScreen(
         when {
             openInfoAlert -> {
                 AlertDialog(
-                    onDismissRequest = { iEviewModel.setShowFileInfoAlert(false) },
+                    onDismissRequest = { viewModel.setShowFileInfoAlert(false) },
                     title = {
                         Text("File opened successfully")
                     },
@@ -268,7 +268,7 @@ fun ImportScreen(
                     },
                     confirmButton = {
                         Button(onClick = {
-                            iEviewModel.setShowFileInfoAlert(false)
+                            viewModel.setShowFileInfoAlert(false)
                         }) {
                             Text("Okay")
                         }
@@ -279,7 +279,7 @@ fun ImportScreen(
         when {
             showFinalImportAlert -> {
                 AlertDialog(
-                    onDismissRequest = { iEviewModel.setShowFinalImportAlert(false) },
+                    onDismissRequest = { viewModel.setShowFinalImportAlert(false) },
                     title = {
                         Text("Import selected notes")
                     },
@@ -297,15 +297,15 @@ fun ImportScreen(
                     },
                     confirmButton = {
                         Button(onClick = {
-                            iEviewModel.setShowFinalImportAlert(false)
-                            iEviewModel.importImportData()
+                            viewModel.setShowFinalImportAlert(false)
+                            viewModel.importImportData()
                         }) {
                             Text("Import")
                         }
                     },
                     dismissButton = {
                         Button(
-                            onClick = { iEviewModel.setShowFinalImportAlert(false) },
+                            onClick = { viewModel.setShowFinalImportAlert(false) },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,
                                 contentColor = MaterialTheme.colorScheme.onError,

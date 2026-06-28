@@ -231,7 +231,7 @@ class HomeViewModel @Inject constructor(
          */
         //TODO actually store a list of notes not ids to be coherent with the rest of the app
         // where i always store notes and not ids. this will make it possible to use batch operations
-        // and simplyfy the repository and all the logic in the viewmodel
+        // and simplify the repository and all the logic in the viewmodel
         data class Archive(val noteIds: List<Long?>) : LastAction()
         data class Bin(val noteIds: List<Long?>) : LastAction()
         // Add other actions if needed

@@ -102,7 +102,7 @@ fun HomeScreenPreview() {
     heightDp = 200
 )
 @Composable
-fun PreviewDropDownmenu() {
+fun PreviewDropDownMenu() {
     FinotesTheme {
         Column(
             modifier = Modifier
@@ -147,7 +147,7 @@ fun PreviewDropDownmenu() {
     heightDp = 100
 )
 @Composable
-fun PreviewFastSelectionCarusel() {
+fun PreviewFastSelectionCarousel() {
     FinotesTheme {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
@@ -322,7 +322,7 @@ fun PreviewNoteCardDark () {
 
 @Preview
 @Composable
-fun PreviewDropDownmenuDark() {
+fun PreviewDropDownMenuDark() {
     FinotesTheme {
         var expandedMenu = true
         Column(
@@ -377,7 +377,7 @@ fun PreviewDropDownmenuDark() {
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun PreviewFastSelectionCaruselDark() {
+fun PreviewFastSelectionCarouselDark() {
     FinotesTheme {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),

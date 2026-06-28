@@ -29,21 +29,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun ExportScreen(
-    iEviewModel: ImportExportViewModel
+    viewModel: ImportExportViewModel
 ) {
     val createFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         uri?.let {
-            iEviewModel.exportNotesToFile(it) // Call ViewModel method
+            viewModel.exportNotesToFile(it) // Call ViewModel method
         }
     }
 
 
-    val exportSettings by iEviewModel.exportSettings.collectAsStateWithLifecycle()
-    val exportData by iEviewModel.exportData.collectAsStateWithLifecycle()
+    val exportSettings by viewModel.exportSettings.collectAsStateWithLifecycle()
+    val exportData by viewModel.exportData.collectAsStateWithLifecycle()
 
-    iEviewModel.setMode(ImportExportMode.EXPORT)
+    viewModel.setMode(ImportExportMode.EXPORT)
 
 
     Column (
@@ -67,7 +67,7 @@ fun ExportScreen(
             Switch(
                 checked = exportSettings.includeArchived,
                 onCheckedChange = {
-                    iEviewModel.setExportSettings (
+                    viewModel.setExportSettings (
                         exportSettings.copy(includeArchived = it)
                     )
                                   },
@@ -92,7 +92,7 @@ fun ExportScreen(
                         .selectable(
                             selected = (exportSettings.exportFileFormat == format),
                             onClick = {
-                                iEviewModel.setExportSettings (
+                                viewModel.setExportSettings (
                                     exportSettings.copy(exportFileFormat = format)
                                 )
                             },
