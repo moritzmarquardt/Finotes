@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -80,8 +81,8 @@ fun HomeScreenPreview() {
                         items = dummyNoteList,
                         key = { note -> requireNotNull(note.id) }
                     ) { note ->
-                        var searchQuery = ""
-                        if (requireNotNull(note.id).toInt() !=1) { searchQuery = "note"}
+                        var searchQuery = rememberTextFieldState()
+                        if (requireNotNull(note.id).toInt() !=1) { searchQuery = rememberTextFieldState("note") }
                         NoteCard(
                             note = note,
                             searchQuery = searchQuery,
@@ -297,7 +298,7 @@ fun PreviewNoteCardDark () {
                 ) {
                     NoteCard(
                         note = note,
-                        searchQuery = "Test",
+                        searchQuery = TextFieldState("Test"),
                         selected = false,
                         onClick = {},
                         onLongClick = {},
@@ -308,7 +309,7 @@ fun PreviewNoteCardDark () {
                 ) {
                     NoteCard(
                         note = note,
-                        searchQuery = "",
+                        searchQuery = TextFieldState(),
                         selected = true,
                         onClick = {},
                         onLongClick = {},

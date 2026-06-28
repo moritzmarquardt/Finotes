@@ -150,7 +150,7 @@ fun HomeScreen(
             ),
             inSelectionMode = inSelectionMode,
             selectedNotes = selectedNotes.toList(),
-            searchQuery = viewModel.searchQuery.text.toString(),
+            searchQuery = viewModel.searchQuery,
             onShortClick = { note ->
                 viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },

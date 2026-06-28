@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +32,7 @@ import de.marquisproject.finotes.utils.MarkdownUtils
 @Composable
 fun OutlinedNoteCard(
     note: Note,
-    searchQuery: String?,
+    searchQuery: TextFieldState,
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,
     selected: Boolean,
@@ -77,7 +78,7 @@ fun OutlinedNoteCard(
                     Text(
                         modifier = Modifier
                             .padding(end = 20.dp),
-                        text = highlightText(AnnotatedString(note.title), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
+                        text = highlightText(AnnotatedString(note.title), searchQuery.text.toString(), highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -86,7 +87,7 @@ fun OutlinedNoteCard(
                 if (note.body.isNotBlank()) {
                     val previewBody = note.body.lineSequence().take(8).joinToString("\n")
                     Text(
-                        text = highlightText(MarkdownUtils.renderMarkdown(previewBody), searchQuery, highlightColor = MaterialTheme.colorScheme.secondaryContainer),
+                        text = highlightText(MarkdownUtils.renderMarkdown(previewBody), searchQuery.text.toString(), highlightColor = MaterialTheme.colorScheme.secondaryContainer),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 7,
                         overflow = TextOverflow.Ellipsis
@@ -112,7 +113,7 @@ fun OutlinedNoteCard(
 @Composable
 fun NoteCard(
     note: Note,
-    searchQuery: String? = null,
+    searchQuery: TextFieldState = TextFieldState(),
     selected: Boolean,
     onClick: (Note) -> Unit,
     onLongClick: (Note) -> Unit,

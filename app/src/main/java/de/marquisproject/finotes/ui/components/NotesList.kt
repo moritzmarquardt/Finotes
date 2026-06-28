@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,7 +26,7 @@ fun NotesList(
     noteSections: List<NoteSection> = emptyList(),
     inSelectionMode: Boolean = false,
     selectedNotes: List<Note> = emptyList(),
-    searchQuery: String = "",
+    searchQuery: TextFieldState = TextFieldState(),
     onShortClick: (Note) -> Unit = {},
     onLongClick: (Note) -> Unit = {},
 ){

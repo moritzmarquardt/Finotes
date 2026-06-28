@@ -24,8 +24,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -52,9 +58,21 @@ fun BinScreen(
     val notesList by viewModel.notesList.collectAsStateWithLifecycle()
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
 
+    var isSearching by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isSearching) {
+        if (isSearching) {
+            focusRequester.requestFocus()
+        }
+    }
+
     BackHandler {
         if (inSelectionMode) {
             viewModel.clearSelection()
+        } else if (isSearching) {
+            isSearching = false
+            viewModel.searchQuery.clearText()
         } else {
             navController.popBackStack()
         }
@@ -77,14 +95,36 @@ fun BinScreen(
             } else {
                 TopAppBar(
                     title = {
-                        Text(text = "Bin")
+                        if (isSearching) {
+                            de.marquisproject.finotes.ui.components.SearchField(
+                                state = viewModel.searchQuery,
+                                modifier = Modifier.focusRequester(focusRequester),
+                                placeholder = "Search Bin"
+                            )
+                        } else {
+                            Text(text = "Bin")
+                        }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(onClick = {
+                            if (isSearching) {
+                                isSearching = false
+                                viewModel.searchQuery.clearText()
+                            } else {
+                                navController.popBackStack()
+                            }
+                        }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back press"
                             )
+                        }
+                    },
+                    actions = {
+                        if (!isSearching) {
+                            IconButton(onClick = { isSearching = true }) {
+                                Icon(Icons.Default.Search, contentDescription = "Search")
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -133,7 +173,7 @@ fun BinScreen(
                 )
             ),
             selectedNotes = selectedNotes,
-            searchQuery = viewModel.searchQuery.text.toString(),
+            searchQuery = viewModel.searchQuery,
             onShortClick = { note ->
                 viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },

@@ -7,6 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,9 +53,21 @@ fun ArchiveScreen(
     val selectedNotes by viewModel.selectedNotes.collectAsStateWithLifecycle()
     val notesList by viewModel.notesList.collectAsStateWithLifecycle()
 
+    var isSearching by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isSearching) {
+        if (isSearching) {
+            focusRequester.requestFocus()
+        }
+    }
+
     BackHandler {
         if (inSelectionMode) {
             viewModel.clearSelection()
+        } else if (isSearching) {
+            isSearching = false
+            viewModel.searchQuery.clearText()
         } else {
             navController.popBackStack()
         }
@@ -69,14 +89,36 @@ fun ArchiveScreen(
             } else {
                 TopAppBar(
                     title = {
-                        Text(text = "Archive")
+                        if (isSearching) {
+                            de.marquisproject.finotes.ui.components.SearchField(
+                                state = viewModel.searchQuery,
+                                modifier = Modifier.focusRequester(focusRequester),
+                                placeholder = "Search Archive"
+                            )
+                        } else {
+                            Text(text = "Archive")
+                        }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(onClick = {
+                            if (isSearching) {
+                                isSearching = false
+                                viewModel.searchQuery.clearText()
+                            } else {
+                                navController.popBackStack()
+                            }
+                        }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back press"
                             )
+                        }
+                    },
+                    actions = {
+                        if (!isSearching) {
+                            IconButton(onClick = { isSearching = true }) {
+                                Icon(Icons.Default.Search, contentDescription = "Search")
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -112,7 +154,7 @@ fun ArchiveScreen(
                 )
             ),
             selectedNotes = selectedNotes,
-            searchQuery = viewModel.searchQuery.text.toString(),
+            searchQuery = viewModel.searchQuery,
             onShortClick = { note ->
                 viewModel.shortClickSelect(note = note, shortClickAction = {navController.navigate(NoteRoute(noteId = requireNotNull(note.id), noteStatus = note.noteStatus))} )
             },

@@ -28,13 +28,14 @@ import de.marquisproject.finotes.ui.theme.FinotesTheme
 @Composable
 fun SearchField (
     state: TextFieldState,
+    modifier: Modifier = Modifier,
     placeholder: String = "Search Finotes",
 ) {
     val focusManager = LocalFocusManager.current
 
     OutlinedTextField(
         state = state,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(50),
         keyboardOptions = KeyboardOptions(
