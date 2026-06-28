@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
@@ -49,7 +49,6 @@ fun NoteScreen(
     val viewModel: NoteViewModel = hiltViewModel()
 
     val currentNote by viewModel.currentNote.collectAsStateWithLifecycle()
-    val currentBodyTextFieldValue by viewModel.currentBodyTextFieldValue.collectAsStateWithLifecycle()
     val noteIsLoaded by viewModel.noteIsLoaded.collectAsStateWithLifecycle()
     val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
@@ -182,18 +181,17 @@ fun NoteScreen(
             ) {
                 TextField(
                     readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
-                    value = currentNote.title,
-                    onValueChange = { viewModel.updateCurrentNoteTitle(it) },
+                    state = viewModel.titleState,
                     textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                     modifier = Modifier
                         .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                     ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { bodyFocusRequester.requestFocus() },
-                    ),
-                    singleLine = true,
+                    onKeyboardAction = {
+                        bodyFocusRequester.requestFocus()
+                    },
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     placeholder = { Text("Title", color = Color.Gray, style = MaterialTheme.typography.titleLarge) },
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
@@ -206,8 +204,7 @@ fun NoteScreen(
                 )
                 MarkdownTextField(
                     readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
-                    value = currentBodyTextFieldValue,
-                    onValueChange = { viewModel.updateCurrentNoteBody(it) },
+                    state = viewModel.bodyState,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                     focusRequester = bodyFocusRequester,
                     placeholder = {
