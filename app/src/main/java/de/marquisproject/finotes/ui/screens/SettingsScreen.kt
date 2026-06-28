@@ -90,21 +90,20 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
                     ) {
-                        val themename = ThemeVariantMap[themeV]?.name
+                        val themeName = ThemeVariantMap[themeV]?.name
                             ?: (themeV.name.lowercase().replaceFirstChar { it.uppercase() } + "'s theme")
-                        //val themename = themeV.name.lowercase().replaceFirstChar { it.uppercase() } + "'s theme"
                         RadioButton(
                             selected = themeVariant == themeV,
                             onClick = null
                         )
                         Text(
-                            text = themename,
+                            text = themeName,
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
 
-                    // show three main colours as a palette of boxes
+                    // show three main colors as a palette of boxes
                     Row(
                         modifier = Modifier
                             .padding(8.dp)

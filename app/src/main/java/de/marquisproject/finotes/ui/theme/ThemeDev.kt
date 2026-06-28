@@ -102,7 +102,7 @@ fun HomeScreenPreview() {
     heightDp = 200
 )
 @Composable
-fun PreviewDropDownmenu() {
+fun PreviewDropDownMenu() {
     FinotesTheme {
         Column(
             modifier = Modifier
@@ -147,7 +147,7 @@ fun PreviewDropDownmenu() {
     heightDp = 100
 )
 @Composable
-fun PreviewFastSelectionCarusel() {
+fun PreviewFastSelectionCarousel() {
     FinotesTheme {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
@@ -322,9 +322,8 @@ fun PreviewNoteCardDark () {
 
 @Preview
 @Composable
-fun PreviewDropDownmenuDark() {
+fun PreviewDropDownMenuDark() {
     FinotesTheme {
-        var expandedMenu = true
         Column(
             modifier = Modifier
                 .height(200.dp)
@@ -333,36 +332,28 @@ fun PreviewDropDownmenuDark() {
         ) {
             DropdownMenuItem(
                 text = { Text("Archive") },
-                onClick = {
-                    expandedMenu = false
-                },
+                onClick = {},
                 leadingIcon = {
                     Icon(painterResource(id = R.drawable.inventory_2_24dp), contentDescription = "Archive")
                 }
             )
             DropdownMenuItem(
                 text = { Text("Bin") },
-                onClick = {
-                    expandedMenu = false
-                },
+                onClick = {},
                 leadingIcon = {
                     Icon(Icons.Default.Delete, contentDescription = "Bin")
                 }
             )
             DropdownMenuItem(
                 text = { Text("Export/Import notes") },
-                onClick = {
-                    expandedMenu = false
-                },
+                onClick = {},
                 leadingIcon = {
                     Icon(painterResource(id = R.drawable.baseline_import_export_24), contentDescription = "Bin")
                 }
             )
             DropdownMenuItem(
                 text = { Text("Settings") },
-                onClick = {
-                    expandedMenu = false
-                },
+                onClick = {},
                 leadingIcon = {
                     Icon(Icons.Default.Settings, contentDescription = "Settings")
                 }
@@ -377,7 +368,7 @@ fun PreviewDropDownmenuDark() {
     uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun PreviewFastSelectionCaruselDark() {
+fun PreviewFastSelectionCarouselDark() {
     FinotesTheme {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
