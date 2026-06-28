@@ -37,7 +37,6 @@ class HomeViewModel @Inject constructor(
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    val selectedCategories: StateFlow<List<Long>> = _selectedCategories.asStateFlow()
     val selectedNotes: StateFlow<Set<Note>> = _selectedNotes.asStateFlow()
     val inSelectionMode: StateFlow<Boolean> = _inSelectionMode // already a StateFlow
     val snackbarEventFlow = _snackbarEventChannel.receiveAsFlow()
