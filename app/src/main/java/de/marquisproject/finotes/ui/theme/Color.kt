@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.ui.theme
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
@@ -47,7 +48,50 @@ data class ColourPalette(
     val onBackgroundDark: Color,
     val surfaceDark: Color,
     val onSurfaceDark: Color,
-)
+
+) {
+    fun toColorScheme(isDark: Boolean): ColorScheme {
+        return if (isDark) {
+            darkColorScheme(
+                primary = primaryDark,
+                onPrimary = onPrimaryDark,
+                primaryContainer = primaryContainerDark,
+                onPrimaryContainer = onPrimaryContainerDark,
+                secondary = secondaryDark,
+                onSecondary = onSecondaryDark,
+                secondaryContainer = secondaryContainerDark,
+                onSecondaryContainer = onSecondaryContainerDark,
+                tertiary = tertiaryDark,
+                onTertiary = onTertiaryDark,
+                error = errorDark,
+                onError = onErrorDark,
+                background = backgroundDark,
+                onBackground = onBackgroundDark,
+                surface = surfaceDark,
+                onSurface = onSurfaceDark,
+            )
+        } else {
+            lightColorScheme(
+                primary = primaryLight,
+                onPrimary = onPrimaryLight,
+                primaryContainer = primaryContainerLight,
+                onPrimaryContainer = onPrimaryContainerLight,
+                secondary = secondaryLight,
+                onSecondary = onSecondaryLight,
+                secondaryContainer = secondaryContainerLight,
+                onSecondaryContainer = onSecondaryContainerLight,
+                tertiary = tertiaryLight,
+                onTertiary = onTertiaryLight,
+                error = errorLight,
+                onError = onErrorLight,
+                background = backgroundLight,
+                onBackground = onBackgroundLight,
+                surface = surfaceLight,
+                onSurface = onSurfaceLight,
+            )
+        }
+    }
+}
 
 
 val AuColorPalette = ColourPalette(
