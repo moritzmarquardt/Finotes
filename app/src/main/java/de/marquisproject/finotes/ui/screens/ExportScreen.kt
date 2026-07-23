@@ -29,7 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun ExportScreen(
-    viewModel: ImportExportViewModel
+    viewModel: ImportExportViewModel,
+    modifier: Modifier = Modifier
 ) {
     val createFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -47,7 +48,7 @@ fun ExportScreen(
 
 
     Column (
-        modifier = Modifier.padding(16.dp)
+        modifier = modifier.padding(16.dp)
     ) {
         Text("Export notes here to transfer them to a new phone or computer.")
         Text("Export options", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 30.dp, bottom = 10.dp))

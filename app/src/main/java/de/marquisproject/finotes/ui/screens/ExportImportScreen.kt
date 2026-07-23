@@ -1,7 +1,5 @@
 package de.marquisproject.finotes.ui.screens
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,13 +22,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
-import kotlinx.serialization.Serializable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,11 +33,9 @@ fun ExportImportScreen(
 ) {
     val viewModel: ImportExportViewModel = hiltViewModel()
 
-    val navControllerIE = rememberNavController()
     val importExportMode by viewModel.importExportMode.collectAsStateWithLifecycle()
     val loadedData by viewModel.loadedData.collectAsStateWithLifecycle()
     val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty()
-
 
     Scaffold(
         topBar = {
@@ -94,7 +86,6 @@ fun ExportImportScreen(
                     selected = importExportMode == ImportExportMode.EXPORT,
                     onClick = {
                         viewModel.setMode(ImportExportMode.EXPORT)
-                        navControllerIE.navigate(ExportRoute)
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.onSecondary,
@@ -110,7 +101,6 @@ fun ExportImportScreen(
                     selected = importExportMode == ImportExportMode.IMPORT,
                     onClick = {
                         viewModel.setMode(ImportExportMode.IMPORT)
-                        navControllerIE.navigate(ImportRoute)
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.onSecondary,
@@ -123,27 +113,20 @@ fun ExportImportScreen(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navControllerIE,
-            startDestination = ExportRoute,
-            modifier = Modifier.padding(innerPadding),
-            exitTransition = { ExitTransition.None},
-            enterTransition = { EnterTransition.None }
-        ) {
-            composable<ExportRoute> {
+        when (importExportMode) {
+            ImportExportMode.EXPORT -> {
                 ExportScreen(
                     viewModel = viewModel,
+                    modifier = Modifier.padding(innerPadding)
                 )
             }
-            composable<ImportRoute> {
+            ImportExportMode.IMPORT -> {
                 ImportScreen(
                     viewModel = viewModel,
+                    modifier = Modifier.padding(innerPadding)
                 )
             }
         }
     }
 
 }
-
-@Serializable object ExportRoute
-@Serializable object ImportRoute
