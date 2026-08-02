@@ -7,14 +7,14 @@ This is a project for friends and family.
 
 ## Features
 
-- **Private by design**: No internet access, no cloud sync, no tracking. Your notes stay on your device.
-- **Export & import**: Backup notes to a file or move them between devices.
-- **Auto-save**: Notes save instantly as you type.
-- **Search**: Find notes quickly with full-text search.
+- **Only local storage**: Your notes stay on your device.
+- **Export & import**: Backup notes to a file and import them.
+- **Auto-save**: Notes save instantly as you type so nothing gets lost.
+- **Search**: Find notes with full-text search.
 - **Pin notes**: Keep important notes at the top.
 - **Archive**: Hide notes you don’t need right now.
-- **Bin**: Delete notes with a safety net—restore or empty the bin anytime.
-- **Dark mode**: Easy on the eyes, day or night.
+- **Bin**: Deleted notes are kept in a bin until final deletion.
+- **Dark mode**
 
 ## Screenshots
 
@@ -27,16 +27,16 @@ This is a project for friends and family.
 
 ## Technical Details
 
-Built with modern Android development tools:
-- **Jetpack Compose**: Declarative UI for a smooth, responsive interface.
-- **Kotlin**: Clean, concise code with full null safety.
-- **MVVM architecture**: Separates UI from business logic for easier maintenance.
-- **Room**: Robust local database with migrations and validation.
+Built with modern Android development tools so this can be seen as a blueprint for other projects or as a guideline.
+- **Jetpack Compose**: Most modern Android Development Architecture to make modular code.
+- **Kotlin**: Clean and modern language.
+- **MVVM architecture**: Separates UI from underlying logic for easier maintenance and cleaner code. Using viewmodels for data persistence across UI reloads.
+- **Room**: Modern local database with migrations.
 - **Hilt**: Dependency injection for cleaner, testable code.
 
 ## Contributions
 
-Contributions are welcome! Open an issue or submit a pull request. Report any bugs, suggest features and create pull requests to help improve Finotes.
+Report any bugs, suggest features and create pull requests to help improve Finotes. contributions are welcome:)
 
 ## License
 
