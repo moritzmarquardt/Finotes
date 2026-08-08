@@ -48,7 +48,8 @@ import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
 
 @Composable
 fun ImportScreen(
-    viewModel: ImportExportViewModel
+    viewModel: ImportExportViewModel,
+    modifier: Modifier = Modifier
 ) {
     val pickFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -69,7 +70,7 @@ fun ImportScreen(
 
     viewModel.setMode(ImportExportMode.IMPORT)
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         if (!notesLoaded) {
             Column(
                 modifier = Modifier
