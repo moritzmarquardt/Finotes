@@ -70,7 +70,13 @@ fun HomeScreenPreview() {
             ),
         )
         Scaffold(
-            topBar = { TopBarHome(navController = rememberNavController(), searchQuery = rememberTextFieldState("note")) },
+            topBar = {
+                TopBarHome(
+                    navController = rememberNavController(),
+                    searchQuery = rememberTextFieldState("note"),
+                    onToggleCategoryFilter = {}
+                )
+            },
             floatingActionButton = { AddNoteFAB(onClick = {}) },
         ) { innerPadding ->
             LazyVerticalStaggeredGrid(
@@ -223,6 +229,7 @@ fun PreviewTopBarHome () {
         TopBarHome(
             navController = rememberNavController(),
             searchQuery = rememberTextFieldState(),
+            onToggleCategoryFilter = {}
         )
     }
 }
@@ -444,6 +451,7 @@ fun PreviewTopBarHomeDark () {
         TopBarHome(
             navController = rememberNavController(),
             searchQuery = rememberTextFieldState(),
+            onToggleCategoryFilter = {}
         )
     }
 }

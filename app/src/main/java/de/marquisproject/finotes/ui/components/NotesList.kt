@@ -14,9 +14,12 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import de.marquisproject.finotes.data.notes.model.Category
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.utils.NoteSection
 
@@ -24,12 +27,17 @@ import de.marquisproject.finotes.utils.NoteSection
 fun NotesList(
     padding: PaddingValues = PaddingValues(0.dp),
     noteSections: List<NoteSection> = emptyList(),
+    categories: List<Category> = emptyList(),
     inSelectionMode: Boolean = false,
     selectedNotes: List<Note> = emptyList(),
     searchQuery: TextFieldState = TextFieldState(),
     onShortClick: (Note) -> Unit = {},
     onLongClick: (Note) -> Unit = {},
 ){
+    val categoryColorMap = remember(categories) {
+        categories.associate { it.id to Color(it.color) }
+    }
+
     LazyVerticalStaggeredGrid(
         modifier = Modifier.padding(padding),
         columns = StaggeredGridCells.Adaptive(180.dp),
@@ -68,6 +76,7 @@ fun NotesList(
                     ) { note ->
                         NoteCard(
                             note = note,
+                            categoryColor = categoryColorMap[note.category],
                             searchQuery = searchQuery,
                             selected = selectedNotes.contains(note),
                             onClick = { onShortClick(note) },

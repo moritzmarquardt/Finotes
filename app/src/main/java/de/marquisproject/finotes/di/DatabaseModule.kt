@@ -8,6 +8,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import de.marquisproject.finotes.data.notes.sources.CategoryDAO
 import de.marquisproject.finotes.data.notes.sources.NoteDAO
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
 import javax.inject.Singleton
@@ -25,7 +26,10 @@ object DatabaseModule {
             NoteDatabase::class.java,
             "note.db"
         )
-            .addMigrations(NoteDatabase.getMigration1to2(app.applicationContext))
+            .addMigrations(
+                NoteDatabase.getMigration1to2(app.applicationContext),
+                NoteDatabase.getMigration2to3()
+            )
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     super.onOpen(db)
@@ -51,5 +55,11 @@ object DatabaseModule {
     @Singleton
     fun provideNoteDao(db: NoteDatabase): NoteDAO {
         return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun provideCategoryDao(db: NoteDatabase): CategoryDAO {
+        return db.categoryDao
     }
 }
