@@ -44,7 +44,6 @@ fun ExportImportScreen(
     val loadedData by viewModel.loadedData.collectAsStateWithLifecycle()
     val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty()
 
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -142,7 +141,6 @@ fun ExportImportScreen(
             }
         }
     }
-
 }
 
 @Serializable object ExportRoute

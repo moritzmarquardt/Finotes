@@ -5,6 +5,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import de.marquisproject.finotes.data.ncapi.NextcloudNote
 
 @Keep
 enum class NoteStatus {
@@ -84,4 +85,21 @@ data class Note(
     fun isUnsavedNoteWithContent() : Boolean {
         return !this.isExistingNote() && (this.title.isNotBlank() || this.body.isNotBlank())
     }
+
+    /**
+     * Extension function to convert a Note (Domain model) to a NextcloudNote (API model).
+     * Bijective translation: Title and body are joined with a newline.
+     */
+    fun toNextcloudNote() : NextcloudNote? {
+        if (remoteId == null) return null
+        return NextcloudNote(
+            id = remoteId,
+            etag = "", // Etag is usually handled by the server
+            content = if (title.isNotBlank()) "$title\n$body" else body,
+            modifiedAt = lastModified / 1000L,
+            category = null, // Logic for category mapping can be added here if needed
+            favorite = isPinned
+        )
+    }
+
 }
