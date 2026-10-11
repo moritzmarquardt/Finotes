@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import de.marquisproject.finotes.data.notes.model.Category
+import de.marquisproject.finotes.data.category.Category
 
 /**
  * A horizontal category picker that filters categories based on an external search query.

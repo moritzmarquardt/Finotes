@@ -1,4 +1,4 @@
-package de.marquisproject.finotes.data.notes.model
+package de.marquisproject.finotes.data.category
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

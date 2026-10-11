@@ -1,8 +1,11 @@
-package de.marquisproject.finotes.data.notes.sources
+package de.marquisproject.finotes.data.category
 
-import androidx.room.*
-import de.marquisproject.finotes.data.notes.model.Category
-import de.marquisproject.finotes.data.notes.model.CategoryUsage
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,7 +31,7 @@ interface CategoryDAO {
 
     /**
      * Fetches categories sorted by relevance.
-     * Relevance is determined by how many times a category was used as a filter 
+     * Relevance is determined by how many times a category was used as a filter
      * within the specified [cutoff] timestamp.
      */
     @Query("""
@@ -59,7 +62,7 @@ interface CategoryDAO {
         ORDER BY u.usageCount DESC, c.name ASC
     """)
     fun getUsedCategoriesByRelevance(cutoff: Long): Flow<List<Category>>
-    
+
     /**
      * Optional: Cleanup old logs to keep the DB small.
      */

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.settings.SettingsRepository
-import de.marquisproject.finotes.data.notes.model.Category
-import de.marquisproject.finotes.data.notes.repositories.CategoryRepository
+import de.marquisproject.finotes.data.category.Category
+import de.marquisproject.finotes.data.category.CategoryRepository
 import de.marquisproject.finotes.ui.theme.ThemeVariant
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted

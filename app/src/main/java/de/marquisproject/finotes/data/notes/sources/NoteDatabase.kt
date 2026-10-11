@@ -4,8 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
-import de.marquisproject.finotes.data.notes.model.Category
-import de.marquisproject.finotes.data.notes.model.CategoryUsage
+import de.marquisproject.finotes.data.category.Category
+import de.marquisproject.finotes.data.category.CategoryDAO
+import de.marquisproject.finotes.data.category.CategoryUsage
 import de.marquisproject.finotes.data.notes.model.Note
 
 @Database(

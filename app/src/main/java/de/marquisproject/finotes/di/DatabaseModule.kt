@@ -8,7 +8,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import de.marquisproject.finotes.data.notes.sources.CategoryDAO
+import de.marquisproject.finotes.data.category.CategoryDAO
 import de.marquisproject.finotes.data.notes.sources.NoteDAO
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
 import javax.inject.Singleton

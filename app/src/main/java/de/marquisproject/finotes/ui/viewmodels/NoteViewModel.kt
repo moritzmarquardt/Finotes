@@ -9,10 +9,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.marquisproject.finotes.data.notes.model.Category
+import de.marquisproject.finotes.data.category.Category
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.data.notes.model.Note
-import de.marquisproject.finotes.data.notes.repositories.CategoryRepository
+import de.marquisproject.finotes.data.category.CategoryRepository
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview

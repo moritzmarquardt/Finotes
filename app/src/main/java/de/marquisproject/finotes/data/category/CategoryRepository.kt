@@ -1,8 +1,5 @@
-package de.marquisproject.finotes.data.notes.repositories
+package de.marquisproject.finotes.data.category
 
-import de.marquisproject.finotes.data.notes.model.Category
-import de.marquisproject.finotes.data.notes.model.CategoryUsage
-import de.marquisproject.finotes.data.notes.sources.CategoryDAO
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -40,7 +37,7 @@ class CategoryRepository @Inject constructor(
      */
     suspend fun logCategoryUsage(categoryId: Long) {
         categoryDao.logUsage(CategoryUsage(categoryId = categoryId))
-        
+
         // Bonus: Clean up very old logs (e.g., older than 60 days) to keep DB healthy
         val sixtyDaysAgo = System.currentTimeMillis() - (60L * 24 * 60 * 60 * 1000)
         categoryDao.deleteOldUsageLogs(sixtyDaysAgo)

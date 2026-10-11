@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import de.marquisproject.finotes.data.notes.model.Category
+import de.marquisproject.finotes.data.category.Category
 import de.marquisproject.finotes.ui.theme.ThemeVariant
 import de.marquisproject.finotes.ui.theme.ThemeVariantMap
 import de.marquisproject.finotes.ui.viewmodels.SettingsViewModel
