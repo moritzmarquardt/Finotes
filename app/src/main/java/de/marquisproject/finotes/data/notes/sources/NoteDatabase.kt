@@ -4,17 +4,22 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
+import de.marquisproject.finotes.data.category.Category
+import de.marquisproject.finotes.data.category.CategoryDAO
+import de.marquisproject.finotes.data.category.CategoryUsage
 import de.marquisproject.finotes.data.notes.model.Note
 
 @Database(
-    entities = [Note::class],
-    version = 2,
+    entities = [Note::class, Category::class, CategoryUsage::class],
+    version = 3,
     exportSchema = true
 )
 abstract class NoteDatabase : RoomDatabase() {
     abstract val dao: NoteDAO
+    abstract val categoryDao: CategoryDAO
 
     companion object {
         fun getMigration1to2(context: Context): Migration = NoteMigration1to2(context)
+        fun getMigration2to3(): Migration = NoteMigration2to3()
     }
 }

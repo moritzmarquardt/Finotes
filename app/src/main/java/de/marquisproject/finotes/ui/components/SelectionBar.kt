@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.ui.components
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,7 +23,8 @@ import kotlin.collections.listOf
 fun SelectionBar(
     numSelected: Int,
     onSelectionClear: () -> Unit,
-    actionButtons: List<Pair<Painter, () -> Unit>>,
+    actionButtons: List<Pair<Painter, () -> Unit>> = emptyList(),
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
         title = {
@@ -36,6 +38,7 @@ fun SelectionBar(
             }
         },
         actions = {
+            actions()
             actionButtons.forEach {
                 IconButton(onClick = it.second) {
                     Icon(it.first, contentDescription = "Action")

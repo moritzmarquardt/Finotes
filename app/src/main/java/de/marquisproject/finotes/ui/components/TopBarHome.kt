@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -40,6 +41,7 @@ import de.marquisproject.finotes.ui.theme.FinotesTheme
 fun TopBarHome(
     navController: NavController,
     searchQuery: TextFieldState,
+    onToggleCategoryFilter: () -> Unit,
 ) {
     var expandedMenu by remember { mutableStateOf(false) }
 
@@ -47,6 +49,15 @@ fun TopBarHome(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background
         ),
+        navigationIcon = {
+            IconButton(onClick = onToggleCategoryFilter) {
+                Icon(
+                    imageVector = Icons.Default.FilterList,
+                    contentDescription = "Toggle category filter",
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            }
+        },
         title = {
             SearchField(
                 state = searchQuery,
@@ -98,7 +109,8 @@ fun TopBarHomePreview() {
         Surface {
             TopBarHome(
                 navController = rememberNavController(),
-                searchQuery = rememberTextFieldState()
+                searchQuery = rememberTextFieldState(),
+                onToggleCategoryFilter = {}
             )
         }
     }
@@ -112,7 +124,8 @@ fun TopBarHomeWithTextPreview() {
         Surface {
             TopBarHome(
                 navController = rememberNavController(),
-                searchQuery = rememberTextFieldState()
+                searchQuery = rememberTextFieldState(),
+                onToggleCategoryFilter = {}
             )
         }
     }
