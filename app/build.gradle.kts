@@ -44,6 +44,10 @@ android {
             assets.directories.add("$projectDir/schemas")
         }
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 ksp {
@@ -69,10 +73,6 @@ dependencies {
     implementation(libs.androidx.animation)
     implementation(libs.androidx.animation.graphics)
 
-    //Moshi for JSON parsing
-    implementation(libs.moshi)
-    implementation(libs.moshi.kotlin)
-
     // Navigation
     implementation(libs.androidx.navigation.compose)
     androidTestImplementation(libs.androidx.navigation.testing)
@@ -96,6 +96,7 @@ dependencies {
 
     //Testing
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

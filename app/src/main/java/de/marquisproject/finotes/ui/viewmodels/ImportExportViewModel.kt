@@ -6,13 +6,12 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,13 +38,13 @@ class ImportExportViewModel @Inject constructor(
                 getApplication<Application>().contentResolver.openOutputStream(uri)?.bufferedWriter().use { writer ->
                     writer?.write(jsonString)
                 }
-                // Show toast on the main thread (or emit a UI event for the Composable to show)
-                launch(Dispatchers.Main) {
+                // Show toast on the main thread
+                withContext(Dispatchers.Main) {
                     Toast.makeText(getApplication(), "Backup saved successfully!", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
-                launch(Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     Toast.makeText(getApplication(), "Failed to save backup: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -56,28 +55,37 @@ class ImportExportViewModel @Inject constructor(
     fun importNotesFromFile(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) { // Perform file I/O on IO dispatcher
             try {
-                getApplication<Application>().contentResolver.openInputStream(uri)?.bufferedReader().use { reader ->
-                    val jsonString = reader?.readText()
-                    jsonString?.let {
-                        loadBackupFile(it) // Call your existing loadBackupFile
-                        // setShowFileInfoAlert(true) // Set UI state for the Composable
-                        // Or emit an event to the Composable to show the alert
+                val jsonString = getApplication<Application>()
+                    .contentResolver
+                    .openInputStream(uri)
+                    ?.bufferedReader()
+                    .use { it?.readText() }
+
+                if (jsonString != null) {
+                    val isSuccess = loadBackupFile(jsonString)
+                    withContext(Dispatchers.Main) {
+                        if (isSuccess) {
+                            Toast.makeText(getApplication(), "Backup loaded successfully!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(getApplication(), "Failed to read backup: Invalid file or corrupted JSON format", Toast.LENGTH_LONG).show()
+                        }
                     }
-                }
-                launch(Dispatchers.Main) {
-                    Toast.makeText(getApplication(), "Backup loaded successfully!", Toast.LENGTH_SHORT).show()
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(getApplication(), "Failed to load backup: Empty file", Toast.LENGTH_LONG).show()
+                    }
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
-                launch(Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     Toast.makeText(getApplication(), "Failed to load backup: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
-    private val _notesList = noteRepository.fetchAllNotesByStatus(NoteStatus.ACTIVE).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    private val _archivedList = noteRepository.fetchAllNotesByStatus(NoteStatus.ARCHIVED).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    private val _notesList = noteRepository.fetchAllNotesByStatus(NoteStatus.ACTIVE).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val _archivedList = noteRepository.fetchAllNotesByStatus(NoteStatus.ARCHIVED).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private val _exportSettings = MutableStateFlow(ExportSettings())
     private val _exportData = combine(
         _notesList,
@@ -89,7 +97,7 @@ class ImportExportViewModel @Inject constructor(
         } else {
             ExportData(notesList)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), ExportData())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ExportData())
 
     private val _importData = MutableStateFlow(ExportData())
     private val _loadedData = MutableStateFlow(ExportData())
@@ -113,7 +121,7 @@ class ImportExportViewModel @Inject constructor(
         val notesNonDuplicatesSelected = importData.notes.toSet() == notesNonDuplicates.toSet()
         val archivedNotesNonDuplicatesSelected = importData.archivedNotes.toSet() == archivedNotesNonDuplicates.toSet()
         return@combine notesNonDuplicatesSelected && archivedNotesNonDuplicatesSelected
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     // exposing the state
     val importExportMode : StateFlow<ImportExportMode> = _importExportMode.asStateFlow()
@@ -143,29 +151,30 @@ class ImportExportViewModel @Inject constructor(
         _showFinalImportAlert.update { show }
     }
 
-    fun createExportDataJson() : String {
-        /**
-         * Create a JSON string from the export data using Moshi
-         */
-        val exportData = _exportData.value
-        val moshi = Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .build()
-
-        val jsonAdapter = moshi.adapter(ExportData::class.java)
-        val exportDataJason = jsonAdapter.toJson(exportData)
-
-        return exportDataJason
+    companion object {
+        internal val json = Json {
+            // Ignores unknown JSON keys to ensure backward/forward compatibility with future backup formats
+            ignoreUnknownKeys = true
+            // Allows lenient syntax parsing (e.g. trailing commas or unquoted keys in manually edited JSON files)
+            isLenient = true
+            // Coerces 'null' values in JSON back to Kotlin default values if the property is non-nullable
+            coerceInputValues = true
+            // Explicitly writes out default property values in the exported JSON file
+            encodeDefaults = true
+        }
     }
 
-    fun loadBackupFile(jsonString: String) {
-        viewModelScope.launch {
-            val moshi = Moshi.Builder()
-                .add(KotlinJsonAdapterFactory())
-                .build()
-            val jsonAdapter = moshi.adapter(ExportData::class.java)
-            val backupData = jsonAdapter.fromJson(jsonString)
-                ?: throw IllegalArgumentException("Invalid JSON format")
+    fun createExportDataJson() : String {
+        /**
+         * Create a JSON string from the export data using kotlinx.serialization
+         */
+        val exportData = _exportData.value
+        return json.encodeToString(exportData)
+    }
+
+    fun loadBackupFile(jsonString: String): Boolean {
+        return try {
+            val backupData = json.decodeFromString<ExportData>(jsonString)
             val loadedData = ExportData(
                 notes = backupData.notes,
                 archivedNotes = backupData.archivedNotes
@@ -173,6 +182,10 @@ class ImportExportViewModel @Inject constructor(
             _loadedData.update { loadedData }
             _importData.update { loadedData }
             Log.d("ImportExportViewModel", "Loaded data: ${loadedData.notes.size} notes, ${loadedData.archivedNotes.size} archived notes")
+            true
+        } catch (e: Exception) {
+            Log.e("ImportExportViewModel", "Failed to parse backup JSON", e)
+            false
         }
     }
 
@@ -219,10 +232,10 @@ class ImportExportViewModel @Inject constructor(
                 _showImportLoading.update { true }
                 try {
                     _importData.value.notes.forEach { note ->
-                        noteRepository.insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+                        noteRepository.insertNote(note.copy(id = null, noteStatus = NoteStatus.ACTIVE))
                     }
                     _importData.value.archivedNotes.forEach { note ->
-                        noteRepository.insertNote(note.copy(noteStatus = NoteStatus.ARCHIVED))
+                        noteRepository.insertNote(note.copy(id = null, noteStatus = NoteStatus.ARCHIVED))
                     }
 
                     // Clear only after all updates completed successfully
