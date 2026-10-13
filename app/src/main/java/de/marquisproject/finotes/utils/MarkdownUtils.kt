@@ -24,26 +24,73 @@ object MarkdownUtils {
     private val JUST_SYMBOL_REGEX = Regex("^(\\s*)([-*])$")
 
     /**
+     * Fixes a bug prevalent on Samsung Keyboards (e.g. on Galaxy S10 series) where pressing Enter
+     * with predictive text/autocorrect active commits the current composing word/line AND inserts
+     * a newline simultaneously without replacing the active composition in the buffer, resulting
+     * in duplicated text (e.g. "hellohello\n").
+     */
+    @OptIn(ExperimentalFoundationApi::class)
+    private fun fixSamsungDuplicateNewline(buffer: TextFieldBuffer) {
+        val changes = buffer.changes
+        if (changes.changeCount != 1) return
+
+        val changeRange = changes.getRange(0)
+        val originalRange = changes.getOriginalRange(0)
+        val text = buffer.asCharSequence()
+
+        if (changeRange.length > 1 && text.getOrNull(changeRange.end - 1) == '\n') {
+            val insertedText = text.subSequence(changeRange.start, changeRange.end)
+            val insertedPrefix = insertedText.subSequence(0, insertedText.length - 1)
+
+            if (insertedPrefix.isNotEmpty()) {
+                val originalText = buffer.originalText
+                val origStart = originalRange.start
+
+                val lineStartInOriginal = if (origStart <= 0) 0 else {
+                    originalText.lastIndexOf('\n', origStart - 1).let { if (it == -1) 0 else it + 1 }
+                }
+                val precedingOriginal = originalText.subSequence(lineStartInOriginal, origStart)
+
+                if (precedingOriginal.isNotEmpty()) {
+                    if (precedingOriginal == insertedPrefix) {
+                        buffer.delete(changeRange.start, changeRange.start + insertedPrefix.length)
+                    } else if (insertedPrefix.length > precedingOriginal.length && insertedPrefix.startsWith(precedingOriginal)) {
+                        buffer.delete(lineStartInOriginal, origStart)
+                    } else {
+                        val lastWordStart = precedingOriginal.lastIndexOf(' ').let { if (it == -1) 0 else it + 1 }
+                        val precedingWord = precedingOriginal.subSequence(lastWordStart, precedingOriginal.length)
+                        if (precedingWord.isNotEmpty() && precedingWord == insertedPrefix) {
+                            buffer.delete(changeRange.start, changeRange.start + insertedPrefix.length)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Handles list formatting in a TextFieldBuffer for the new TextFieldState API.
      */
     @OptIn(ExperimentalFoundationApi::class)
     fun handleListInput(buffer: TextFieldBuffer) {
+        if (!buffer.selection.collapsed) return
+
+        // Fix Samsung Keyboard duplicate commit on enter if present
+        fixSamsungDuplicateNewline(buffer)
+
         val text = buffer.asCharSequence()
         val selection = buffer.selection
-
-        // return and exit if a selection is present. List logic should only be applied
-        // when a user types normally with no selection.
-        if (!selection.collapsed) return
-
         val changes = buffer.changes
+
         // Only handle single-character changes to avoid interfering with pastes/multi-edits
         if (changes.changeCount == 1) {
             val changeRange = changes.getRange(0)
             val originalRange = changes.getOriginalRange(0)
+            val netAdded = buffer.asCharSequence().length - buffer.originalText.length
 
             // 1. Handle Newline (Enter key)
-            if (changeRange.length == 1 && originalRange.length == 0 && (text.getOrNull(changeRange.start) == '\n')) {
-                val lineEnd = changeRange.start
+            if ((changeRange.length == 1 || netAdded == 1) && selection.start > 0 && text[selection.start - 1] == '\n') {
+                val lineEnd = selection.start - 1
                 val lastNewLine = if (lineEnd == 0) -1 else text.lastIndexOf('\n', lineEnd - 1)
                 val lineStart = if (lastNewLine == -1) 0 else lastNewLine + 1
                 
@@ -56,10 +103,10 @@ object MarkdownUtils {
                     
                     if (previousLine.trim() == symbol) {
                         // User pressed enter on an empty bullet line: remove the bullet and end the list
-                        buffer.delete(lineStart, changeRange.end)
+                        buffer.delete(lineStart, selection.start)
                     } else {
                         // Continue the list with the same indent and symbol
-                        buffer.insert(changeRange.end, "$indent$symbol ")
+                        buffer.insert(selection.start, "$indent$symbol ")
                     }
                 }
                 return

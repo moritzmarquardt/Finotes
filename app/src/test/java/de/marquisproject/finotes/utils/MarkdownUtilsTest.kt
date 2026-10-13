@@ -300,4 +300,40 @@ class MarkdownUtilsTest {
         // Change count will be 2, so it should not trigger auto-bullet
         assertEquals("prefix - item\n", testState.text.toString())
     }
+
+    @Test
+    fun `handleListInput fixes Samsung Keyboard duplicate word on enter`() {
+        // Simulates Samsung Keyboard committing "hello\n" at index 5 when "hello" was already typed
+        val testState = createStateAndEdit(
+            "hello",
+            TextRange(5),
+            editBlock = { append("hello\n") }
+        )
+        assertEquals("hello\n", testState.text.toString())
+        assertEquals(TextRange(6), testState.selection)
+    }
+
+    @Test
+    fun `handleListInput fixes Samsung Keyboard duplicate line on enter with bullet list`() {
+        // Simulates Samsung Keyboard committing "item\n" at index 8 when "- item" was already typed
+        val testState = createStateAndEdit(
+            "- item",
+            TextRange(6),
+            editBlock = { append("item\n") }
+        )
+        assertEquals("- item\n- ", testState.text.toString())
+        assertEquals(TextRange(9), testState.selection)
+    }
+
+    @Test
+    fun `handleListInput fixes Samsung Keyboard predictive completion duplicate on enter`() {
+        // Simulates Samsung Keyboard committing "there\n" at index 3 when "the" was already typed
+        val testState = createStateAndEdit(
+            "the",
+            TextRange(3),
+            editBlock = { append("there\n") }
+        )
+        assertEquals("there\n", testState.text.toString())
+        assertEquals(TextRange(6), testState.selection)
+    }
 }
