@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "de.marquisproject.finotes"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "de.marquisproject.finotes"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 7
         versionName = "v1.1.2"
 
@@ -98,7 +98,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
