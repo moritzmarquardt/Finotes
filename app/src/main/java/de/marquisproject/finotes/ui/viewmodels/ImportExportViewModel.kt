@@ -44,10 +44,12 @@ class ImportExportViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val backupFileService = BackupFileService(
-        getApplication<Application>().contentResolver,
-        getApplication<Application>().cacheDir
-    )
+    private val backupFileService by lazy {
+        BackupFileService(
+            getApplication<Application>().contentResolver,
+            getApplication<Application>().cacheDir
+        )
+    }
 
     private val _notesList = noteRepository.fetchAllNotesByStatus(NoteStatus.ACTIVE).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private val _archivedList = noteRepository.fetchAllNotesByStatus(NoteStatus.ARCHIVED).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
