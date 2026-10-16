@@ -1,6 +1,7 @@
 package de.marquisproject.finotes.ui.viewmodels
 
 import de.marquisproject.finotes.data.notes.model.Note
+import kotlinx.serialization.Serializable
 
 enum class ImportExportMode {
     EXPORT,
@@ -16,6 +17,7 @@ data class ExportSettings (
     val includeArchived: Boolean = true
 )
 
+@Serializable
 data class ExportData(
     val notes: List<Note> = emptyList(),
     val archivedNotes: List<Note> = emptyList(),
