@@ -43,8 +43,15 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.marquisproject.finotes.ui.components.NoteCard
-import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
+import de.marquisproject.finotes.data.backup.ImportExportMode
+import android.widget.Toast
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @Composable
 fun ImportScreen(
@@ -61,12 +68,21 @@ fun ImportScreen(
 
     val loadedData by viewModel.loadedData.collectAsStateWithLifecycle()
     val importData by viewModel.importData.collectAsStateWithLifecycle()
-    val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty()
+    val importPassphrase by viewModel.importPassphrase.collectAsStateWithLifecycle()
+    val operationResult by viewModel.operationResult.collectAsStateWithLifecycle()
+    val notesLoaded = loadedData.notes.isNotEmpty() || loadedData.archivedNotes.isNotEmpty() || loadedData.binnedNotes.isNotEmpty()
     val openInfoAlert by viewModel.showFileInfoAlert.collectAsStateWithLifecycle()
     val showFinalImportAlert by viewModel.showFinalImportAlert.collectAsStateWithLifecycle()
     val onlyNonDuplicatesInImportData by viewModel.onlyNonDuplicatesInImportData.collectAsStateWithLifecycle()
     val showImportLoading by viewModel.showImportLoading.collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
+    LaunchedEffect(operationResult) {
+        operationResult?.let {
+            Toast.makeText(context, it.message, Toast.LENGTH_LONG).show()
+            viewModel.consumeOperationResult()
+        }
+    }
 
     viewModel.setMode(ImportExportMode.IMPORT)
 
@@ -79,7 +95,23 @@ fun ImportScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("Load notes from a JSON file to import them.")
+                Text("Load notes from a backup file to import them.")
+                Text(
+                    "Encrypted backups require the export passphrase.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                OutlinedTextField(
+                    value = importPassphrase,
+                    onValueChange = { viewModel.setImportPassphrase(it) },
+                    label = { Text("Passphrase for encrypted backups") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -87,9 +119,9 @@ fun ImportScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(onClick = {
-                        pickFileLauncher.launch("application/json")
+                        pickFileLauncher.launch("*/*")
                     }) {
-                        Text("Load notes from JSON file")
+                        Text("Load notes from backup file")
                     }
                 }
             }
@@ -189,6 +221,30 @@ fun ImportScreen(
                             item(
                                 span = StaggeredGridItemSpan.FullLine
                             ) {
+                                Text(
+                                    text = "Binned notes",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp, horizontal = 12.dp)
+                                )
+                            }
+                            items(
+                                items = loadedData.binnedNotes,
+                                key = { note -> "binned_${note.id}" }
+                            ) { note ->
+                                val isSelected =
+                                    importData.binnedNotes.contains(note)
+                                NoteCard(
+                                    note = note,
+                                    selected = isSelected,
+                                    onClick = { viewModel.longClickSelect(note) },
+                                    onLongClick = { viewModel.longClickSelect(note) },
+                                )
+                            }
+                            item(
+                                span = StaggeredGridItemSpan.FullLine
+                            ) {
                                 // spacer at the bottom of height 200.dp
                                 Box(
                                     modifier = Modifier
@@ -263,7 +319,7 @@ fun ImportScreen(
                     },
                     text = {
                         Column {
-                            Text("The file contains ${loadedData.notes.size} notes and ${loadedData.archivedNotes.size} archived notes")
+                            Text("The file contains ${loadedData.notes.size} notes, ${loadedData.archivedNotes.size} archived and ${loadedData.binnedNotes.size} binned notes")
                             Text("Select the notes you want to import and click on the import button.")
                         }
                     },
@@ -286,7 +342,7 @@ fun ImportScreen(
                     },
                     text = {
                         Column {
-                            Text("This will add ${importData.notes.size} note(s) and ${importData.archivedNotes.size} archived note(s) to your database.")
+                            Text("This will add ${importData.notes.size} note(s), ${importData.archivedNotes.size} archived and ${importData.binnedNotes.size} binned note(s) to your database.")
                             Text(text = buildAnnotatedString {
                                 append("This action is ")
                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {

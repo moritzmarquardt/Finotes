@@ -23,7 +23,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
-import de.marquisproject.finotes.ui.viewmodels.ImportExportMode
+import de.marquisproject.finotes.data.backup.ImportExportMode
 import de.marquisproject.finotes.ui.viewmodels.ImportExportViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

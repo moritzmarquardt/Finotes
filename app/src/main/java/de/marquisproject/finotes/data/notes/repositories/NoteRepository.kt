@@ -14,6 +14,14 @@ class NoteRepository(
     }
 
     /**
+     * Inserts multiple notes in a single transaction. Either all notes are
+     * inserted or none, so a failed import never leaves partial data behind.
+     */
+    suspend fun insertNotes(notes: List<Note>) {
+        noteDao.insertNotesTransaction(notes.map { it.prepareForUpdate().copy(id = null) })
+    }
+
+    /**
      * Updates multiple notes in the database and marks them as needing to be synced.
      * @param notes The list of notes to update.
      */

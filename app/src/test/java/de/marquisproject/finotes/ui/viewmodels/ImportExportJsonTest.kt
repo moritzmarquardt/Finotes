@@ -1,6 +1,9 @@
 package de.marquisproject.finotes.ui.viewmodels
 
 import android.app.Application
+import de.marquisproject.finotes.data.backup.BackupCodec
+import de.marquisproject.finotes.data.backup.BackupCrypto
+import de.marquisproject.finotes.data.backup.ExportData
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
@@ -17,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -39,10 +43,20 @@ class ImportExportJsonTest {
 
     private fun createViewModel(
         activeNotes: List<Note> = emptyList(),
-        archivedNotes: List<Note> = emptyList()
+        archivedNotes: List<Note> = emptyList(),
+        binnedNotes: List<Note> = emptyList()
     ): ImportExportViewModel {
         val fakeDao = object : NoteDAO {
-            override suspend fun insertNote(note: Note): Long = 1L
+            val insertedNotes = mutableListOf<Note>()
+            var failNextInsert = false
+            override suspend fun insertNote(note: Note): Long {
+                if (failNextInsert) throw RuntimeException("Simulated database failure")
+                insertedNotes.add(note)
+                return insertedNotes.size.toLong()
+            }
+            override suspend fun insertNotesTransaction(notes: List<Note>) {
+                notes.forEach { insertNote(it) }
+            }
             override suspend fun updateNotes(notes: List<Note>) {}
             override suspend fun deleteNotes(note: List<Note>) {}
             override fun getNoteById(noteId: Long): Flow<Note> = flowOf()
@@ -50,7 +64,7 @@ class ImportExportJsonTest {
             override fun getAllNotesByStatus(noteStatus: NoteStatus): Flow<List<Note>> = when (noteStatus) {
                 NoteStatus.ACTIVE -> flowOf(activeNotes)
                 NoteStatus.ARCHIVED -> flowOf(archivedNotes)
-                else -> flowOf(emptyList())
+                NoteStatus.BINNED -> flowOf(binnedNotes)
             }
             override fun getNotesWithQuery(
                 searchQuery: String?,
@@ -67,7 +81,8 @@ class ImportExportJsonTest {
 
     /**
      * Tests ImportExportViewModel.createExportDataJson() directly.
-     * Verifies that the ViewModel exports active and archived notes into a valid JSON string.
+     * Verifies that the ViewModel exports active, archived and binned notes
+     * into a valid versioned backup envelope.
      */
     @Test
     fun testViewModel_createExportDataJson() = runTest {
@@ -86,6 +101,7 @@ class ImportExportJsonTest {
 
         val jsonOutput = viewModel.createExportDataJson()
 
+        assertTrue(jsonOutput.contains("finotes-backup"))
         assertTrue(jsonOutput.contains("Active Note"))
         assertTrue(jsonOutput.contains("Archived Note"))
         assertTrue(jsonOutput.contains("Active Body"))
@@ -96,6 +112,57 @@ class ImportExportJsonTest {
         assertTrue(jsonOutput.contains("title"))
         assertTrue(jsonOutput.contains("body"))
         assertTrue(jsonOutput.contains("noteStatus"))
+    }
+
+    @Test
+    fun testViewModel_createBackupFileBytes_isVersionedEnvelopeWithChecksum() = runTest {
+        val viewModel = createViewModel(
+            activeNotes = listOf(Note(id = 1L, title = "Note", body = "Body"))
+        )
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.exportData.collect()
+        }
+
+        val envelope = BackupCodec.decode(viewModel.createBackupFileBytes())
+
+        assertEquals("finotes-backup", envelope.format)
+        assertEquals(2, envelope.version)
+        assertEquals(1, envelope.data.notes.size)
+        assertTrue(envelope.checksum!!.matches(Regex("[0-9a-f]{64}")))
+    }
+
+    @Test
+    fun testViewModel_createBackupFileBytes_encryptedWithPassphrase() = runTest {
+        val viewModel = createViewModel(
+            activeNotes = listOf(Note(id = 1L, title = "Secret", body = "Body"))
+        )
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.exportData.collect()
+        }
+        viewModel.setExportPassphrase("my-passphrase")
+
+        val fileBytes = viewModel.createBackupFileBytes()
+
+        assertTrue(BackupCodec.isEncrypted(fileBytes))
+        val decrypted = BackupCrypto.decrypt(
+            BackupCodec.unwrapEncrypted(fileBytes),
+            "my-passphrase".toCharArray()
+        )
+        val envelope = BackupCodec.decode(decrypted)
+        assertEquals("Secret", envelope.data.notes.first().title)
+    }
+
+    @Test
+    fun testViewModel_createBackupFileBytes_unencryptedWithoutPassphrase() = runTest {
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.exportData.collect()
+        }
+
+        val fileBytes = viewModel.createBackupFileBytes()
+
+        assertFalse(BackupCodec.isEncrypted(fileBytes))
+        assertTrue(fileBytes.decodeToString().contains("finotes-backup"))
     }
 
     /**
@@ -160,6 +227,29 @@ class ImportExportJsonTest {
         assertEquals(1, importedData.notes.size)
         assertEquals("Round Trip Note", importedData.notes.first().title)
         assertEquals("Testing ViewModel functions", importedData.notes.first().body)
+    }
+
+    @Test
+    fun testViewModel_exportIncludesBinnedNotes() = runTest {
+        val binnedNote = Note(id = 3L, title = "Binned Note", noteStatus = NoteStatus.BINNED)
+        val viewModel = createViewModel(binnedNotes = listOf(binnedNote))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.exportData.collect()
+        }
+
+        val envelope = BackupCodec.decode(viewModel.createBackupFileBytes())
+
+        assertEquals(1, envelope.data.binnedNotes.size)
+        assertEquals("Binned Note", envelope.data.binnedNotes.first().title)
+    }
+
+    @Test
+    fun testViewModel_suggestBackupFileName_containsTimestampAndJsonExtension() {
+        val viewModel = createViewModel()
+
+        val fileName = viewModel.suggestBackupFileName()
+
+        assertTrue(fileName.matches(Regex("Finotes_backup_\\d{8}_\\d{6}\\.json")))
     }
 
     /**
@@ -236,5 +326,21 @@ class ImportExportJsonTest {
         val loadedData = viewModel.loadedData.value
         assertTrue(loadedData.notes.isEmpty())
         assertTrue(loadedData.archivedNotes.isEmpty())
+    }
+
+    @Test
+    fun testViewModel_loadBackupFile_checksumMismatchRejected() {
+        val viewModel = createViewModel()
+        val valid = BackupCodec.encode(
+            de.marquisproject.finotes.data.backup.BackupEnvelope(
+                data = ExportData(notes = listOf(Note(id = 1L, title = "Tampered")))
+            )
+        ).decodeToString()
+        val tampered = valid.replace("Tampered", "Tampered2")
+
+        val loaded = viewModel.loadBackupFile(tampered)
+
+        assertFalse(loaded)
+        assertTrue(viewModel.loadedData.value.notes.isEmpty())
     }
 }

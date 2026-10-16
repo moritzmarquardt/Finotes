@@ -4,6 +4,7 @@ import de.marquisproject.finotes.data.notes.model.Note
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Update
@@ -59,6 +60,18 @@ interface NoteDAO {
      * @param noteStatus NoteStatus of the notes to be fetched
      * @return Flow of List of Notes ordered by lastEdited in descending order
      */
+    /**
+     * Insert multiple notes in a single transaction so an import either
+     * applies completely or not at all.
+     * @param notes List of Note objects to insert
+     */
+    @Transaction
+    suspend fun insertNotesTransaction(notes: List<Note>) {
+        notes.forEach { note ->
+            insertNote(note)
+        }
+    }
+
     @Query("SELECT * FROM ${Note.TABLE_NAME} WHERE noteStatus = :noteStatus ORDER BY isPinned DESC, dateCreated DESC")
     fun getAllNotesByStatus(noteStatus: NoteStatus): Flow<List<Note>>
 
