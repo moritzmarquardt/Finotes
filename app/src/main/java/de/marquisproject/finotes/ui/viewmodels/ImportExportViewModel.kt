@@ -14,6 +14,7 @@ import de.marquisproject.finotes.data.backup.BackupFileService
 import de.marquisproject.finotes.data.backup.BackupFormatException
 import de.marquisproject.finotes.data.backup.BackupTooLargeException
 import de.marquisproject.finotes.data.backup.ExportData
+import de.marquisproject.finotes.data.backup.ImportExportMode
 import de.marquisproject.finotes.data.backup.ExportSettings
 import de.marquisproject.finotes.data.backup.BackupOperationResult
 import de.marquisproject.finotes.data.notes.model.Note
