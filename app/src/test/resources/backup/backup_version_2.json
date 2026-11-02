@@ -1,0 +1,29 @@
+{
+  "notes":
+  [
+    {
+      "id":1837,
+      "title":"fjds foi fisdhf siopzf o",
+      "body":"j jsh doi hsf hsidoifs",
+      "category":0,
+      "isPinned":true,
+      "dateCreated":1792311095870,
+      "lastModified":1792311102988,
+      "noteStatus":"ACTIVE",
+      "needsSync":true
+    }
+  ],
+  "archivedNotes":[
+    {
+      "id":1813,
+      "title":"hdfhd h dhg fdh dfh",
+      "body":"dfgdfgdf \nh sghdghdfh\n shdfh dhfghs ob dhdshf ghdfxy  dfg\nfoto dfhdss tohdo dfhsdf",
+      "category":0,
+      "isPinned":true,
+      "dateCreated":1788903684500,
+      "lastModified":1788922693701,
+      "noteStatus":"ARCHIVED",
+      "needsSync":true
+    }
+  ]
+}

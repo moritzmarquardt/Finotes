@@ -237,4 +237,98 @@ class ImportExportJsonTest {
         assertTrue(loadedData.notes.isEmpty())
         assertTrue(loadedData.archivedNotes.isEmpty())
     }
+
+    /**
+     * Helper function to read test resource files from src/test/backup
+     * @param path the path to the resource file relative to src/test/backup
+     * @return the content of the file as a String
+     */
+    private fun readTestResource(path: String): String {
+        return javaClass.getResourceAsStream("/$path")?.bufferedReader()?.readText()
+            ?: throw IllegalStateException("Test resource not found: $path.")
+    }
+
+    /**
+     * Tests ImportExportViewModel.loadBackupFile() with an actual backup file
+     * created by the old Moshi implementation.
+     *
+     * This is the most critical test to ensure backward compatibility with old backups.
+     *
+     * INSTRUCTIONS:
+     * 1. Create the directory: app/src/test/backup/
+     * 2. Add your actual Moshi-generated backup file as: app/src/test/backup/moshi_backup_export.json
+     * 3. Run this test to verify the backup can be loaded
+     *
+     * If this test fails, users with old backups will NOT be able to restore their data!
+     */
+    @Test
+    fun testViewModel_loadBackupFile_actualMoshiBackup() {
+        val viewModel = createViewModel()
+
+        // Read the actual Moshi backup file from test backup
+        val moshiBackupJson = readTestResource("backup/backup_version_1.json")
+        
+        // Load the backup - this should succeed with actual Moshi data
+        val result = viewModel.loadBackupFile(moshiBackupJson)
+        
+        // Verify the backup loaded successfully
+        assertTrue("Moshi backup should load successfully", result)
+        
+        // Add your specific assertions based on the content of your backup file
+        // Example:
+        val loadedData = viewModel.loadedData.value
+        assertTrue("Backup should contain at least one note", loadedData.notes.isNotEmpty())
+        
+        // Verify the first note has expected data
+        // Adjust these assertions to match your actual backup content
+        assertEquals("koop", loadedData.notes.first().title)
+        assertEquals("- \n- zwiebelkuchen\n\n\n- Tee puderzucker sieb ding,\n- *PFEFFMÜHLE*\n- glascontainer für meine haferflocken, zucker\n- ventilator\n\nideen:\n- pilz bourginion\n- kaiserschmarrn in neuer pfanne\n- spinat mit lachs\n- früchtejoghurt mascarpone", loadedData.notes.first().body)
+        assertEquals(NoteStatus.ACTIVE, loadedData.notes.first().noteStatus)
+        
+        // If your backup contains archived notes:
+        assertEquals(1, loadedData.archivedNotes.size)
+    }
+
+    /**
+     * Tests ImportExportViewModel.loadBackupFile() with special characters and unicode.
+     * This ensures that notes with newlines, tabs, emojis, and non-ASCII characters are handled correctly.
+     */
+    @Test
+    fun testViewModel_loadBackupFile_withSpecialCharacters() {
+        val viewModel = createViewModel()
+        val jsonWithSpecialChars = """
+            {
+              "notes": [
+                {
+                  "id": 1,
+                  "title": "Note with newlines\nand\ttabs",
+                  "body": "Line 1\nLine 2\n\tIndented",
+                  "noteStatus": "ACTIVE"
+                },
+                {
+                  "id": 2,
+                  "title": "Unicode: 你好世界 🎉",
+                  "body": "Emoji test: ❤️ 🎯 ✅",
+                  "noteStatus": "ACTIVE"
+                },
+                {
+                  "id": 3,
+                  "title": "Special chars: \"quotes\" and 'apostrophes'",
+                  "body": "Backslash: \\ Forward slash: /",
+                  "noteStatus": "ARCHIVED"
+                }
+              ],
+              "archivedNotes": []
+            }
+        """.trimIndent()
+
+        val result = viewModel.loadBackupFile(jsonWithSpecialChars)
+        assertTrue("Special characters should be handled", result)
+
+        val loadedData = viewModel.loadedData.value
+        assertEquals(3, loadedData.notes.size)
+        assertEquals("Note with newlines\nand\ttabs", loadedData.notes[0].title)
+        assertEquals("Unicode: 你好世界 🎉", loadedData.notes[1].title)
+        assertEquals("Special chars: \"quotes\" and 'apostrophes'", loadedData.notes[2].title)
+    }
 }
