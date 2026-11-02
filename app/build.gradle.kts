@@ -38,10 +38,11 @@ android {
         compose = true
     }
 
-    // Ensure the androidTest source set has access to the Room schema JSONs
+    // Ensure the androidTest source set has access to the Room schema JSONs and test resources
     sourceSets {
         getByName("androidTest") {
             assets.directories.add("$projectDir/schemas")
+            resources.directories.add("$projectDir/src/test/resources")
         }
     }
 

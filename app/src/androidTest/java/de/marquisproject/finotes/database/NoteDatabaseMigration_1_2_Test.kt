@@ -1,4 +1,4 @@
-package de.marquisproject.finotes
+package de.marquisproject.finotes.database
 
 import android.content.ContentValues
 import android.content.Context
@@ -14,6 +14,8 @@ import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -21,10 +23,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * Test the migration of notes from the database V1 (with color) to V2 (with category instead of color, sync fields)
+ */
 @RunWith(AndroidJUnit4::class)
 class NoteDatabaseMigration_1_2_Test {
 
     private val dbName = "migration-test-note.db"
+    private val dbArchiveName = "archive.db"
+    private val dbBinName = "bin.db"
     private lateinit var roomDb: NoteDatabase
     private lateinit var context: Context
     @get:Rule
@@ -33,24 +40,27 @@ class NoteDatabaseMigration_1_2_Test {
         NoteDatabase::class.java
     )
 
+    // Clean up any leftover databases from previous runs
+    private fun cleanupTestDb(context: Context) {
+        context.deleteDatabase(dbName)
+        context.deleteDatabase(dbArchiveName)
+        context.deleteDatabase(dbBinName)
+    }
+
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        // Clean up any leftover databases from previous runs
-        context.deleteDatabase(dbName)
-        context.deleteDatabase("bin.db")
-        context.deleteDatabase("archive.db")
+        cleanupTestDb(context)
     }
 
     @After
     fun tearDown() {
         if (::roomDb.isInitialized) roomDb.close()
-        context.deleteDatabase(dbName)
-        context.deleteDatabase("bin.db")
-        context.deleteDatabase("archive.db")
+        cleanupTestDb(context)
     }
 
     // Old version 1 Note class all nullable to allow for testing of corrupt data
+    @Serializable
     data class NoteV1(
         val id: Long? = -1L,
         val title: String? = "",
@@ -60,6 +70,7 @@ class NoteDatabaseMigration_1_2_Test {
         val noteStatus: NoteStatus? = NoteStatus.ACTIVE,
         val color: Int? = 0,
     )
+
 
     fun insertNoteV1(note: NoteV1, db: SupportSQLiteDatabase, tableName: String): Long {
         val noteValue = ContentValues().apply {
@@ -75,38 +86,30 @@ class NoteDatabaseMigration_1_2_Test {
 
     val standardNoteV1 : NoteV1 = NoteV1(title = "Active Note", body = "Main", dateCreated = 1, isPinned = false, noteStatus = NoteStatus.ACTIVE)
 
+    // Load test data from JSON file
+    val testNotesV1: List<NoteV1> = Json.decodeFromString(javaClass.getResource("/title_body_edge_cases.json")?.readText() ?: error("File not found"))
+
     /**
      * Check that data is migrated correctly from v1 to v2.
      */
     @Test
     fun migrate_1_2_preservesDataAndSchema() {
+        // Create the three databases
         val dbV1 = helper.createDatabase(dbName, 1)
+        val dbArchive = helper.createDatabase(dbArchiveName, 1)
+        val dbBin = helper.createDatabase(dbBinName, 1)
 
-        // Create the main database at version 1 filled with test data
-        val testNotesV1 = listOf(
-            NoteV1(title = "Note 1", body = "Body 1", dateCreated = 123456789L, isPinned = false, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(title = "Note 2", body = "Body 2", dateCreated = 0, isPinned = true, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(title = "Note 3", body = "Body 3", dateCreated = 0L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(id = -1L, title = "Note 4", body = "Body 4", dateCreated = 283L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(id = 0, title = "Note 5", body = "Body 5", dateCreated = 283L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(id = -20293L, title = "Note 5", body = "Body 5", dateCreated = 283L, isPinned = true, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(title = "fuzzy note with 🎼 and \n new lines \t tabs", body = "note with emojis 🎼️ and \n new lines \t tabs.", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(title = "SQL Injection Attempt", body = "'); DROP TABLE notes_table; --", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(title = "missing body", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(title = "missing dateCreated", body = "missing dateCreated", isPinned = false, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(body = "missing title", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(title = "missing status", body = "missing status", dateCreated = 0, isPinned = false),
-            NoteV1(title = "missing color", body = "missing color", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ACTIVE),
-            NoteV1(),
-            NoteV1(title = "Archived note 1", body = "Body 1", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ARCHIVED),
-            NoteV1(title = "Archived note 2", body = "Body 2", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ARCHIVED),
-            NoteV1(title = "Archived note 3", body = "Body 3", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.ARCHIVED),
-            NoteV1(title = "Binned note 1", body = "Body 1", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.BINNED),
-            NoteV1(title = "Binned note 2", body = "Body 2", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.BINNED),
-            NoteV1(title = "Binned note 3", body = "Body 3", dateCreated = 0, isPinned = false, noteStatus = NoteStatus.BINNED),
-        )
-        testNotesV1.forEach {
-            insertNoteV1(it, dbV1, "notes_table")
+
+        // Fill the respective database with test data of its noteStatus
+        testNotesV1.forEach { note ->
+            // depending on status add to bin or archive or active
+            val targetDb = when (note.noteStatus) {
+                NoteStatus.ACTIVE -> dbV1
+                NoteStatus.ARCHIVED -> dbArchive
+                NoteStatus.BINNED -> dbBin
+                null -> dbV1
+            }
+            insertNoteV1(note, targetDb, "notes_table")
         }
 
         helper.runMigrationsAndValidate(
@@ -128,16 +131,28 @@ class NoteDatabaseMigration_1_2_Test {
         assertEquals("check number of binned notes in db", testNotesV1.filter { it.noteStatus == NoteStatus.BINNED }.size, notes.filter { it.noteStatus == NoteStatus.BINNED }.size)
 
         testNotesV1.forEach { note ->
-            val dbNote = notes.find { it.title == note.title && it.body == note.body }
+            val dbNote = notes.find {
+                it.title == note.title &&
+                it.body == note.body &&
+                it.dateCreated == note.dateCreated &&
+                it.isPinned == note.isPinned &&
+                it.noteStatus == note.noteStatus
+            }
             assertNotNull(dbNote)
             assertEquals(note.title, dbNote!!.title)
             assertEquals(note.body, dbNote.body)
             assertEquals(note.isPinned, dbNote.isPinned)
             assertEquals(note.noteStatus, dbNote.noteStatus)
             assertEquals(note.dateCreated, dbNote.dateCreated)
-            assertEquals(note.color, dbNote.category.toInt())
+            //This reflects the migration logic of not migrating the color information as it has not been used before and just defaulting to category 0
+            assertEquals(0, dbNote.category.toInt())
             assertNull(dbNote.remoteId)
-            assertTrue(dbNote.needsSync)
+            // This reflects the migration logic of only marking active notes as to sync
+            if (dbNote.noteStatus == NoteStatus.ACTIVE) {
+                assertTrue(dbNote.needsSync)
+            } else {
+                assertFalse(dbNote.needsSync)
+            }
             assertEquals(dbNote.lastModified, dbNote.dateCreated)
         }
     }
@@ -177,8 +192,8 @@ class NoteDatabaseMigration_1_2_Test {
         val dbV1 = helper.createDatabase(dbName, 1)
         insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
-        createExternalDb("bin.db", emptyList())
-        createExternalDb("archive.db", emptyList())
+        createExternalDb(dbBinName, emptyList())
+        createExternalDb(dbArchiveName, emptyList())
 
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
@@ -242,8 +257,8 @@ class NoteDatabaseMigration_1_2_Test {
         val dbV1 = helper.createDatabase(dbName, 1)
         insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
-        createExternalDb("bin.db", listOf(standardNoteV1.copy(title = "Bin Note", noteStatus = NoteStatus.BINNED)))
-        createExternalDb("archive.db", listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
+        createExternalDb(dbBinName, listOf(standardNoteV1.copy(title = "Bin Note", noteStatus = NoteStatus.BINNED)))
+        createExternalDb(dbArchiveName, listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
 
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
@@ -277,8 +292,8 @@ class NoteDatabaseMigration_1_2_Test {
         val dbV1 = helper.createDatabase(dbName, 1)
         insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
-        createMalformedExternalDb("bin.db")
-        createExternalDb("archive.db", listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
+        createMalformedExternalDb(dbBinName)
+        createExternalDb(dbArchiveName, listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
 
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
 
@@ -304,8 +319,8 @@ class NoteDatabaseMigration_1_2_Test {
         insertNoteV1(standardNoteV1, dbV1, "notes_table")
 
         // 1. GIVEN: Create the old external databases
-        createExternalDb("bin.db", listOf(standardNoteV1.copy(title = "Bin Note", noteStatus = NoteStatus.BINNED)))
-        createExternalDb("archive.db", listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
+        createExternalDb(dbBinName, listOf(standardNoteV1.copy(title = "Bin Note", noteStatus = NoteStatus.BINNED)))
+        createExternalDb(dbArchiveName, listOf(standardNoteV1.copy(title = "Archive Note", noteStatus = NoteStatus.ARCHIVED)))
 
         // 3. WHEN: Run migration
         helper.runMigrationsAndValidate(dbName, 2, true, NoteDatabase.getMigration1to2(context))
@@ -316,8 +331,8 @@ class NoteDatabaseMigration_1_2_Test {
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     super.onOpen(db)
                     // Match the cleanup logic from your DatabaseModule.kt
-                    context.deleteDatabase("bin.db")
-                    context.deleteDatabase("archive.db")
+                    context.deleteDatabase(dbBinName)
+                    context.deleteDatabase(dbArchiveName)
                 }
             })
             .build()
@@ -339,8 +354,8 @@ class NoteDatabaseMigration_1_2_Test {
         // 5. THEN: Verify files were cleaned up (if your logic handles this)
         // Note: If cleanup happens in a Callback, you might need to trigger a DB operation
         // to ensure the callback has run.
-        assertFalse("bin.db should be deleted after migration", context.getDatabasePath("bin.db").exists())
-        assertFalse("archive.db should be deleted after migration", context.getDatabasePath("archive.db").exists())
+        assertFalse("bin.db should be deleted after migration", context.getDatabasePath(dbBinName).exists())
+        assertFalse("archive.db should be deleted after migration", context.getDatabasePath(dbArchiveName).exists())
     }
 
     private fun createExternalDb(fileName: String, notes: List<NoteV1>) {
@@ -365,8 +380,8 @@ class NoteDatabaseMigration_1_2_Test {
                     put("body", note.body)
                     put("dateCreated", note.dateCreated)
                     put("isPinned", note.isPinned)
-                    put("noteStatus", "ACTIVE") // Status in old DBs was usually ACTIVE or implied
-                    put("color", 0)
+                    put("noteStatus", note.noteStatus?.name ?: "ACTIVE") // Status in old DBs was usually ACTIVE or implied
+                    put("color", note.color ?: 0)
                 }
                 db.insert("notes_table", null, values)
             }
