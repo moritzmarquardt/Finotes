@@ -12,9 +12,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.sources.NoteDatabase
+import de.marquisproject.finotes.testutils.LegacyNoteV1
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.*
@@ -29,7 +29,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class NoteDatabaseMigration_1_2_Test {
 
-    private val dbName = "migration-test-note.db"
+    private val dbName = "note.db"
     private val dbArchiveName = "archive.db"
     private val dbBinName = "bin.db"
     private lateinit var roomDb: NoteDatabase
@@ -59,35 +59,22 @@ class NoteDatabaseMigration_1_2_Test {
         cleanupTestDb(context)
     }
 
-    // Old version 1 Note class all nullable to allow for testing of corrupt data
-    @Serializable
-    data class NoteV1(
-        val id: Long? = -1L,
-        val title: String? = "",
-        val body: String? = "",
-        val dateCreated: Long? = System.currentTimeMillis(),
-        val isPinned: Boolean? = false,
-        val noteStatus: NoteStatus? = NoteStatus.ACTIVE,
-        val color: Int? = 0,
-    )
-
-
-    fun insertNoteV1(note: NoteV1, db: SupportSQLiteDatabase, tableName: String): Long {
+    fun insertNoteV1(note: LegacyNoteV1, db: SupportSQLiteDatabase, tableName: String): Long {
         val noteValue = ContentValues().apply {
             put("title", note.title)
             put("body", note.body)
             put("dateCreated", note.dateCreated)
             put("isPinned", note.isPinned)
-            put("noteStatus", note.noteStatus!!.name)
+            put("noteStatus", note.noteStatus.name)
             put("color", note.color)
         }
         return db.insert(tableName, SQLiteDatabase.CONFLICT_REPLACE, noteValue)
     }
 
-    val standardNoteV1 : NoteV1 = NoteV1(title = "Active Note", body = "Main", dateCreated = 1, isPinned = false, noteStatus = NoteStatus.ACTIVE)
+    val standardNoteV1 : LegacyNoteV1 = LegacyNoteV1(title = "Active Note", body = "Main", dateCreated = 1, isPinned = false, noteStatus = NoteStatus.ACTIVE)
 
     // Load test data from JSON file
-    val testNotesV1: List<NoteV1> = Json.decodeFromString(javaClass.getResource("/title_body_edge_cases.json")?.readText() ?: error("File not found"))
+    val testNotesV1: List<LegacyNoteV1> = Json.decodeFromString(javaClass.getResource("/title_body_edge_cases.json")?.readText() ?: error("File not found"))
 
     /**
      * Check that data is migrated correctly from v1 to v2.
@@ -107,7 +94,6 @@ class NoteDatabaseMigration_1_2_Test {
                 NoteStatus.ACTIVE -> dbV1
                 NoteStatus.ARCHIVED -> dbArchive
                 NoteStatus.BINNED -> dbBin
-                null -> dbV1
             }
             insertNoteV1(note, targetDb, "notes_table")
         }
@@ -358,7 +344,7 @@ class NoteDatabaseMigration_1_2_Test {
         assertFalse("archive.db should be deleted after migration", context.getDatabasePath(dbArchiveName).exists())
     }
 
-    private fun createExternalDb(fileName: String, notes: List<NoteV1>) {
+    private fun createExternalDb(fileName: String, notes: List<LegacyNoteV1>) {
         val path = context.getDatabasePath(fileName).absolutePath
         SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.CREATE_IF_NECESSARY).use { db ->
             db.execSQL(
@@ -380,8 +366,8 @@ class NoteDatabaseMigration_1_2_Test {
                     put("body", note.body)
                     put("dateCreated", note.dateCreated)
                     put("isPinned", note.isPinned)
-                    put("noteStatus", note.noteStatus?.name ?: "ACTIVE") // Status in old DBs was usually ACTIVE or implied
-                    put("color", note.color ?: 0)
+                    put("noteStatus", note.noteStatus.name)
+                    put("color", note.color)
                 }
                 db.insert("notes_table", null, values)
             }
