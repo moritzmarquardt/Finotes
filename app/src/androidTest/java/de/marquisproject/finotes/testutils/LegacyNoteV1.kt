@@ -1,27 +1,36 @@
 package de.marquisproject.finotes.testutils
 
+import android.content.ContentValues
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import kotlinx.serialization.Serializable
 
+/**
+ * Legacy Note data class representing Database V1 schema structure.
+ * Used as a helper data structure in database migration tests.
+ */
 @Serializable
 data class LegacyNoteV1(
     /**
-     * @property id: unique identifier for the note
-     * @property title: title of the note
-     * @property body: content of the note
-     * @property dateCreated: timestamp of the creation date as Long
-     * @property isPinned: boolean indicating if the note is pinned
-     * @property noteStatus: status of the note as NoteStatus so either ACTIVE, ARCHIVED or BINNED
-     * @property color: color of the note as Int
-     *
-     * Important: If the type of Field is changed, the App will crash because the db still has the old type.
-     * Therefore, the App has to be uninstalled and reinstalled to recreate the db.
-     */
-    val id: Long = -1L,
+     * this differs from the actual legacy implementation which was val id: Long = -1L.
+     * But it is necessary because JSON deserialization assigns the default -1L which triggers
+     * the conflict replace, and then it does not make sense anymore.
+     * For some reason this only happens in the tests because they are all inserted at the same time
+      */
+    val id: Long? = null,
     val title: String = "",
     val body: String = "",
     val dateCreated: Long = System.currentTimeMillis(),
     val isPinned: Boolean = false,
     val noteStatus: NoteStatus = NoteStatus.ACTIVE,
     val color: Int = 0,
-)
+) {
+    fun toContentValues(): ContentValues = ContentValues().apply {
+        put("id", id)
+        put("title", title)
+        put("body", body)
+        put("dateCreated", dateCreated)
+        put("isPinned", isPinned)
+        put("noteStatus", noteStatus.name)
+        put("color", color)
+    }
+}

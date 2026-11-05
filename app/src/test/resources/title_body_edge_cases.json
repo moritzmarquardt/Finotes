@@ -23,5 +23,5 @@
   { "title": "Binned note 1", "body": "Body 1", "dateCreated": 0, "isPinned": false, "noteStatus": "BINNED" },
   { "title": "Binned note 2", "body": "Body 2", "dateCreated": 0, "isPinned": false, "noteStatus": "BINNED" },
   { "title": "Binned note 3", "body": "Body 3", "dateCreated": 0, "isPinned": false, "noteStatus": "BINNED" },
-  { "title": "Active Note with colour", "body": "Color is an old field from scheme V 1 and needs to be handles correctly in the migration", "dateCreated": 0, "isPinned": false, "noteStatus": "ACTIVE", "color":  10}
+  { "title": "Active Note with colour", "body": "Color is an old field from schema V1 and needs to be handled correctly in the migration", "dateCreated": 0, "isPinned": false, "noteStatus": "ACTIVE", "color": 10}
 ]

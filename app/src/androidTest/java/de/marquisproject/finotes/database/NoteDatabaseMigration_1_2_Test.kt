@@ -1,6 +1,5 @@
 package de.marquisproject.finotes.database
 
-import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
@@ -60,21 +59,16 @@ class NoteDatabaseMigration_1_2_Test {
     }
 
     fun insertNoteV1(note: LegacyNoteV1, db: SupportSQLiteDatabase, tableName: String): Long {
-        val noteValue = ContentValues().apply {
-            put("title", note.title)
-            put("body", note.body)
-            put("dateCreated", note.dateCreated)
-            put("isPinned", note.isPinned)
-            put("noteStatus", note.noteStatus.name)
-            put("color", note.color)
-        }
-        return db.insert(tableName, SQLiteDatabase.CONFLICT_REPLACE, noteValue)
+        return db.insert(tableName, SQLiteDatabase.CONFLICT_REPLACE, note.toContentValues())
     }
 
     val standardNoteV1 : LegacyNoteV1 = LegacyNoteV1(title = "Active Note", body = "Main", dateCreated = 1, isPinned = false, noteStatus = NoteStatus.ACTIVE)
 
     // Load test data from JSON file
-    val testNotesV1: List<LegacyNoteV1> = Json.decodeFromString(javaClass.getResource("/title_body_edge_cases.json")?.readText() ?: error("File not found"))
+    val testNotesV1: List<LegacyNoteV1> = javaClass.classLoader
+        ?.getResourceAsStream("title_body_edge_cases.json")
+        ?.use { Json.decodeFromString<List<LegacyNoteV1>>(it.bufferedReader().readText()) }
+        ?: error("Test resource title_body_edge_cases.json not found")
 
     /**
      * Check that data is migrated correctly from v1 to v2.
@@ -361,15 +355,7 @@ class NoteDatabaseMigration_1_2_Test {
                 """.trimIndent()
             )
             notes.forEach { note ->
-                val values = ContentValues().apply {
-                    put("title", note.title)
-                    put("body", note.body)
-                    put("dateCreated", note.dateCreated)
-                    put("isPinned", note.isPinned)
-                    put("noteStatus", note.noteStatus.name)
-                    put("color", note.color)
-                }
-                db.insert("notes_table", null, values)
+                db.insert("notes_table", null, note.toContentValues())
             }
         }
     }
