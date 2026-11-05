@@ -32,6 +32,7 @@ class NoteMigration1to2(private val context: Context) : Migration(1, 2) {
 
         Log.d("NoteMigration", "Copying existing app data from `notes_table` if present")
         // COALESCE ensures NOT NULL constraints are met. the two redundant lines are used to set both the date created and last modified column.
+        // color values are not migrated and category is always set to 0 because the color property has not been used before this migration.
         db.execSQL(
             """
                 INSERT INTO `notes_table_new`(
@@ -103,7 +104,7 @@ class NoteMigration1to2(private val context: Context) : Migration(1, 2) {
                         val values = ContentValues().apply {
                             put("title", c.getString(titleIndex))
                             put("body", c.getString(bodyIndex))
-                            put("category", 0)
+                            put("category", 0) // External DBs (bin.db, archive.db) never had color in v1, so default to 0
                             put("isPinned", c.getInt(isPinnedIndex))
                             put("dateCreated", createdAt)
                             put("lastModified", createdAt)
