@@ -55,7 +55,7 @@ class NoteViewModel @Inject constructor(
                 Note()
             }
 
-            _currentNote.update { note }
+            _currentNote.update { note }  // does not trigger debounced room saves yet since _noteIsLoaded is false still and the debounce logic is filtered
             titleState.setTextAndPlaceCursorAtEnd(note.title)
             bodyState.setTextAndPlaceCursorAtEnd(note.body)
             _noteIsLoaded.value = true
@@ -84,6 +84,7 @@ class NoteViewModel @Inject constructor(
         // Debounce mechanism for saving the _currentNote
         viewModelScope.launch {
             _currentNote
+                .filter { _noteIsLoaded.value }  // Only process note after it has been loaded. Otherwise, the first update call from init{} will already cause a note database update with updated lastEdited even tho it has just been opened.
                 .debounce(500L.milliseconds) // Wait 500ms after the last change
                 .distinctUntilChanged() // Only emit if the value has changed (uses structural equality of the data class
                 .filter { noteToSave ->
