@@ -36,7 +36,6 @@ class HomeViewModel @Inject constructor(
         it.isNotEmpty()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     private val _snackbarEventChannel = Channel<SnackbarEvent>()
-    private var lastAction: LastAction? = null
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
     val selectedNotes: StateFlow<Set<Note>> = _selectedNotes.asStateFlow()
@@ -128,14 +127,12 @@ class HomeViewModel @Inject constructor(
     fun archiveSelectedNotes() {
         viewModelScope.launch {
             val notesToArchive = _selectedNotes.value.toList()
-            val archivedNoteIds = notesToArchive.map { it.id }  // All ids of the notes to archive
             noteRepository.archiveNotes(notesToArchive)
-            lastAction = LastAction.Archive(archivedNoteIds)
             _snackbarEventChannel.send(
                 SnackbarEvent.ShowSnackbar(
-                    message = "${archivedNoteIds.size} note(s) archived",
-                    actionLabel = "Undo"
-                )
+                    message = "${notesToArchive.size} note(s) archived",
+                    actionLabel = "Undo",
+                    undoAction = LastAction.Archive(notesToArchive))
             )
             clearSelection()
         }
@@ -144,13 +141,12 @@ class HomeViewModel @Inject constructor(
     fun binSelectedNotes() {
         viewModelScope.launch {
             val notesToBin = _selectedNotes.value.toList()
-            val binnedNoteIds = notesToBin.map { it.id }  // All ids of the notes to bin
             noteRepository.binNotes(notesToBin)
-            lastAction = LastAction.Bin(binnedNoteIds)
             _snackbarEventChannel.send(
                 SnackbarEvent.ShowSnackbar(
-                    message = "${binnedNoteIds.size} note(s) moved to bin",
-                    actionLabel = "Undo"
+                    message = "${notesToBin.size} note(s) moved to bin",
+                    actionLabel = "Undo",
+                    undoAction = LastAction.Bin(notesToBin)
                 )
             )
             clearSelection()
@@ -173,68 +169,33 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun performUndo() {
+    fun performUndo(action: LastAction) {
         viewModelScope.launch {
-            when (val action = lastAction) {
-                is LastAction.Archive -> {
-                    val archivedNoteIds = action.noteIds
-                    archivedNoteIds.forEach { id ->
-                        id?.let { noteId ->
-                            noteRepository.restoreNoteById(noteId)
-                        }
-                    }
-                    _snackbarEventChannel.send(
-                        SnackbarEvent.ShowSnackbar(
-                            message = "Archived note(s) restored",
-                            actionLabel = null // No undo for undo
-                        )
-                    )
-                }
-                is LastAction.Bin -> {
-                    val binnedNoteIds = action.noteIds
-                    binnedNoteIds.forEach { id ->
-                        id?.let { noteId ->
-                            noteRepository.restoreNoteById(noteId)
-                        }
-                    }
-                    _snackbarEventChannel.send(
-                        SnackbarEvent.ShowSnackbar(
-                            message = "Note(s) restored from bin",
-                            actionLabel = null // No undo for undo
-                        )
-                    )
-                }
-                null -> {
-                    // No action to undo
-                    _snackbarEventChannel.send(
-                        SnackbarEvent.ShowSnackbar(
-                            message = "Error: No action to undo",
-                            actionLabel = null
-                        )
-                    )
-                }
-            }
-            lastAction = null // Clear the last action after undo
+            noteRepository.restoreNotes(action.notes)   // one batch @Update
+            _snackbarEventChannel.send(
+                SnackbarEvent.ShowSnackbar("Note(s) restored", actionLabel = null, undoAction = null)
+            )
         }
     }
 
 
     // Sealed class to represent different types of Snackbar events
     sealed class SnackbarEvent {
-        data class ShowSnackbar(val message: String, val actionLabel: String?) : SnackbarEvent()
+        data class ShowSnackbar(
+            val message: String,
+            val actionLabel: String?,
+            val undoAction: LastAction? = null  // each event owns its undo
+        ) : SnackbarEvent()
     }
 
     // Sealed class to represent the last action performed for undo
-    private sealed class LastAction {
+    sealed class LastAction {
         /**
          * Represents an action to archive notes.
-         * @property noteIds The IDs of the notes to archive.
          */
-        //TODO actually store a list of notes not ids to be coherent with the rest of the app
-        // where i always store notes and not ids. this will make it possible to use batch operations
-        // and simplify the repository and all the logic in the viewmodel
-        data class Archive(val noteIds: List<Long?>) : LastAction()
-        data class Bin(val noteIds: List<Long?>) : LastAction()
+        abstract val notes: List<Note>
+        data class Archive(override val notes: List<Note>) : LastAction()
+        data class Bin(override val notes: List<Note>) : LastAction()
         // Add other actions if needed
     }
 
