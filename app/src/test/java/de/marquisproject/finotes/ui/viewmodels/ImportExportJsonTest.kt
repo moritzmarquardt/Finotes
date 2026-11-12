@@ -3,7 +3,7 @@ package de.marquisproject.finotes.ui.viewmodels
 import android.app.Application
 import de.marquisproject.finotes.data.notes.model.Note
 import de.marquisproject.finotes.data.notes.model.NoteStatus
-import de.marquisproject.finotes.data.notes.repositories.NoteRepository
+import de.marquisproject.finotes.data.notes.repositories.NoteRepositoryImpl
 import de.marquisproject.finotes.data.notes.sources.NoteDAO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -60,7 +60,7 @@ class ImportExportJsonTest {
                 hasCategories: Boolean
             ): Flow<List<Note>> = flowOf(emptyList())
         }
-        val repository = NoteRepository(fakeDao)
+        val repository = NoteRepositoryImpl(fakeDao)
         val application = Application()
         return ImportExportViewModel(repository, application)
     }

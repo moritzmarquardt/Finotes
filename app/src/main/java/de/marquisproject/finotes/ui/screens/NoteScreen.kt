@@ -1,5 +1,6 @@
 package de.marquisproject.finotes.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,10 +29,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import de.marquisproject.finotes.ui.components.MarkdownTextField
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -40,6 +43,7 @@ import androidx.navigation.NavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.ui.viewmodels.NoteViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,15 +51,25 @@ fun NoteScreen(
     navController: NavController,
 ) {
     val viewModel: NoteViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
 
     val currentNote by viewModel.currentNote.collectAsStateWithLifecycle()
-    val noteIsLoaded by viewModel.noteIsLoaded.collectAsStateWithLifecycle()
+    val areQuickActionsAllowed by viewModel.areQuickActionsAllowed.collectAsStateWithLifecycle()
+    val isEditingAllowed by viewModel.isEditingAllowed.collectAsStateWithLifecycle()
+    val shouldFocusBody by viewModel.shouldFocusBody.collectAsStateWithLifecycle()
     val bodyFocusRequester = remember { FocusRequester() }
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
 
+    BackHandler {
+        scope.launch {
+            viewModel.saveIfNeeded()
+            navController.popBackStack()
+        }
+    }
 
-    LaunchedEffect(noteIsLoaded, currentNote.id) {
-        if (noteIsLoaded && currentNote.id == null) {
+
+    LaunchedEffect(shouldFocusBody) {
+        if (shouldFocusBody) {
             bodyFocusRequester.requestFocus()
         }
     }
@@ -66,17 +80,24 @@ fun NoteScreen(
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = {
-                        viewModel.saveCurrentNote()  // make sure to save the note before navigating
-                        navController.popBackStack()
+                        scope.launch {
+                            viewModel.saveIfNeeded()
+                            navController.popBackStack()
+                        }
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Localized description")
                     }
                 },
                 actions = {
                     if (currentNote.noteStatus == NoteStatus.ACTIVE) {
-                        IconButton(onClick = {
-                            viewModel.updateCurrentNoteIsPinned(!currentNote.isPinned)
-                        }) {
+                        IconButton(
+                            enabled = areQuickActionsAllowed,
+                            onClick = {
+                                scope.launch {
+                                    viewModel.updateCurrentNoteIsPinned(!currentNote.isPinned)
+                                }
+                            }
+                        ) {
                             if (currentNote.isPinned) {
                                 Icon(
                                     painterResource(id = R.drawable.baseline_push_pin_24),
@@ -91,34 +112,54 @@ fun NoteScreen(
                         }
                     }
                     if (currentNote.noteStatus == NoteStatus.ACTIVE) {
-                        IconButton(onClick = {
-                            viewModel.archiveNote(currentNote)
-                            navController.popBackStack()
-                        }) {
+                        IconButton(
+                            enabled = areQuickActionsAllowed,
+                            onClick = {
+                                scope.launch {
+                                    viewModel.archiveNote(currentNote)
+                                    navController.popBackStack()
+                                }
+                            }
+                        ) {
                             Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
                         }
                     }
                     if (currentNote.noteStatus == NoteStatus.ARCHIVED) {
-                        IconButton(onClick = {
-                            viewModel.unarchiveNote(currentNote)
-                            navController.popBackStack()
-                        }) {
+                        IconButton(
+                            enabled = areQuickActionsAllowed,
+                            onClick = {
+                                scope.launch {
+                                    viewModel.unarchiveNote(currentNote)
+                                    navController.popBackStack()
+                                }
+                            }
+                        ) {
                             Icon(painterResource(id = R.drawable.outline_unarchive_24), contentDescription = "Localized description")
                         }
                     }
                     if (currentNote.noteStatus == NoteStatus.BINNED) {
-                        IconButton(onClick = {
-                            viewModel.restoreNote(currentNote)
-                            navController.popBackStack()
-                        }) {
+                        IconButton(
+                            enabled = areQuickActionsAllowed,
+                            onClick = {
+                                scope.launch {
+                                    viewModel.restoreNote(currentNote)
+                                    navController.popBackStack()
+                                }
+                            }
+                        ) {
                             Icon(painterResource(id = R.drawable.baseline_restore_from_trash_24), contentDescription = "Localized description")
                         }
                     }
                     if (currentNote.noteStatus == NoteStatus.ACTIVE || currentNote.noteStatus == NoteStatus.ARCHIVED) {
-                        IconButton(onClick = {
-                            viewModel.binNote(currentNote)
-                            navController.popBackStack()
-                        }) {
+                        IconButton(
+                            enabled = areQuickActionsAllowed,
+                            onClick = {
+                                scope.launch {
+                                    viewModel.binNote(currentNote)
+                                    navController.popBackStack()
+                                }
+                            }
+                        ) {
                             Icon(
                                 Icons.Outlined.Delete,
                                 contentDescription = "Localized description"
@@ -126,11 +167,12 @@ fun NoteScreen(
                         }
                     }
                     if (currentNote.noteStatus == NoteStatus.BINNED) {
-                        IconButton(onClick = {
-                            //viewModel.deleteNoteFromBin(uiState.currentNote)
-                            //navController.popBackStack()
-                            openFinalDeleteAlert.value = true
-                        }) {
+                        IconButton(
+                            enabled = areQuickActionsAllowed,
+                            onClick = {
+                                openFinalDeleteAlert.value = true
+                            }
+                        ) {
                             Icon(
                                 Icons.Outlined.Delete,
                                 contentDescription = "Localized description"
@@ -157,8 +199,10 @@ fun NoteScreen(
                     confirmButton = {
                         Button(onClick = {
                             openFinalDeleteAlert.value = false
-                            navController.popBackStack()
-                            viewModel.deleteNoteFromBin(currentNote)
+                            scope.launch {
+                                viewModel.deleteNoteFromBin(currentNote)
+                                navController.popBackStack()
+                            }
                         }) {
                             Text("Delete")
                         }
@@ -180,13 +224,13 @@ fun NoteScreen(
                 modifier = Modifier.imePadding()
             ) {
                 TextField(
-                    readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
+                    readOnly = !isEditingAllowed,
                     state = viewModel.titleState,
                     textStyle = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                     modifier = Modifier
                         .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
-                        imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                        imeAction = ImeAction.Next,
                     ),
                     onKeyboardAction = {
                         bodyFocusRequester.requestFocus()
@@ -203,7 +247,7 @@ fun NoteScreen(
                     )
                 )
                 MarkdownTextField(
-                    readOnly = currentNote.noteStatus != NoteStatus.ACTIVE && noteIsLoaded,
+                    readOnly = !isEditingAllowed,
                     state = viewModel.bodyState,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
                     focusRequester = bodyFocusRequester,
