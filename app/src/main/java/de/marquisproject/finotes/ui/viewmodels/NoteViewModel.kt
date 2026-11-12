@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,8 +48,7 @@ class NoteViewModel @Inject constructor(
             val passedNoteId = noteRoute.noteId
             val note = if (passedNoteId != null) {
                 Log.d("NoteViewModel", "Fetching note with ID: $passedNoteId")
-                noteRepository.fetchNoteById(passedNoteId).firstOrNull() ?: Note()
-                //TODO make this timeout safe
+                noteRepository.fetchNoteById(passedNoteId).first() ?: Note()
             } else {
                 Log.d("NoteViewModel", "Creating new empty note.")
                 Note()

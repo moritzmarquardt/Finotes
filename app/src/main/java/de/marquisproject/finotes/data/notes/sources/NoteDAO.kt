@@ -45,7 +45,7 @@ interface NoteDAO {
      * @return Flow of Note object with the given id
      */
     @Query("SELECT * FROM ${Note.TABLE_NAME} WHERE id = :noteId")
-    fun getNoteById(noteId: Long): Flow<Note>
+    fun getNoteById(noteId: Long): Flow<Note?>
 
     /**
      * With flow, we get an observable which will notify us when there is a change in the database.
