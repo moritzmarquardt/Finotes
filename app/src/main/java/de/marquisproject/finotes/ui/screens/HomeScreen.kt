@@ -91,7 +91,7 @@ fun HomeScreen(
                         duration = SnackbarDuration.Short
                     )
                     if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.performUndo()
+                        event.undoAction?.let { viewModel.performUndo(it) }
                     }
                 }
             }
