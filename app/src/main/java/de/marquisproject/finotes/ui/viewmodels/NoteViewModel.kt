@@ -11,24 +11,27 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.marquisproject.finotes.NoteRoute
 import de.marquisproject.finotes.data.notes.model.Note
+import de.marquisproject.finotes.data.notes.model.NoteStatus
 import de.marquisproject.finotes.data.notes.repositories.NoteRepository
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class NoteViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
@@ -36,13 +39,44 @@ class NoteViewModel @Inject constructor(
 ) : ViewModel() {
     private val _noteIsLoaded = MutableStateFlow(false)
     private val _currentNote = MutableStateFlow(Note())
+
+    /**
+     * This variable stores the information whether the user has typed in content into the title or body
+     * text fields but the auto-update has not run yet due to the debounce mechanism
+     */
+    private val _hasPendingContentChanges = MutableStateFlow(false)
     val titleState = TextFieldState()
     val bodyState = TextFieldState()
 
     val currentNote: StateFlow<Note> = _currentNote.asStateFlow()
-    val noteIsLoaded: StateFlow<Boolean> = _noteIsLoaded.asStateFlow()
+    /**Editing a note should only be allowed after it has loaded from the database and if it has status active
+    * This is okay because notes are small and room is quick so waiting time is short.
+    * And in doing so consistent room flows are guaranteed.
+    */
+    val isEditingAllowed: StateFlow<Boolean> = combine(_currentNote, _noteIsLoaded) { note, isLoaded ->
+        note.noteStatus == NoteStatus.ACTIVE && isLoaded
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    /**
+     * Quick actions directly from the note screen such as pinning, archiving, deleting, restoring and unarchiving
+     * a note should only be possible when the note is loaded
+     */
+    val areQuickActionsAllowed: StateFlow<Boolean> = _noteIsLoaded.asStateFlow()
+    // Focus body automatically when a new unsaved note finishes loading
+    val shouldFocusBody: StateFlow<Boolean> = combine(_currentNote, _noteIsLoaded) { note, isLoaded ->
+        isLoaded && note.id == null
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    /**
+     * When the NoteScreen is launched with an id passed in the route, we want to load the note from room
+     * if the id is not null so if the note exists in the database. If the id is null, then the
+     * note does not exist yet in the database. But we also do not want to insert a new note into
+     * the database until it is certain that the note has content. This is to avoid saving and deleting
+     * empty notes when the user decides to close the screen without writing a note.
+     */
     init {
+        /**
+         * Loading the note from the database. Runs once.
+         */
         viewModelScope.launch {
             val noteRoute = savedStateHandle.toRoute<NoteRoute>()
             val passedNoteId = noteRoute.noteId
@@ -58,26 +92,32 @@ class NoteViewModel @Inject constructor(
             _currentNote.update { note }
             titleState.setTextAndPlaceCursorAtEnd(note.title)
             bodyState.setTextAndPlaceCursorAtEnd(note.body)
-            _noteIsLoaded.value = true
 
+            _noteIsLoaded.value = true
             Log.d("NoteViewModel", "Note loaded: ${note.id}")
         }
 
         // Update _currentNote when states change efficiently
         viewModelScope.launch {
             snapshotFlow { titleState.text }
-                .map { it.toString() }
-                .distinctUntilChanged()
+                .filter { _noteIsLoaded.value }  // only continue if the note has been loaded since otherwise, no user changes have been made anyway
+                .map { it.toString() }  // only count as change if the text changes in the state and not counting cursor changes as well
+                .distinctUntilChanged()  // only continue if the value has changed
                 .collect { newText ->
+                    // Only update the internal current Note so that we can use debounce for saving notes to room
                     _currentNote.update { it.copy(title = newText) }
+                    _hasPendingContentChanges.value = true
                 }
         }
+        // Analogous for the bodyState
         viewModelScope.launch {
             snapshotFlow { bodyState.text }
+                .filter { _noteIsLoaded.value }
                 .map { it.toString() }
                 .distinctUntilChanged()
                 .collect { newText ->
                     _currentNote.update { it.copy(body = newText) }
+                    _hasPendingContentChanges.value = true
                 }
         }
 
@@ -91,8 +131,11 @@ class NoteViewModel @Inject constructor(
                 }  // Only emit if statement inside filter is true
                 .collect { noteToSave ->
                     try {
-                        Log.d("NoteViewModel", "Debounced save triggered for note ID: ${noteToSave.id} and body: ${noteToSave.body}")
-                        insertNewOrUpdateNote(noteToSave)
+                        when {
+                            noteToSave.id == null -> insertNote(noteToSave)
+                            else -> updateNote(noteToSave)
+                        }
+                        _hasPendingContentChanges.value = false
                     } catch (e: Exception) {
                         Log.e("NoteViewModel", "Failed auto-saving note", e)
                     }
@@ -100,62 +143,91 @@ class NoteViewModel @Inject constructor(
         }
     }
 
-    // This function is now responsible for both inserting new notes and updating existing ones.
-    private fun insertNewOrUpdateNote(updatedNote: Note) {
-        viewModelScope.launch {
-            if (updatedNote.id == null) {
-                // New note: insert and update the ID
-                Log.d("NoteViewModel", "Inserting new note into database.")
-                val newId = noteRepository.insertNote(updatedNote)
-                _currentNote.update { it.copy(id = newId) } // Update the editable note with the new ID
-                Log.d("NoteViewModel", "New note inserted with ID: $newId")
-            } else {
-                // Existing note: update
-                Log.d("NoteViewModel", "Updating existing note with ID: ${updatedNote.id}")
-                noteRepository.updateNotes(listOf(updatedNote))
-            }
+    /**
+     * Insert a note to the database and update the [_currentNote] with the new id to keep
+     * it in sync with the database.
+     *
+     *  @param note The note to insert.
+     *  @return The id of the inserted note.
+     */
+    private suspend fun insertNote(note: Note): Long {
+        val newId = noteRepository.insertNote(note)
+        _currentNote.update { note.copy(id = newId) }
+        return newId
+    }
+
+    private suspend fun updateNote(note: Note) {
+        noteRepository.updateNotes(listOf(note))
+    }
+
+    /**
+     * Called on navigate-back to flush any un-persisted edits.
+     * Inserts new notes only if they contain text (prevents blank notes), and updates existing notes
+     * only if user changes are pending.
+     */
+    suspend fun saveIfNeeded() {
+        val note = _currentNote.value
+        val isExistingWithChanges = note.id != null && _hasPendingContentChanges.value
+
+        if (note.isUnsavedNoteWithContent()) {
+            insertNote(note)
+            _hasPendingContentChanges.value = false
+        } else if (isExistingWithChanges) {
+            updateNote(note)
+            _hasPendingContentChanges.value = false
         }
     }
 
-    fun saveCurrentNote() {
-        viewModelScope.launch {
-            Log.d("NoteViewModel", "Updating current note with ID: ${_currentNote.value.id}")
-            noteRepository.updateNotes(listOf(_currentNote.value))
+    suspend fun updateCurrentNoteIsPinned(isPinned: Boolean) {
+        if (!areQuickActionsAllowed.value) return
+        val current = _currentNote.value
+        if (current.id == null) {
+            insertNote(current.copy(isPinned = isPinned))
+        } else {
+            updateNote(current.copy(isPinned = isPinned))
         }
-    }
-
-    // UI-facing update functions that directly modify _currentNote
-    fun updateCurrentNoteIsPinned(isPinned: Boolean) {
         _currentNote.update { it.copy(isPinned = isPinned) }
     }
 
-    // --- Actions that affect note status and often navigate away ---
-    fun archiveNote(note: Note) {
-        viewModelScope.launch {
+    suspend fun archiveNote(note: Note) {
+        if (!areQuickActionsAllowed.value) return
+        if (note.id == null) {
+            insertNote(note.copy(noteStatus = NoteStatus.ARCHIVED))
+        } else {
             noteRepository.archiveNotes(listOf(note))
         }
     }
 
-    fun unarchiveNote(note: Note) {
-        viewModelScope.launch {
+    suspend fun unarchiveNote(note: Note) {
+        if (!areQuickActionsAllowed.value) return
+        if (note.id == null) {
+            insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+        } else {
             noteRepository.restoreNotes(listOf(note))
         }
     }
 
-    fun binNote(note: Note) {
-        viewModelScope.launch {
+    suspend fun binNote(note: Note) {
+        if (!areQuickActionsAllowed.value) return
+        if (note.id == null) {
+            insertNote(note.copy(noteStatus = NoteStatus.BINNED))
+        } else {
             noteRepository.binNotes(listOf(note))
         }
     }
 
-    fun restoreNote(note: Note) {
-        viewModelScope.launch {
+    suspend fun restoreNote(note: Note) {
+        if (!areQuickActionsAllowed.value) return
+        if (note.id == null) {
+            insertNote(note.copy(noteStatus = NoteStatus.ACTIVE))
+        } else {
             noteRepository.restoreNotes(listOf(note))
         }
     }
 
-    fun deleteNoteFromBin(note: Note) {
-        viewModelScope.launch {
+    suspend fun deleteNoteFromBin(note: Note) {
+        if (!areQuickActionsAllowed.value) return
+        if (note.id != null) {
             noteRepository.permanentlyDeleteNotes(listOf(note))
         }
     }
