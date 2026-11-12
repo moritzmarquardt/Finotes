@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,7 +41,6 @@ import de.marquisproject.finotes.ui.components.SelectionBar
 import de.marquisproject.finotes.ui.components.TopBarHome
 import de.marquisproject.finotes.ui.viewmodels.HomeViewModel
 import de.marquisproject.finotes.utils.NoteSection
-import kotlinx.coroutines.flow.collectLatest
 
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
@@ -81,7 +81,7 @@ fun HomeScreen(
 
     // Observe Snackbar events from the ViewModel
     LaunchedEffect(Unit) {
-        viewModel.snackbarEventFlow.collectLatest { event ->
+        viewModel.snackbarEventFlow.collect { event ->
             when (event) {
                 is HomeViewModel.SnackbarEvent.ShowSnackbar -> {
                     val result = snackbarHostState.showSnackbar(
@@ -90,7 +90,7 @@ fun HomeScreen(
                         withDismissAction = true, // Allows dismissal by swipe or timeout
                         duration = SnackbarDuration.Short
                     )
-                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                    if (result == SnackbarResult.ActionPerformed) {
                         viewModel.performUndo()
                     }
                 }

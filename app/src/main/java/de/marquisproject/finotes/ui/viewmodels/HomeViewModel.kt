@@ -35,7 +35,8 @@ class HomeViewModel @Inject constructor(
     private val _inSelectionMode = _selectedNotes.map {
         it.isNotEmpty()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    private val _snackbarEventChannel = Channel<SnackbarEvent>()
+    // Use Channel.CONFLATED to only keep the latest snackbar visible
+    private val _snackbarEventChannel = Channel<SnackbarEvent>(capacity = Channel.CONFLATED)
     private var lastAction: LastAction? = null
 
     // public vals to expose the state of the UI to the UI layer (marked with val)
