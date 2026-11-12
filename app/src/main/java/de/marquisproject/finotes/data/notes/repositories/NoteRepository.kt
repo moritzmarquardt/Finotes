@@ -43,14 +43,14 @@ class NoteRepository(
      * @param noteId The id of the note to fetch.
      * @return A flow of the note.
      */
-    fun fetchNoteById(noteId: Long): Flow<Note> = noteDao.getNoteById(noteId)
+    fun fetchNoteById(noteId: Long): Flow<Note?> = noteDao.getNoteById(noteId)
 
     /**
      * Restore a note by its id.
      * @param id The id of the note to restore.
      */
     suspend fun restoreNoteById(id: Long) {
-        val note = noteDao.getNoteById(id).first()
+        val note = noteDao.getNoteById(id).first() ?: return
         restoreNotes(listOf(note))
     }
 
