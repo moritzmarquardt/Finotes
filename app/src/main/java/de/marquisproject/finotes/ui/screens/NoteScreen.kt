@@ -29,21 +29,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import de.marquisproject.finotes.ui.components.MarkdownTextField
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import de.marquisproject.finotes.R
 import de.marquisproject.finotes.data.notes.model.NoteStatus
+import de.marquisproject.finotes.ui.components.MarkdownTextField
 import de.marquisproject.finotes.ui.viewmodels.NoteViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,9 +49,9 @@ fun NoteScreen(
     navController: NavController,
 ) {
     val viewModel: NoteViewModel = hiltViewModel()
-    val scope = rememberCoroutineScope()
 
-    val currentNote by viewModel.currentNote.collectAsStateWithLifecycle()
+    val isPinned by viewModel.isPinned.collectAsStateWithLifecycle()
+    val noteStatus by viewModel.noteStatus.collectAsStateWithLifecycle()
     val areQuickActionsAllowed by viewModel.areQuickActionsAllowed.collectAsStateWithLifecycle()
     val isEditingAllowed by viewModel.isEditingAllowed.collectAsStateWithLifecycle()
     val shouldFocusBody by viewModel.shouldFocusBody.collectAsStateWithLifecycle()
@@ -61,12 +59,10 @@ fun NoteScreen(
     val openFinalDeleteAlert = remember { mutableStateOf(false) }
 
     BackHandler {
-        scope.launch {
-            viewModel.saveIfNeeded()
+        viewModel.saveIfNeeded {
             navController.popBackStack()
         }
     }
-
 
     LaunchedEffect(shouldFocusBody) {
         if (shouldFocusBody) {
@@ -80,93 +76,86 @@ fun NoteScreen(
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = {
-                        scope.launch {
-                            viewModel.saveIfNeeded()
+                        viewModel.saveIfNeeded {
                             navController.popBackStack()
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Localized description")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    if (currentNote.noteStatus == NoteStatus.ACTIVE) {
+                    if (noteStatus == NoteStatus.ACTIVE) {
                         IconButton(
                             enabled = areQuickActionsAllowed,
                             onClick = {
-                                scope.launch {
-                                    viewModel.updateCurrentNoteIsPinned(!currentNote.isPinned)
-                                }
+                                viewModel.togglePinned()
                             }
                         ) {
-                            if (currentNote.isPinned) {
+                            if (isPinned) {
                                 Icon(
                                     painterResource(id = R.drawable.baseline_push_pin_24),
-                                    contentDescription = "Localized description"
+                                    contentDescription = "Unpin"
                                 )
                             } else {
                                 Icon(
                                     painterResource(id = R.drawable.outline_push_pin_24),
-                                    contentDescription = "Localized description"
+                                    contentDescription = "Pin"
                                 )
                             }
                         }
                     }
-                    if (currentNote.noteStatus == NoteStatus.ACTIVE) {
+                    if (noteStatus == NoteStatus.ACTIVE) {
                         IconButton(
                             enabled = areQuickActionsAllowed,
                             onClick = {
-                                scope.launch {
-                                    viewModel.archiveNote(currentNote)
+                                viewModel.archiveNote {
                                     navController.popBackStack()
                                 }
                             }
                         ) {
-                            Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Localized description")
+                            Icon(painterResource(id = R.drawable.outline_archive_24), contentDescription = "Archive")
                         }
                     }
-                    if (currentNote.noteStatus == NoteStatus.ARCHIVED) {
+                    if (noteStatus == NoteStatus.ARCHIVED) {
                         IconButton(
                             enabled = areQuickActionsAllowed,
                             onClick = {
-                                scope.launch {
-                                    viewModel.unarchiveNote(currentNote)
+                                viewModel.unarchiveNote {
                                     navController.popBackStack()
                                 }
                             }
                         ) {
-                            Icon(painterResource(id = R.drawable.outline_unarchive_24), contentDescription = "Localized description")
+                            Icon(painterResource(id = R.drawable.outline_unarchive_24), contentDescription = "Unarchive")
                         }
                     }
-                    if (currentNote.noteStatus == NoteStatus.BINNED) {
+                    if (noteStatus == NoteStatus.BINNED) {
                         IconButton(
                             enabled = areQuickActionsAllowed,
                             onClick = {
-                                scope.launch {
-                                    viewModel.restoreNote(currentNote)
+                                viewModel.restoreNote {
                                     navController.popBackStack()
                                 }
                             }
                         ) {
-                            Icon(painterResource(id = R.drawable.baseline_restore_from_trash_24), contentDescription = "Localized description")
+                            Icon(painterResource(id = R.drawable.baseline_restore_from_trash_24), contentDescription = "Restore")
                         }
                     }
-                    if (currentNote.noteStatus == NoteStatus.ACTIVE || currentNote.noteStatus == NoteStatus.ARCHIVED) {
+                    if (noteStatus == NoteStatus.ACTIVE || noteStatus == NoteStatus.ARCHIVED) {
                         IconButton(
                             enabled = areQuickActionsAllowed,
                             onClick = {
-                                scope.launch {
-                                    viewModel.binNote(currentNote)
+                                viewModel.binNote {
                                     navController.popBackStack()
                                 }
                             }
                         ) {
                             Icon(
                                 Icons.Outlined.Delete,
-                                contentDescription = "Localized description"
+                                contentDescription = "Bin"
                             )
                         }
                     }
-                    if (currentNote.noteStatus == NoteStatus.BINNED) {
+                    if (noteStatus == NoteStatus.BINNED) {
                         IconButton(
                             enabled = areQuickActionsAllowed,
                             onClick = {
@@ -175,7 +164,7 @@ fun NoteScreen(
                         ) {
                             Icon(
                                 Icons.Outlined.Delete,
-                                contentDescription = "Localized description"
+                                contentDescription = "Delete permanently"
                             )
                         }
                     }
@@ -199,8 +188,7 @@ fun NoteScreen(
                     confirmButton = {
                         Button(onClick = {
                             openFinalDeleteAlert.value = false
-                            scope.launch {
-                                viewModel.deleteNoteFromBin(currentNote)
+                            viewModel.deleteNoteFromBin {
                                 navController.popBackStack()
                             }
                         }) {
