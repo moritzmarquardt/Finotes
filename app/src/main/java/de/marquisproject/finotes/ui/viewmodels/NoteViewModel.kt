@@ -91,11 +91,8 @@ class NoteViewModel @Inject constructor(
             ) { title, body -> title to body }
                 .distinctUntilChanged()
                 .debounce(500.milliseconds)
-                .collect { (title, body) ->
-                    val current = getCurrentNoteWithLiveText() ?: return@collect
-                    if ((current.id != null || current.isUnsavedNoteWithContent()) && current != lastSavedNote) {
-                        save(current)
-                    }
+                .collect {
+                    savePendingEdits()
                 }
         }
     }
@@ -104,7 +101,7 @@ class NoteViewModel @Inject constructor(
      * Executes the DB save operation using NonCancellable context so that the database transaction
      * will never be interrupted or lost even if the ViewModel/Screen is popped immediately.
      */
-    private suspend fun save(note: Note): Note = withContext(NonCancellable) {
+    private suspend fun save(note: Note) = withContext(NonCancellable) {
         val saved = if (note.id == null) {
             val newId = noteRepository.insertNote(note)
             note.copy(id = newId)
@@ -114,7 +111,6 @@ class NoteViewModel @Inject constructor(
         }
         lastSavedNote = saved
         loadedNote.value = saved
-        saved
     }
 
     /**
@@ -129,16 +125,21 @@ class NoteViewModel @Inject constructor(
     }
 
     /**
-     * Flush un-persisted text changes on back navigation and run onComplete afterward.
+     * Checks if there are pending text edits and saves to the database if necessary.
+     */
+    private suspend fun savePendingEdits() {
+        val current = getCurrentNoteWithLiveText() ?: return
+        if (current != lastSavedNote && (current.id != null || current.isUnsavedNoteWithContent())) {
+            save(current)
+        }
+    }
+
+    /**
+     * Flush un-persisted text changes on back navigation and run onComplete afterwards.
      */
     fun saveIfNeeded(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
-            val updated = getCurrentNoteWithLiveText()
-            if (updated != null && updated != lastSavedNote) {
-                if (updated.id != null || updated.isUnsavedNoteWithContent()) {
-                    save(updated)
-                }
-            }
+            savePendingEdits()
             onComplete()
         }
     }
